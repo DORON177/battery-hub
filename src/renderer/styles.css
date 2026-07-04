@@ -44,6 +44,10 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Ensure the [hidden] attribute always wins — class rules like .btn set an explicit
+   `display`, which would otherwise override the browser default of `display:none`. */
+[hidden] { display: none !important; }
+
 html, body {
   height: 100%;
   overflow: hidden;
