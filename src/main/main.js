@@ -1,10 +1,7 @@
 const { app, BrowserWindow, ipcMain, nativeTheme, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const https = require('https');
-
-// Where update checks look — the public GitHub repo's latest release.
-const UPDATE_REPO = 'DORON177/battery-hub';
+const { autoUpdater } = require('electron-updater');
 
 // ---- Windows stability switches (must run before app 'ready') ----
 // This app lives in the tray and hides/shows its window constantly. Chromium's native
@@ -162,6 +159,7 @@ app.whenReady().then(() => {
   applyTheme();
   applyLoginItem();
   tray.setHandlers(showWindow, quitApp);
+  tray.setMode(store.getSetting('trayMode'));
   createWindow();
   poller.start(broadcast);
 
@@ -249,59 +247,45 @@ ipcMain.handle('settings:set', (evt, patch) => {
   if ('pollIntervalSec' in patch) restartPoller();
   if ('trayEnabled' in patch && !patch.trayEnabled) tray.destroyAll();
   if ('trayEnabled' in patch && patch.trayEnabled) restartPoller();
+  if ('trayMode' in patch) tray.setMode(patch.trayMode);
 
   return after;
 });
 
-// ---- IPC: updates ----
+// ---- IPC: in-app auto-update (electron-updater) ----
+// Downloads the update in the background (differential via blockmap — not the whole exe)
+// straight from the public GitHub release, then installs it on restart.
 
-// a > b for dotted numeric versions (e.g. "1.0.3" > "1.0.2")
-function isNewerVersion(a, b) {
-  const pa = String(a).split('.').map((n) => parseInt(n, 10) || 0);
-  const pb = String(b).split('.').map((n) => parseInt(n, 10) || 0);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    if ((pa[i] || 0) > (pb[i] || 0)) return true;
-    if ((pa[i] || 0) < (pb[i] || 0)) return false;
-  }
-  return false;
+autoUpdater.autoDownload = true;           // start downloading as soon as an update is found
+autoUpdater.autoInstallOnAppQuit = true;   // also install silently if the user just quits
+autoUpdater.logger = { info: (m) => logLine('INFO', `updater: ${m}`), warn: (m) => logLine('INFO', `updater: ${m}`), error: (m) => logLine('ERROR', `updater: ${m}`), debug: () => {} };
+
+function sendUpdate(payload) {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('update-event', payload);
 }
 
-function fetchLatestRelease() {
-  return new Promise((resolve, reject) => {
-    const req = https.get({
-      hostname: 'api.github.com',
-      path: `/repos/${UPDATE_REPO}/releases/latest`,
-      headers: { 'User-Agent': 'Battery-Hub', Accept: 'application/vnd.github+json' },
-      timeout: 10000,
-    }, (res) => {
-      if (res.statusCode !== 200) { res.resume(); return reject(new Error(`GitHub returned ${res.statusCode}`)); }
-      let data = '';
-      res.on('data', (c) => { data += c; });
-      res.on('end', () => { try { resolve(JSON.parse(data)); } catch (e) { reject(e); } });
-    });
-    req.on('timeout', () => req.destroy(new Error('request timed out')));
-    req.on('error', reject);
-  });
-}
+autoUpdater.on('checking-for-update', () => sendUpdate({ status: 'checking' }));
+autoUpdater.on('update-available', (info) => sendUpdate({ status: 'available', version: info && info.version }));
+autoUpdater.on('update-not-available', () => sendUpdate({ status: 'not-available', version: app.getVersion() }));
+autoUpdater.on('download-progress', (p) => sendUpdate({ status: 'downloading', percent: Math.round(p.percent || 0) }));
+autoUpdater.on('update-downloaded', (info) => sendUpdate({ status: 'downloaded', version: info && info.version }));
+autoUpdater.on('error', (err) => sendUpdate({ status: 'error', message: (err && err.message) || String(err) }));
 
 ipcMain.handle('app:version', () => app.getVersion());
 
 ipcMain.handle('app:check-updates', async () => {
-  const current = app.getVersion();
+  if (!app.isPackaged) return { status: 'dev', version: app.getVersion() };
   try {
-    const rel = await fetchLatestRelease();
-    const latest = (rel.tag_name || '').replace(/^v/i, '');
-    const exe = (rel.assets || []).find((a) => /\.exe$/i.test(a.name));
-    return {
-      current,
-      latest,
-      hasUpdate: !!latest && isNewerVersion(latest, current),
-      downloadUrl: exe ? exe.browser_download_url : rel.html_url,
-      pageUrl: rel.html_url,
-    };
+    await autoUpdater.checkForUpdates(); // progress/results arrive via the 'update-event' channel
+    return { status: 'checking', version: app.getVersion() };
   } catch (e) {
-    return { current, error: e.message };
+    return { status: 'error', message: e.message, version: app.getVersion() };
   }
+});
+
+ipcMain.handle('app:install-update', () => {
+  isQuitting = true;
+  setImmediate(() => autoUpdater.quitAndInstall());
 });
 
 ipcMain.handle('app:open-external', (evt, url) => {

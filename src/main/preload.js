@@ -23,6 +23,12 @@ contextBridge.exposeInMainWorld('batteryHub', {
   // updates / app info
   getVersion: () => ipcRenderer.invoke('app:version'),
   checkForUpdates: () => ipcRenderer.invoke('app:check-updates'),
+  installUpdate: () => ipcRenderer.invoke('app:install-update'),
+  onUpdateEvent: (cb) => {
+    const listener = (evt, data) => cb(data);
+    ipcRenderer.on('update-event', listener);
+    return () => ipcRenderer.removeListener('update-event', listener);
+  },
   openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
 
   // window / app
