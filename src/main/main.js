@@ -219,6 +219,12 @@ ipcMain.handle('devices:rename', (evt, { id, name }) => {
   return saved;
 });
 
+// Custom device emoji (null = fall back to the auto-derived icon). Cosmetic only —
+// the tray uses battery glyphs, so no poller restart is needed here.
+ipcMain.handle('devices:set-icon', (evt, { id, icon }) => {
+  return store.upsertDevice(id, { customIcon: icon || null });
+});
+
 ipcMain.handle('devices:capture', async (evt, id) => {
   const live = (await hidClient.enumerate()).find((d) => d.id === id);
   if (!live) throw new Error('device not connected');

@@ -4,6 +4,7 @@
   --sidebar-bg: rgba(240, 240, 243, 0.55);
   --card-bg: rgba(255, 255, 255, 0.66);
   --card-hover-bg: rgba(255, 255, 255, 0.85);
+  --panel-bg: #f7f7f9; /* opaque equivalent of --card-bg, for filter-free panels */
   --text: #1d1d1f;
   --text-secondary: #86868b;
   --text-tertiary: #a1a1a6;
@@ -31,6 +32,7 @@
     --sidebar-bg: rgba(32, 32, 34, 0.5);
     --card-bg: rgba(48, 48, 51, 0.55);
     --card-hover-bg: rgba(58, 58, 61, 0.72);
+    --panel-bg: #2a2a2d; /* opaque equivalent of --card-bg, for filter-free panels */
     --text: #f5f5f7;
     --text-secondary: #98989d;
     --text-tertiary: #6e6e73;
@@ -267,6 +269,41 @@ html, body {
 .menu-dropdown button:hover { background: var(--hover-fill); }
 .menu-remove { color: var(--red); }
 
+/* emoji picker popover (Change icon) — anchored like the menu, wide enough for a 6-col grid */
+.icon-picker {
+  position: absolute; right: 11px; top: 38px; z-index: 25;
+  width: 236px; padding: 10px;
+  background: var(--card-hover-bg);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+}
+.icon-picker-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px; padding: 0 2px;
+}
+.icon-picker-head span { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.icon-picker-auto {
+  border: 1px solid var(--border-strong); background: transparent;
+  color: var(--text); font-size: 11px; font-weight: 600;
+  padding: 3px 10px; border-radius: 999px; cursor: default;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.icon-picker-auto:hover { background: var(--hover-fill); }
+.icon-picker-auto.selected { background: var(--accent); color: #fff; border-color: transparent; }
+.icon-picker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; }
+.icon-choice {
+  border: none; background: transparent; cursor: default;
+  font-size: 18px; line-height: 1;
+  width: 100%; aspect-ratio: 1; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.12s ease, transform 0.12s ease;
+}
+.icon-choice:hover { background: var(--hover-fill); transform: scale(1.12); }
+.icon-choice.selected { background: var(--hover-fill); box-shadow: inset 0 0 0 2px var(--accent); }
+
 .gauge-wrap { position: relative; width: 116px; height: 116px; margin-bottom: 14px; }
 /* soft ambient glow behind the ring, tinted by battery state */
 .gauge-wrap::before {
@@ -442,9 +479,11 @@ html, body {
 }
 .settings-group-title:first-of-type { margin-top: 4px; }
 .settings-panel {
-  background: var(--card-bg);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  /* Opaque background (no backdrop-filter): the settings view is a tall stack of
+     these panels, and re-blurring the backdrop behind each one every frame made
+     scrolling janky. The gradient behind is faint, so a flat surface looks the
+     same and scrolls smoothly. */
+  background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   max-width: 540px;
