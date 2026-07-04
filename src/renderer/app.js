@@ -204,7 +204,7 @@ function buildDeviceCard(dev) {
   });
 
   el.querySelector('.device-name').textContent = dev.customName || dev.product || 'Device';
-  el.querySelector('.device-type-icon').textContent = iconFor(dev.product, dev.driverId);
+  el.querySelector('.device-type-icon').textContent = dev.customIcon || iconFor(dev.product, dev.driverId);
 
   const menuBtn = el.querySelector('.menu-btn');
   const dropdown = el.querySelector('.menu-dropdown');
@@ -228,6 +228,11 @@ function buildDeviceCard(dev) {
     e.stopPropagation();
     dropdown.hidden = true;
     startRename(card, dev);
+  });
+  el.querySelector('.menu-change-icon').addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.hidden = true;
+    openIconPicker(card, dev);
   });
   el.querySelector('.menu-remove').addEventListener('click', async (e) => {
     e.stopPropagation();
@@ -630,6 +635,60 @@ function startRename(card, dev) {
   });
   input.addEventListener('blur', () => commit(true));
   input.addEventListener('click', (ev) => ev.stopPropagation());
+}
+
+// ---------- change icon ----------
+
+// A small, device-flavoured emoji palette. Picking one stores a customIcon override;
+// "Auto" clears it and falls back to iconFor().
+const ICON_CHOICES = ['🖱️', '⌨️', '🎧', '🎮', '🕹️', '🎤', '🔊', '🖥️', '💻', '📱', '⌚', '🖊️', '🎚️', '📷', '🔋', '🔌', '🪫', '🎛️'];
+
+function openIconPicker(card, dev) {
+  document.querySelectorAll('.icon-picker').forEach((p) => p.remove()); // one at a time
+
+  const pop = document.createElement('div');
+  pop.className = 'icon-picker';
+  pop.addEventListener('click', (e) => e.stopPropagation());
+
+  const head = document.createElement('div');
+  head.className = 'icon-picker-head';
+  const title = document.createElement('span');
+  title.textContent = 'Choose an icon';
+  const auto = document.createElement('button');
+  auto.className = 'icon-picker-auto';
+  auto.textContent = 'Auto';
+  if (!dev.customIcon) auto.classList.add('selected');
+  auto.addEventListener('click', () => applyDeviceIcon(card, dev, null, pop));
+  head.append(title, auto);
+
+  const grid = document.createElement('div');
+  grid.className = 'icon-picker-grid';
+  for (const emo of ICON_CHOICES) {
+    const b = document.createElement('button');
+    b.className = 'icon-choice';
+    b.textContent = emo;
+    if (dev.customIcon === emo) b.classList.add('selected');
+    b.addEventListener('click', () => applyDeviceIcon(card, dev, emo, pop));
+    grid.appendChild(b);
+  }
+
+  pop.append(head, grid);
+  card.el.appendChild(pop);
+
+  // Close on the next outside click (deferred so this opening click doesn't close it).
+  setTimeout(() => {
+    document.addEventListener('click', function onDoc() {
+      pop.remove();
+      document.removeEventListener('click', onDoc);
+    }, { once: true });
+  }, 0);
+}
+
+async function applyDeviceIcon(card, dev, icon, pop) {
+  dev.customIcon = icon || null;
+  card.el.querySelector('.device-type-icon').textContent = dev.customIcon || iconFor(dev.product, dev.driverId);
+  if (pop) pop.remove();
+  await window.batteryHub.setDeviceIcon(dev.id, dev.customIcon);
 }
 
 // ---------- settings ----------

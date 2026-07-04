@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('batteryHub', {
   addDevice: (payload) => ipcRenderer.invoke('devices:add', payload),
   removeDevice: (id) => ipcRenderer.invoke('devices:remove', id),
   renameDevice: (id, name) => ipcRenderer.invoke('devices:rename', { id, name }),
+  setDeviceIcon: (id, icon) => ipcRenderer.invoke('devices:set-icon', { id, icon }),
   reorderDevices: (ids) => ipcRenderer.invoke('devices:reorder', ids),
   capture: (id) => ipcRenderer.invoke('devices:capture', id),
   pollNow: () => ipcRenderer.invoke('devices:poll-now'),
