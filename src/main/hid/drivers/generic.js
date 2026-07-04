@@ -47,14 +47,22 @@ function readBattery(logicalDevice, profile) {
       }
     }
 
-    // input-report mode: optionally write a trigger, then wait for a matching frame
+    // input-report mode: optionally nudge the device with a trigger write, then wait for a
+    // matching frame. Many wireless devices broadcast the frame on their own and reject
+    // writes, so a failed trigger must NOT abort the read — we keep listening either way.
     let settled = false;
     const finish = (err, result) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      try { dev.close(); } catch (_) {}
+      // Settle first, then tear down outside this (possibly 'data') callback — closing a
+      // node-hid device from inside its own event handler corrupts the heap on Windows.
       if (err) reject(err); else resolve(result);
+      setImmediate(() => {
+        try { dev.removeAllListeners('data'); } catch (_) {}
+        try { dev.removeAllListeners('error'); } catch (_) {}
+        try { dev.close(); } catch (_) {}
+      });
     };
 
     dev.on('data', (data) => {
@@ -64,16 +72,14 @@ function readBattery(logicalDevice, profile) {
         finish(null, { capacity: toPercent(raw, profile), charging: null, voltageMv: null });
       }
     });
-    dev.on('error', (e) => finish(e));
+    dev.on('error', () => {}); // ignore transient read errors; the timeout is the backstop
 
-    const timer = setTimeout(() => finish(new Error('timeout waiting for device response')), 4000);
+    const timer = setTimeout(() => finish(new Error('timeout waiting for device response')), 8000);
 
     if (profile.trigger) {
-      try {
-        dev.write(profile.trigger);
-      } catch (e) {
-        finish(e);
-      }
+      // Best-effort nudge. If the device rejects writes ("Cannot write to hid device") we
+      // swallow it and rely on the device broadcasting the frame on its own.
+      try { dev.write(profile.trigger); } catch (_) {}
     }
   });
 }

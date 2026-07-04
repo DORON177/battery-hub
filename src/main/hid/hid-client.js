@@ -58,7 +58,8 @@ function call(cmd, args, timeoutMs) {
 
 module.exports = {
   enumerate: () => call('enumerate', [], 8000),
-  readBattery: (driverId, device, profile) => call('readBattery', [driverId, device, profile || null], 8000),
+  // Headroom over the drivers' own internal timeouts (generic input-mode waits up to 8s).
+  readBattery: (driverId, device, profile) => call('readBattery', [driverId, device, profile || null], 12000),
   // Must exceed inspector.js CAPTURE_MS (30s scan) plus channel open/close overhead.
   capture: (device) => call('capture', [device], 45000),
   stop: () => { if (child) { try { child.kill(); } catch (_) {} child = null; } rejectAll('hid client stopped'); },
