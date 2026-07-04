@@ -81,7 +81,6 @@ Open **Settings** in the sidebar:
 ## 🧯 Troubleshooting
 
 - **“Can’t read this device’s battery.”** Some devices block battery requests at the driver level — unfortunately those can’t be read.
-- **A headset won’t show up.** MCHOSE-style headsets need **Python** with the `hid` module installed (`pip install hid`). Mice/keyboards/controllers don’t need this.
 - **Nothing captured during a scan?** Run it again and be sure to **turn the device off and on** while it scans.
 - **It crashed?** A log is kept at `%APPDATA%\battery-hub\battery-hub.log` — helpful for reporting issues.
 
