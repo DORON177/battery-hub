@@ -702,6 +702,53 @@ async function refreshSettings() {
   await loadSettings();
 }
 
+// ---------- about / updates ----------
+
+async function initAbout() {
+  const versionEl = document.getElementById('app-version');
+  if (versionEl && window.batteryHub.getVersion) {
+    try { versionEl.textContent = `Version ${await window.batteryHub.getVersion()}`; } catch (_) {}
+  }
+
+  const btn = document.getElementById('check-updates-btn');
+  const row = document.getElementById('update-status-row');
+  const titleEl = document.getElementById('update-status-title');
+  const hintEl = document.getElementById('update-status-hint');
+  const dlBtn = document.getElementById('download-update-btn');
+  if (!btn || !window.batteryHub.checkForUpdates) return;
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = 'Checking…';
+    row.hidden = false;
+    dlBtn.hidden = true;
+    titleEl.textContent = 'Checking for updates…';
+    hintEl.textContent = '';
+    try {
+      const r = await window.batteryHub.checkForUpdates();
+      if (r.error) {
+        titleEl.textContent = "Couldn't check for updates";
+        hintEl.textContent = r.error;
+      } else if (r.hasUpdate) {
+        titleEl.textContent = `Update available — v${r.latest}`;
+        hintEl.textContent = `You have v${r.current}. Click Download, then run the installer.`;
+        dlBtn.hidden = false;
+        dlBtn.onclick = () => window.batteryHub.openExternal(r.downloadUrl);
+      } else {
+        titleEl.textContent = "You're up to date";
+        hintEl.textContent = `v${r.current} is the latest version.`;
+      }
+    } catch (e) {
+      titleEl.textContent = "Couldn't check for updates";
+      hintEl.textContent = e.message || 'Unknown error';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  });
+}
+
 // ---------- boot ----------
 
 // Keep the "Updated Xs ago" labels ticking between polls.
@@ -715,6 +762,7 @@ setInterval(() => {
 (async () => {
   wireSettingsControls();
   wireGridDnd();
+  initAbout();
   await loadSettings();
   await refreshDashboard();
 })();

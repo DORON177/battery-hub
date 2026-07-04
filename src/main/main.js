@@ -1,6 +1,10 @@
-const { app, BrowserWindow, ipcMain, nativeTheme, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, nativeTheme, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
+
+// Where update checks look — the public GitHub repo's latest release.
+const UPDATE_REPO = 'DORON177/battery-hub';
 
 // ---- Windows stability switches (must run before app 'ready') ----
 // This app lives in the tray and hides/shows its window constantly. Chromium's native
@@ -247,6 +251,61 @@ ipcMain.handle('settings:set', (evt, patch) => {
   if ('trayEnabled' in patch && patch.trayEnabled) restartPoller();
 
   return after;
+});
+
+// ---- IPC: updates ----
+
+// a > b for dotted numeric versions (e.g. "1.0.3" > "1.0.2")
+function isNewerVersion(a, b) {
+  const pa = String(a).split('.').map((n) => parseInt(n, 10) || 0);
+  const pb = String(b).split('.').map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    if ((pa[i] || 0) > (pb[i] || 0)) return true;
+    if ((pa[i] || 0) < (pb[i] || 0)) return false;
+  }
+  return false;
+}
+
+function fetchLatestRelease() {
+  return new Promise((resolve, reject) => {
+    const req = https.get({
+      hostname: 'api.github.com',
+      path: `/repos/${UPDATE_REPO}/releases/latest`,
+      headers: { 'User-Agent': 'Battery-Hub', Accept: 'application/vnd.github+json' },
+      timeout: 10000,
+    }, (res) => {
+      if (res.statusCode !== 200) { res.resume(); return reject(new Error(`GitHub returned ${res.statusCode}`)); }
+      let data = '';
+      res.on('data', (c) => { data += c; });
+      res.on('end', () => { try { resolve(JSON.parse(data)); } catch (e) { reject(e); } });
+    });
+    req.on('timeout', () => req.destroy(new Error('request timed out')));
+    req.on('error', reject);
+  });
+}
+
+ipcMain.handle('app:version', () => app.getVersion());
+
+ipcMain.handle('app:check-updates', async () => {
+  const current = app.getVersion();
+  try {
+    const rel = await fetchLatestRelease();
+    const latest = (rel.tag_name || '').replace(/^v/i, '');
+    const exe = (rel.assets || []).find((a) => /\.exe$/i.test(a.name));
+    return {
+      current,
+      latest,
+      hasUpdate: !!latest && isNewerVersion(latest, current),
+      downloadUrl: exe ? exe.browser_download_url : rel.html_url,
+      pageUrl: rel.html_url,
+    };
+  } catch (e) {
+    return { current, error: e.message };
+  }
+});
+
+ipcMain.handle('app:open-external', (evt, url) => {
+  if (/^https:\/\//i.test(url)) shell.openExternal(url);
 });
 
 // ---- IPC: window controls ----

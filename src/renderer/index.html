@@ -218,6 +218,24 @@
             </div>
           </div>
 
+          <div class="settings-group-title">About</div>
+          <div class="settings-panel">
+            <div class="settings-row">
+              <div class="settings-label">
+                <span class="settings-title">Battery Hub</span>
+                <span class="settings-hint" id="app-version">Version —</span>
+              </div>
+              <button class="btn btn-ghost" id="check-updates-btn">Check for updates</button>
+            </div>
+            <div class="settings-row" id="update-status-row" hidden>
+              <div class="settings-label">
+                <span class="settings-title" id="update-status-title"></span>
+                <span class="settings-hint" id="update-status-hint"></span>
+              </div>
+              <button class="btn btn-primary" id="download-update-btn" hidden>Download</button>
+            </div>
+          </div>
+
           <div class="settings-footer">
             <span>Battery Hub · monitoring your devices</span>
             <button class="btn btn-danger" id="quit-app-btn">Quit Battery Hub</button>
