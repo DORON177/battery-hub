@@ -64,6 +64,12 @@ if (!window.batteryHub) {
     onBatteryUpdate: () => () => {},
     getSettings: async () => ({ ...mockSettings }),
     setSettings: async (patch) => { mockSettings = { ...mockSettings, ...patch }; return { ...mockSettings }; },
+    getVersion: async () => '1.0.2',
+    checkForUpdates: async () => {
+      await new Promise((r) => setTimeout(r, 600));
+      return { current: '1.0.2', latest: '1.0.3', hasUpdate: true, downloadUrl: 'https://example.com/x.exe', pageUrl: 'https://example.com' };
+    },
+    openExternal: async () => {},
     minimizeWindow: () => {},
     closeWindow: () => {},
     quitApp: () => {},

@@ -20,6 +20,11 @@ contextBridge.exposeInMainWorld('batteryHub', {
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setSettings: (patch) => ipcRenderer.invoke('settings:set', patch),
 
+  // updates / app info
+  getVersion: () => ipcRenderer.invoke('app:version'),
+  checkForUpdates: () => ipcRenderer.invoke('app:check-updates'),
+  openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
+
   // window / app
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   closeWindow: () => ipcRenderer.send('window:close'),
