@@ -10,6 +10,7 @@ const path = require('path');
 // Windows' shell COM layer (combase.dll). Here we just load the matching file for a Tray.
 
 const TRAY_DIR = path.join(__dirname, '..', '..', 'assets', 'tray');
+const APP_ICON = path.join(__dirname, '..', '..', 'assets', 'icon.png');
 
 let handlers = { open: () => {}, quit: () => {} };
 let mode = 'perDevice';
@@ -37,6 +38,19 @@ function imageFor(fill, charging, offline) {
     imageCache.set(file, img);
   }
   return { img, file };
+}
+
+// The app's own logo, resized to a crisp tray size and cached. Used in 'list'
+// mode, where the single icon represents Battery Hub as a whole rather than one
+// device's battery level.
+let appImg = null;
+function appImage() {
+  if (!appImg) {
+    let img = nativeImage.createFromPath(APP_ICON);
+    if (!img.isEmpty()) img = img.resize({ width: 16, height: 16, quality: 'best' });
+    appImg = img;
+  }
+  return appImg;
 }
 
 function statusText(info) {
@@ -101,16 +115,9 @@ function renderList() {
     return;
   }
 
-  // Icon reflects the lowest-charge online device (so the tray still conveys urgency);
-  // if none are online, show the offline glyph.
-  let lowest = null;
-  for (const d of list) {
-    if (d.offline || d.capacity == null) continue;
-    if (!lowest || d.capacity < lowest.capacity) lowest = d;
-  }
-  const { img } = lowest
-    ? imageFor(lowest.capacity, lowest.charging, false)
-    : imageFor(null, false, true);
+  // A single icon standing for the app as a whole — show Battery Hub's own logo.
+  // Per-device levels live in the tooltip + right-click menu built below.
+  const img = appImage();
 
   if (!listTray) {
     listTray = new Tray(img);
