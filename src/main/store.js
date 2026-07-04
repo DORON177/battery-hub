@@ -10,7 +10,8 @@ const DEFAULT_SETTINGS = {
   notifyEnabled: true,
   notifyThreshold: 20,      // notify when battery drops below this %
   notifyCharged: false,     // notify when a device finishes charging
-  trayEnabled: true,        // show per-device tray icons
+  trayEnabled: true,        // show tray battery icons
+  trayMode: 'perDevice',    // 'perDevice' | 'list'
   closeToTray: true,        // hide to tray instead of quitting on close
   launchAtLogin: false,
   startMinimized: false,

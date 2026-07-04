@@ -714,39 +714,53 @@ async function initAbout() {
   const row = document.getElementById('update-status-row');
   const titleEl = document.getElementById('update-status-title');
   const hintEl = document.getElementById('update-status-hint');
-  const dlBtn = document.getElementById('download-update-btn');
+  const installBtn = document.getElementById('install-update-btn');
   if (!btn || !window.batteryHub.checkForUpdates) return;
 
-  btn.addEventListener('click', async () => {
-    btn.disabled = true;
-    const original = btn.textContent;
-    btn.textContent = 'Checking…';
+  let manual = false; // whether the in-flight check was user-initiated (verbose vs quiet)
+
+  const show = (title, hint, showInstall) => {
     row.hidden = false;
-    dlBtn.hidden = true;
-    titleEl.textContent = 'Checking for updates…';
-    hintEl.textContent = '';
-    try {
-      const r = await window.batteryHub.checkForUpdates();
-      if (r.error) {
-        titleEl.textContent = "Couldn't check for updates";
-        hintEl.textContent = r.error;
-      } else if (r.hasUpdate) {
-        titleEl.textContent = `Update available — v${r.latest}`;
-        hintEl.textContent = `You have v${r.current}. Click Download, then run the installer.`;
-        dlBtn.hidden = false;
-        dlBtn.onclick = () => window.batteryHub.openExternal(r.downloadUrl);
-      } else {
-        titleEl.textContent = "You're up to date";
-        hintEl.textContent = `v${r.current} is the latest version.`;
+    titleEl.textContent = title;
+    hintEl.textContent = hint || '';
+    installBtn.hidden = !showInstall;
+  };
+  const hideRow = () => { row.hidden = true; installBtn.hidden = true; };
+  const resetBtn = () => { btn.disabled = false; btn.textContent = 'Check for updates'; };
+
+  // Real update progress arrives asynchronously from electron-updater via this channel.
+  if (window.batteryHub.onUpdateEvent) {
+    window.batteryHub.onUpdateEvent((e) => {
+      switch (e.status) {
+        case 'checking': if (manual) show('Checking for updates…', ''); break;
+        case 'available': show(`Update available — v${e.version}`, 'Downloading in the background…', false); break;
+        case 'downloading': show('Downloading update…', `${e.percent}%`, false); break;
+        case 'downloaded':
+          show(`Update ready — v${e.version}`, 'Restart to finish installing.', true);
+          installBtn.onclick = () => window.batteryHub.installUpdate();
+          break;
+        case 'not-available': manual ? show("You're up to date", 'You have the latest version.', false) : hideRow(); break;
+        case 'error': manual ? show("Couldn't check for updates", e.message || '', false) : hideRow(); break;
       }
-    } catch (e) {
-      titleEl.textContent = "Couldn't check for updates";
-      hintEl.textContent = e.message || 'Unknown error';
-    } finally {
-      btn.disabled = false;
-      btn.textContent = original;
-    }
-  });
+      resetBtn();
+    });
+  }
+
+  // The Download/Restart button only ever appears when an update is downloaded (i.e. you're
+  // not up to date). When up to date, the row stays hidden on the automatic check.
+  async function runCheck(isManual) {
+    manual = isManual;
+    if (isManual) { btn.disabled = true; btn.textContent = 'Checking…'; show('Checking for updates…', ''); installBtn.hidden = true; }
+    let r;
+    try { r = await window.batteryHub.checkForUpdates(); }
+    catch (e) { r = { status: 'error', message: e.message }; }
+    if (r && r.status === 'dev') { if (isManual) show('Updates run automatically in the installed app', `v${r.version}`, false); resetBtn(); }
+    else if (r && r.status === 'error') { if (isManual) show("Couldn't check for updates", r.message || '', false); resetBtn(); }
+    // 'checking' -> real result comes through onUpdateEvent
+  }
+
+  btn.addEventListener('click', () => runCheck(true));
+  runCheck(false); // silent auto-check on load
 }
 
 // ---------- boot ----------

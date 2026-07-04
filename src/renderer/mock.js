@@ -41,7 +41,7 @@ if (!window.batteryHub) {
   let mockSettings = {
     pollIntervalSec: 60, theme: 'system', density: 'detailed', accent: '#0a84ff',
     notifyEnabled: true, notifyThreshold: 20, notifyCharged: false,
-    trayEnabled: true, closeToTray: true, launchAtLogin: false, startMinimized: false,
+    trayEnabled: true, trayMode: 'perDevice', closeToTray: true, launchAtLogin: false, startMinimized: false,
   };
 
   window.batteryHub = {
@@ -64,11 +64,16 @@ if (!window.batteryHub) {
     onBatteryUpdate: () => () => {},
     getSettings: async () => ({ ...mockSettings }),
     setSettings: async (patch) => { mockSettings = { ...mockSettings, ...patch }; return { ...mockSettings }; },
-    getVersion: async () => '1.0.2',
+    getVersion: async () => '1.1.0',
+    onUpdateEvent: (cb) => { window.__updateCb = cb; return () => { window.__updateCb = null; }; },
     checkForUpdates: async () => {
-      await new Promise((r) => setTimeout(r, 600));
-      return { current: '1.0.2', latest: '1.0.3', hasUpdate: true, downloadUrl: 'https://example.com/x.exe', pageUrl: 'https://example.com' };
+      const fire = (d) => { if (window.__updateCb) window.__updateCb(d); };
+      setTimeout(() => fire({ status: 'available', version: '1.1.1' }), 300);
+      setTimeout(() => fire({ status: 'downloading', percent: 42 }), 600);
+      setTimeout(() => fire({ status: 'downloaded', version: '1.1.1' }), 1000);
+      return { status: 'checking', version: '1.1.0' };
     },
+    installUpdate: async () => { window.__installed = true; },
     openExternal: async () => {},
     minimizeWindow: () => {},
     closeWindow: () => {},

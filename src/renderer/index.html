@@ -183,6 +183,16 @@
             </div>
             <div class="settings-row" data-depends="trayEnabled">
               <div class="settings-label">
+                <span class="settings-title">Tray layout</span>
+                <span class="settings-hint">One icon per device, or a single icon listing them all.</span>
+              </div>
+              <div class="segmented" data-setting="trayMode">
+                <button data-value="perDevice">Per device</button>
+                <button data-value="list">Single list</button>
+              </div>
+            </div>
+            <div class="settings-row" data-depends="trayEnabled">
+              <div class="settings-label">
                 <span class="settings-title">Close to tray</span>
                 <span class="settings-hint">Keep running in the tray when the window closes.</span>
               </div>
@@ -232,7 +242,7 @@
                 <span class="settings-title" id="update-status-title"></span>
                 <span class="settings-hint" id="update-status-hint"></span>
               </div>
-              <button class="btn btn-primary" id="download-update-btn" hidden>Download</button>
+              <button class="btn btn-primary" id="install-update-btn" hidden>Restart &amp; install</button>
             </div>
           </div>
 
