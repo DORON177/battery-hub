@@ -1,0 +1,38 @@
+name: Release
+
+# Build the Windows installer and publish a GitHub Release whenever a version
+# tag (e.g. v1.1.2) is pushed. Runs on a Windows CI runner, which has the symlink
+# privileges electron-builder's winCodeSign step needs — so it avoids the local
+# "A required privilege is not held by the client" build failure.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # needed to create the GitHub Release and upload assets
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      # electron-builder reads GH_TOKEN to publish. By default it creates a
+      # *draft* release with the installer .exe, latest.yml and blockmap
+      # attached — review it on the Releases page and click "Publish" to make it
+      # live to the auto-updater.
+      - name: Build and publish
+        run: npm run dist -- --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
