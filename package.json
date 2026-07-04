@@ -1,0 +1,47 @@
+{
+  "name": "battery-hub",
+  "version": "1.0.2",
+  "description": "Live battery monitor for all your HID devices",
+  "author": "doron",
+  "main": "src/main/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0",
+    "node-hid": "^3.1.2"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.doron.batteryhub",
+    "productName": "Battery Hub",
+    "asar": false,
+    "npmRebuild": false,
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Battery Hub"
+    }
+  },
+  "allowScripts": {
+    "electron@33.4.11": true,
+    "node-hid@3.3.0": true
+  }
+}

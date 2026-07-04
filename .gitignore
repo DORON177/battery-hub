@@ -1,0 +1,11 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+
+# logs & local scratch
+*.log
+
+# local editor / tooling config
+.claude/
