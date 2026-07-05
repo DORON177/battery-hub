@@ -224,6 +224,7 @@ function buildDeviceCard(dev) {
 
   menuBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    document.querySelectorAll('.icon-picker').forEach((p) => p.remove()); // close any open icon picker
     document.querySelectorAll('.menu-dropdown').forEach((d) => { if (d !== dropdown) d.hidden = true; });
     dropdown.hidden = !dropdown.hidden;
   });
@@ -653,8 +654,8 @@ function startRename(card, dev) {
 
 // A small, device-flavoured emoji palette. Picking one stores a customIcon override;
 // "Auto" clears it and falls back to iconFor().
-// Peripherals only — the kinds of battery devices Battery Hub actually tracks.
-const ICON_CHOICES = ['🖱️', '⌨️', '🎧', '🎮', '🕹️', '🎤', '🔊', '📷', '🖊️', '⌚'];
+// Computer peripherals only.
+const ICON_CHOICES = ['🖱️', '⌨️', '🎧', '🎤', '🔊', '📷', '🎮', '🖊️'];
 
 function openIconPicker(card, dev) {
   document.querySelectorAll('.icon-picker').forEach((p) => p.remove()); // one at a time
