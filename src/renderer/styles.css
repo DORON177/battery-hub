@@ -348,7 +348,11 @@ html, body {
   border: 1px solid var(--border);
   border-radius: 11px;
   margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
 }
+.device-type-icon:hover { background: var(--card-hover-bg); border-color: var(--accent); transform: scale(1.08); }
+.device-type-icon:active { transform: scale(0.96); }
 .device-name { font-size: 14px; font-weight: 600; letter-spacing: -0.1px; line-height: 1.25; }
 .name-edit {
   width: 90%; text-align: center; font-size: 14px; font-weight: 600;
