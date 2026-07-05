@@ -67,20 +67,29 @@ function formatDuration(hours) {
   return `${Math.max(5, Math.round(hours * 60))}m`;
 }
 
-// Rough linear time-to-empty from recent discharging samples; null if too little signal.
-function estimateHoursLeft(history) {
-  if (!history || history.length < 2) return null;
-  const now = Date.now();
-  const recent = history.filter((p) => p.t >= now - 24 * 3600 * 1000 && !p.ch);
-  if (recent.length < 2) return null;
-  const first = recent[0];
-  const last = recent[recent.length - 1];
-  const hours = (last.t - first.t) / 3600000;
-  const drop = first.c - last.c;
-  if (hours < 0.5 || drop < 2) return null; // need a real downward trend
-  const ratePerHour = drop / hours;
+// Time-to-empty from the whole persisted history. We sum every genuine *discharging*
+// interval (skipping charging stretches and implausibly long gaps) to get an average
+// drain rate, then divide the live capacity by it. Because the history is persisted, this
+// keeps refining across restarts and picks up where it left off rather than resetting.
+function estimateHoursLeft(history, currentCap) {
+  if (currentCap == null || !history || history.length < 2) return null;
+  let totalDrop = 0;   // % of battery lost
+  let totalHours = 0;  // over this many hours of real discharging
+  for (let i = 1; i < history.length; i++) {
+    const a = history[i - 1];
+    const b = history[i];
+    if (a.ch || b.ch) continue;             // ignore any interval touching a charge
+    const drop = a.c - b.c;                 // positive => discharged
+    const hours = (b.t - a.t) / 3600000;
+    if (drop <= 0 || hours <= 0) continue;  // skip flat / rising / bad-timestamp intervals
+    if (hours > 72) continue;               // skip multi-day gaps (device off / unused)
+    totalDrop += drop;
+    totalHours += hours;
+  }
+  if (totalDrop < 2 || totalHours < 0.25) return null; // not enough signal yet
+  const ratePerHour = totalDrop / totalHours;
   if (ratePerHour <= 0) return null;
-  return last.c / ratePerHour;
+  return currentCap / ratePerHour;
 }
 
 function renderHistory(card, dev, charging, offline) {
@@ -96,7 +105,8 @@ function renderHistory(card, dev, charging, offline) {
 
   let est = '';
   if (!offline && !charging) {
-    const hoursLeft = estimateHoursLeft(dev.history);
+    const currentCap = dev.lastReading ? dev.lastReading.capacity : null;
+    const hoursLeft = estimateHoursLeft(dev.history, currentCap);
     if (hoursLeft != null) est = `~${formatDuration(hoursLeft)} left`;
   }
   card.estimateEl.textContent = est;
@@ -229,7 +239,9 @@ function buildDeviceCard(dev) {
     dropdown.hidden = true;
     startRename(card, dev);
   });
-  el.querySelector('.menu-change-icon').addEventListener('click', (e) => {
+  // Change the icon by clicking the icon itself (no longer a ⋯ menu item).
+  const typeIcon = el.querySelector('.device-type-icon');
+  typeIcon.addEventListener('click', (e) => {
     e.stopPropagation();
     dropdown.hidden = true;
     openIconPicker(card, dev);
@@ -641,7 +653,8 @@ function startRename(card, dev) {
 
 // A small, device-flavoured emoji palette. Picking one stores a customIcon override;
 // "Auto" clears it and falls back to iconFor().
-const ICON_CHOICES = ['🖱️', '⌨️', '🎧', '🎮', '🕹️', '🎤', '🔊', '🖥️', '💻', '📱', '⌚', '🖊️', '🎚️', '📷', '🔋', '🔌', '🪫', '🎛️'];
+// Peripherals only — the kinds of battery devices Battery Hub actually tracks.
+const ICON_CHOICES = ['🖱️', '⌨️', '🎧', '🎮', '🕹️', '🎤', '🔊', '📷', '🖊️', '⌚'];
 
 function openIconPicker(card, dev) {
   document.querySelectorAll('.icon-picker').forEach((p) => p.remove()); // one at a time
