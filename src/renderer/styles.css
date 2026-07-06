@@ -644,8 +644,10 @@ html, body {
 .settings-group-title:first-of-type { margin-top: 4px; }
 .settings-panel {
   background: var(--panel-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  /* No own backdrop-filter: with hardware acceleration off (main.js), a per-panel
+     backdrop blur is re-rendered on the CPU every scrolled frame and breaks the
+     composited-scroll fast path — the Settings view stutters. The window's native
+     acrylic already supplies the glass backdrop (same rationale as .sidebar). */
   border: none;
   border-radius: var(--radius-lg);
   max-width: 540px;
