@@ -8,6 +8,8 @@
 </head>
 <body>
   <div class="app">
+    <!-- full-window drifting color bubbles behind every glass surface (titlebar included) -->
+    <div class="bg-bubbles" aria-hidden="true"><span></span><span></span><span></span></div>
     <div class="titlebar">
       <div class="titlebar-title">Battery Hub</div>
       <div class="window-controls">
@@ -19,6 +21,19 @@
         </button>
       </div>
     </div>
+
+    <!-- Liquid-glass refraction filter: feTurbulence drives a displacement map that
+         warps whatever sits behind a glass surface (used via backdrop-filter: url()).
+         Chromium-only, which is fine — this app IS Chromium. -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <defs>
+        <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012" numOctaves="2" seed="14" result="noise"/>
+          <feGaussianBlur in="noise" stdDeviation="2.5" result="soft"/>
+          <feDisplacementMap in="SourceGraphic" in2="soft" scale="72" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+    </svg>
 
     <div class="body">
       <nav class="sidebar">
@@ -141,6 +156,13 @@
                 <button data-value="detailed">Detailed</button>
                 <button data-value="compact">Compact</button>
               </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-label">
+                <span class="settings-title">Reduce animations</span>
+                <span class="settings-hint">Turn off motion and hover effects for a calmer, faster feel.</span>
+              </div>
+              <button class="toggle" data-setting="reduceMotion" role="switch"><span class="toggle-knob"></span></button>
             </div>
           </div>
 
@@ -270,14 +292,15 @@
       <div class="gauge-wrap">
         <svg viewBox="0 0 120 120" class="gauge">
           <defs>
+            <!-- glassy 3-stop gradients: a bright glossy highlight, the core color, a deeper edge -->
             <linearGradient id="gradHigh" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#30d158"/><stop offset="100%" stop-color="#63e6be"/>
+              <stop offset="0%" stop-color="#7bf5a8"/><stop offset="45%" stop-color="#34d15f"/><stop offset="100%" stop-color="#12a848"/>
             </linearGradient>
             <linearGradient id="gradMid" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ff9f0a"/><stop offset="100%" stop-color="#ffd60a"/>
+              <stop offset="0%" stop-color="#ffe08a"/><stop offset="45%" stop-color="#ffb02e"/><stop offset="100%" stop-color="#f08400"/>
             </linearGradient>
             <linearGradient id="gradLow" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ff375f"/><stop offset="100%" stop-color="#ff453a"/>
+              <stop offset="0%" stop-color="#ff8a94"/><stop offset="45%" stop-color="#ff5a52"/><stop offset="100%" stop-color="#e5352c"/>
             </linearGradient>
           </defs>
           <circle cx="60" cy="60" r="52" class="gauge-track" />
