@@ -101,6 +101,29 @@ function showWindow() {
   mainWindow.focus();
 }
 
+// Windows 11 gives frameless/translucent windows hard square corners; ask DWM to
+// round them (DWMWA_WINDOW_CORNER_PREFERENCE = 33, DWMWCP_ROUND = 2) so the app
+// matches native rounded windows. Done via a one-shot PowerShell P/Invoke so we
+// need no native module; fails silently on older Windows.
+function roundWindowCorners(win) {
+  try {
+    const buf = win.getNativeWindowHandle();
+    const hwnd = buf.length === 8 ? buf.readBigInt64LE(0).toString() : buf.readInt32LE(0).toString();
+    const script =
+      'Add-Type @"\n' +
+      'using System;using System.Runtime.InteropServices;\n' +
+      'public class Dwm{[DllImport("dwmapi.dll")]public static extern int DwmSetWindowAttribute(IntPtr h,int a,ref int v,int s);}\n' +
+      '"@\n' +
+      `$h=[IntPtr]${hwnd};$v=2;[Dwm]::DwmSetWindowAttribute($h,33,[ref]$v,4)`;
+    require('child_process').execFile(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-Command', script],
+      { windowsHide: true },
+      () => {}
+    );
+  } catch (_) {}
+}
+
 function createWindow(forceShow) {
   const startMinimized = !forceShow && (store.getSetting('startMinimized') || process.argv.includes('--hidden'));
 
@@ -110,7 +133,11 @@ function createWindow(forceShow) {
     minWidth: 720,
     minHeight: 500,
     show: false,
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#1c1c1e' : '#ececef',
+    // Translucent window: Windows 11 native acrylic blurs the desktop/other windows
+    // behind us, so the app's glass surfaces show a real glimpse of what's behind it.
+    // A transparent backgroundColor lets the acrylic backdrop show through.
+    backgroundColor: '#00000000',
+    backgroundMaterial: 'acrylic',
     frame: false,
     titleBarStyle: 'hidden',
     icon: ICON,
@@ -124,6 +151,10 @@ function createWindow(forceShow) {
   mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
 
   mainWindow.once('ready-to-show', () => {
+    // Re-assert the acrylic backdrop (some Windows/Electron builds ignore the
+    // constructor option but honor the setter once the window exists).
+    try { mainWindow.setBackgroundMaterial('acrylic'); } catch (_) {}
+    roundWindowCorners(mainWindow);
     if (!startMinimized) mainWindow.show();
   });
 

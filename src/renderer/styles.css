@@ -1,46 +1,86 @@
+/* ============================================================
+   Design tokens — a Google Material 3 / Microsoft Fluent / Apple
+   inspired language. Light: soft blue-tinted surface, white cards,
+   diffuse shadows. Dark: deep neutral surfaces with tonal elevation
+   (cards sit lighter than the background) and a soft blue accent.
+   ============================================================ */
+/* ============================================================
+   Design tokens — "liquid glass" language (iOS-style).
+   Light: white tinted glass over a soft blue wash.
+   Dark: blue-tinted smoked glass over a deep backdrop.
+   Cards are translucent with a real backdrop blur; the glossy
+   "bubble" finish comes from inset highlights + a top sheen,
+   and soft animated color blobs drift behind everything.
+   ============================================================ */
 :root {
-  --bg: #ececef;
-  --titlebar-bg: rgba(236, 236, 239, 0.6);
-  --sidebar-bg: rgba(240, 240, 243, 0.55);
-  --card-bg: rgba(255, 255, 255, 0.66);
-  --card-hover-bg: rgba(255, 255, 255, 0.85);
-  --panel-bg: #f7f7f9; /* opaque equivalent of --card-bg, for filter-free panels */
-  --text: #1d1d1f;
-  --text-secondary: #86868b;
-  --text-tertiary: #a1a1a6;
-  --border: rgba(0, 0, 0, 0.08);
-  --border-strong: rgba(0, 0, 0, 0.12);
-  --accent: #0a84ff;
-  --accent-hover: #0071e3;
-  --green: #34c759;
-  --green-soft: rgba(52, 199, 89, 0.16);
-  --yellow: #ff9f0a;
-  --red: #ff3b30;
-  --hover-fill: rgba(0, 0, 0, 0.05);
-  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-pop: 0 10px 34px rgba(0, 0, 0, 0.14);
-  --radius-xl: 22px;
-  --radius-lg: 16px;
-  --radius-md: 11px;
-  --radius-sm: 8px;
+  --bg: rgba(240, 240, 241, 0.60);  /* neutral translucent — no color of its own */
+  --titlebar-bg: rgba(255, 255, 255, 0.46);
+  --sidebar-bg: rgba(255, 255, 255, 0.42);
+  --card-bg: rgba(255, 255, 255, 0.56);
+  --card-hover-bg: rgba(255, 255, 255, 0.72);
+  --panel-bg: rgba(255, 255, 255, 0.56);  /* neutral white glass */
+  --panel-hover-bg: rgba(255, 255, 255, 0.72);
+  --glass-blur: blur(22px) saturate(170%);
+  --glass-edge: rgba(255, 255, 255, 0.75);        /* bright rim on top edge */
+  --glass-edge-soft: rgba(255, 255, 255, 0.35);   /* rim on the rest */
+  --glass-sheen: linear-gradient(165deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.12) 38%, rgba(255, 255, 255, 0) 62%);
+  --specular: rgba(255, 255, 255, 0.35); /* mouse-tracked glass reflection */
+  --text: #1a1c1e;
+  --text-secondary: #5b6068;
+  --text-tertiary: #969ca6;
+  --border: rgba(0, 0, 0, 0.07);
+  --border-strong: rgba(0, 0, 0, 0.11);
+  --accent: #0b57d0;
+  --accent-hover: #0a4bb5;
+  --accent-soft: rgba(11, 87, 208, 0.12); /* tinted pill / selection */
+  --green: #1e8e3e;
+  --green-soft: rgba(30, 142, 62, 0.12);
+  --yellow: #f29900;
+  --red: #d93025;
+  --hover-fill: rgba(255, 255, 255, 0.45);
+  --shadow-card: 0 1px 3px rgba(60, 70, 90, 0.04), 0 6px 16px rgba(60, 70, 90, 0.06);
+  --shadow-pop: 0 8px 22px rgba(60, 70, 90, 0.12);
+  --blob-a: rgba(90, 140, 255, 0.18);
+  --blob-b: rgba(150, 110, 255, 0.14);
+  --blob-c: rgba(60, 200, 140, 0.12);
+  --radius-xl: 8px;
+  --radius-lg: 6px;
+  --radius-md: 5px;
+  --radius-sm: 4px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1c1c1e;
-    --titlebar-bg: rgba(28, 28, 30, 0.55);
-    --sidebar-bg: rgba(32, 32, 34, 0.5);
-    --card-bg: rgba(48, 48, 51, 0.55);
-    --card-hover-bg: rgba(58, 58, 61, 0.72);
-    --panel-bg: #2a2a2d; /* opaque equivalent of --card-bg, for filter-free panels */
-    --text: #f5f5f7;
-    --text-secondary: #98989d;
-    --text-tertiary: #6e6e73;
-    --border: rgba(255, 255, 255, 0.09);
-    --border-strong: rgba(255, 255, 255, 0.14);
-    --hover-fill: rgba(255, 255, 255, 0.06);
-    --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.3);
-    --shadow-pop: 0 12px 38px rgba(0, 0, 0, 0.5);
+    --bg: rgba(20, 20, 22, 0.52);  /* neutral translucent — no color of its own */
+    --titlebar-bg: rgba(38, 38, 40, 0.46);
+    --sidebar-bg: rgba(36, 36, 38, 0.42);
+    --card-bg: rgba(52, 52, 55, 0.52);
+    --card-hover-bg: rgba(64, 64, 68, 0.64);
+    --panel-bg: rgba(52, 52, 55, 0.52);  /* neutral smoked glass */
+    --panel-hover-bg: rgba(64, 64, 68, 0.64);
+    --glass-blur: blur(22px) saturate(160%);
+    --glass-edge: rgba(255, 255, 255, 0.22);
+    --glass-edge-soft: rgba(255, 255, 255, 0.07);
+    --glass-sheen: linear-gradient(165deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 38%, rgba(255, 255, 255, 0) 62%);
+    --specular: rgba(255, 255, 255, 0.13);
+    --text: #e6e8ee;
+    --text-secondary: #a6acb8;
+    --text-tertiary: #71767f;
+    --border: rgba(255, 255, 255, 0.10);
+    --border-strong: rgba(255, 255, 255, 0.16);
+    --accent: #5c95ff;
+    --accent-hover: #79a9ff;
+    --accent-soft: rgba(92, 149, 255, 0.20);
+    --green: #5bb974;
+    --green-soft: rgba(91, 185, 116, 0.16);
+    --yellow: #fdd663;
+    --red: #f28b82;
+    --hover-fill: rgba(255, 255, 255, 0.07);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.22), 0 6px 16px rgba(0, 0, 0, 0.20);
+    --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.32);
+    --blob-a: rgba(70, 120, 255, 0.16);
+    --blob-b: rgba(140, 90, 255, 0.12);
+    --blob-c: rgba(40, 180, 130, 0.10);
   }
 }
 
@@ -66,6 +106,7 @@ html, body {
 
 /* ---------- titlebar ---------- */
 .titlebar {
+  position: relative; z-index: 2; /* above the fixed bubble layer, which it frosts */
   height: 38px;
   flex-shrink: 0;
   display: flex;
@@ -73,9 +114,11 @@ html, body {
   justify-content: space-between;
   padding: 0 12px 0 16px;
   background: var(--titlebar-bg);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  /* bright top rim + hairline bottom edge = frosted-glass strip */
+  box-shadow: inset 0 1px 0 var(--glass-edge), 0 1px 0 var(--glass-edge-soft);
+  border-bottom: 1px solid var(--glass-edge-soft);
   -webkit-app-region: drag;
 }
 .titlebar-title {
@@ -90,23 +133,69 @@ html, body {
   display: flex; align-items: center; justify-content: center;
   border: none; background: transparent; border-radius: 6px;
   color: var(--text-secondary); cursor: default;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
   -webkit-app-region: no-drag;
 }
 .wc-btn svg { fill: currentColor; stroke: currentColor; pointer-events: none; }
 .wc-btn:hover { background: var(--hover-fill); }
+.wc-btn:active { transform: scale(0.86); }
 .wc-close:hover { background: var(--red); color: #fff; }
 
-.body { flex: 1; display: flex; min-height: 0; }
+.body { flex: 1; display: flex; min-height: 0; position: relative; z-index: 1; }
+
+/* ---------- liquid-glass backdrop: soft drifting color bubbles ----------
+   Two layers of large, soft radial blobs float slowly behind every glass
+   surface. They're what the backdrop blur "sees", which is also what keeps
+   the blur artifact-free (it needs smooth colorful content to sample). */
+.bg-bubbles {
+  display: none; /* removed — the app carries no color of its own; the acrylic backdrop tints it */
+}
+.bg-bubbles span {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+.bg-bubbles span:nth-child(1) {
+  width: 520px; height: 520px; left: -120px; top: -160px;
+  background: radial-gradient(circle at 35% 35%, var(--blob-a), transparent 70%);
+  animation: blobDrift1 26s ease-in-out infinite alternate;
+}
+.bg-bubbles span:nth-child(2) {
+  width: 460px; height: 460px; right: -140px; top: -80px;
+  background: radial-gradient(circle at 60% 40%, var(--blob-b), transparent 70%);
+  animation: blobDrift2 32s ease-in-out infinite alternate;
+}
+.bg-bubbles span:nth-child(3) {
+  width: 560px; height: 560px; left: 30%; bottom: -260px;
+  background: radial-gradient(circle at 50% 45%, var(--blob-c), transparent 70%);
+  animation: blobDrift3 38s ease-in-out infinite alternate;
+}
+@keyframes blobDrift1 { from { transform: translate(0, 0) scale(1); } to { transform: translate(90px, 70px) scale(1.15); } }
+@keyframes blobDrift2 { from { transform: translate(0, 0) scale(1.1); } to { transform: translate(-110px, 90px) scale(0.95); } }
+@keyframes blobDrift3 { from { transform: translate(0, 0) scale(1); } to { transform: translate(-80px, -70px) scale(1.12); } }
+
+.sidebar, .content { position: relative; z-index: 1; }
+
+/* fine frost grain over everything — kills the "flat plastic" feel of pure blur */
+.body::after {
+  content: '';
+  position: absolute; inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
 
 /* ---------- sidebar ---------- */
 .sidebar {
   width: 208px;
   flex-shrink: 0;
   background: var(--sidebar-bg);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border-right: 1px solid var(--border);
+  /* No own backdrop-filter: it sits over the acrylic (which already blurs the
+     desktop), and blurring the near-flat backdrop again produced vertical
+     banding streaks under software rendering. Staying translucent keeps the
+     glass look without the artifact. */
+  border-right: 1px solid var(--glass-edge-soft);
   display: flex;
   flex-direction: column;
   padding: 14px 12px 12px;
@@ -122,22 +211,39 @@ html, body {
 }
 .brand-name { font-size: 14.5px; font-weight: 600; letter-spacing: -0.3px; }
 
-.nav-items { display: flex; flex-direction: column; gap: 2px; }
+.nav-items { display: flex; flex-direction: column; gap: 3px; }
 .nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px;
+  position: relative; overflow: hidden; /* clips the click ripple to the pill */
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 14px;
   border: none; background: transparent;
   color: var(--text); font-size: 13px; font-weight: 500;
-  border-radius: var(--radius-sm);
+  border-radius: 999px; /* full pill */
   text-align: left; cursor: default;
-  transition: background 0.14s ease, color 0.14s ease;
+  transition: background 0.14s ease, color 0.14s ease, transform 0.1s ease;
+}
+.nav-item:active { transform: scale(0.965); }
+/* click ripple — a soft accent wave bursting out from the click point */
+.nav-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  transform: scale(0);
+  animation: navRipple 0.45s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes navRipple {
+  to { transform: scale(2.6); opacity: 0; }
 }
 .nav-item:hover { background: var(--hover-fill); }
 .nav-item.active {
-  background: linear-gradient(135deg, #0a84ff, #5e5ce6);
-  color: #fff;
-  box-shadow: 0 3px 10px rgba(10, 132, 255, 0.35);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+  animation: pillPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); /* springy select */
 }
+@keyframes pillPop { from { transform: scale(0.93); } to { transform: scale(1); } }
+.nav-item.active .nav-icon { opacity: 1; }
 .nav-icon { width: 16px; height: 16px; display: inline-flex; opacity: 0.9; }
 .nav-icon svg { fill: currentColor; stroke: currentColor; }
 .nav-item .nav-icon svg rect { stroke: none; }
@@ -157,18 +263,20 @@ html, body {
 /* ---------- content ---------- */
 .content {
   flex: 1; overflow-y: auto; padding: 26px 32px 48px;
-  background:
-    radial-gradient(760px 460px at 88% -12%, rgba(63, 107, 255, 0.13), transparent 62%),
-    radial-gradient(680px 420px at -8% -6%, rgba(123, 92, 255, 0.10), transparent 60%),
-    radial-gradient(720px 500px at 50% 118%, rgba(48, 209, 88, 0.07), transparent 62%);
+  /* transparent — the animated .bg-bubbles layer shows through */
 }
 .content::-webkit-scrollbar { width: 9px; }
 .content::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 5px; border: 2px solid transparent; background-clip: padding-box; }
 .content::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); background-clip: padding-box; }
 
 .view { display: none; }
-.view.active { display: block; animation: fadeIn 0.22s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.view.active { display: block; animation: viewIn 0.36s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes viewIn { from { opacity: 0; transform: translateY(14px) scale(0.985); } to { opacity: 1; transform: none; } }
+/* header + first panel lead the view in with a tiny stagger */
+.view.active > .view-header { animation: viewIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.view.active > .settings-group-title:first-of-type,
+.view.active > .device-grid,
+.view.active > .list { animation: viewIn 0.44s 0.05s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 .view-header {
   display: flex; align-items: flex-start; justify-content: space-between;
@@ -178,30 +286,35 @@ html, body {
   display: inline-block;
   font-size: 26px; font-weight: 680; letter-spacing: -0.7px; line-height: 1.3;
   padding: 0.06em 0.04em 0.02em;
-  background: linear-gradient(120deg, var(--text) 30%, color-mix(in srgb, var(--accent) 55%, var(--text)) 100%);
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent; color: transparent;
+  color: var(--text); /* solid heading — no gradient text */
 }
 .view-sub { font-size: 12.5px; color: var(--text-secondary); margin-top: 3px; }
 .header-with-back { display: flex; align-items: center; gap: 12px; }
 
 .btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  border: none; border-radius: 9px;
-  padding: 7px 13px;
+  display: inline-flex; align-items: center; gap: 7px;
+  border: none; border-radius: 999px; /* pill */
+  padding: 9px 18px;
   font-size: 12.5px; font-weight: 600;
   cursor: default;
-  transition: transform 0.08s ease, background 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.08s ease, background 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
   white-space: nowrap;
 }
-.btn:active { transform: scale(0.97); }
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: scale(0.96); }
 .btn svg { fill: none; stroke: currentColor; }
-.btn-ghost { background: var(--card-bg); color: var(--text); box-shadow: var(--shadow-card); border: 1px solid var(--border); }
-.btn-ghost:hover { background: var(--card-hover-bg); }
+.btn-ghost {
+  background: var(--card-bg); color: var(--text);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: none;
+  box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 0 1px var(--glass-edge-soft), var(--shadow-card);
+}
+.btn-ghost:hover { background: var(--panel-hover-bg); box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 0 1px var(--glass-edge-soft), var(--shadow-pop); }
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-primary:disabled { opacity: 0.5; }
-.btn-icon { padding: 7px; }
+.btn-icon { padding: 9px; }
 .refresh-icon { transition: transform 0.6s ease; }
 .btn.spinning .refresh-icon { animation: spin 0.7s linear infinite; }
 
@@ -214,21 +327,56 @@ html, body {
 
 .device-card {
   position: relative;
-  background: var(--card-bg);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid var(--border);
+  /* Liquid glass: the backdrop is warped by an SVG displacement filter
+     (real refraction) before a light blur — not just frosted, it bends
+     what's behind it. Bright top rim + inner edge complete the finish. */
+  background: var(--panel-bg);
+  backdrop-filter: url(#glass-distortion) blur(7px) saturate(170%);
+  -webkit-backdrop-filter: url(#glass-distortion) blur(7px) saturate(170%);
+  border: none;
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    inset 0 0 0 1px var(--glass-edge-soft),
+    var(--shadow-card);
   padding: 22px 16px 18px;
   display: flex; flex-direction: column; align-items: center;
   text-align: center;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.25s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
   animation: cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: calc(var(--i, 0) * 70ms);
 }
+/* glossy sheen sweeping from the top-left corner, like light on glass */
+.device-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: var(--glass-sheen);
+  pointer-events: none;
+}
+/* mouse-tracked specular highlight — the reflection follows the cursor,
+   like tilting real glass under a light (see trackSpecular in app.js) */
+.device-card::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(220px circle at var(--mx, 50%) var(--my, -30%),
+    var(--specular, rgba(255, 255, 255, 0.28)), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.device-card:hover::after { opacity: 1; }
+.device-card > * { position: relative; z-index: 1; } /* content above sheen + specular */
 @keyframes cardIn { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
-.device-card:hover { transform: translateY(-3px); background: var(--card-hover-bg); box-shadow: var(--shadow-pop); }
+.device-card:hover {
+  transform: translateY(-3px) scale(1.012);
+  background: var(--panel-hover-bg);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    inset 0 0 0 1px var(--glass-edge-soft),
+    var(--shadow-pop);
+}
 /* While dragging, hide the source card entirely — only the drag image + a moving gap show.
    Uses visibility (not opacity) because the cardIn entry animation's fill-mode overrides
    opacity; visibility isn't animated, so it reliably hides. animation:none also clears any
@@ -241,32 +389,37 @@ html, body {
   display: flex; align-items: center; justify-content: center;
   border: none; background: transparent; color: var(--text-tertiary);
   border-radius: 7px; cursor: default;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1);
   opacity: 0;
 }
 .icon-btn svg { fill: currentColor; }
 .device-card:hover .icon-btn { opacity: 1; }
-.icon-btn:hover { background: var(--hover-fill); color: var(--text); }
+.icon-btn:hover { background: var(--hover-fill); color: var(--text); transform: scale(1.12) rotate(90deg); }
+.icon-btn:active { transform: scale(0.9); }
 
 .menu-dropdown {
   position: absolute; right: 11px; top: 38px;
   min-width: 148px;
   background: var(--card-hover-bg);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border: 1px solid var(--border-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: none;
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-pop);
+  box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 0 1px var(--glass-edge-soft), var(--shadow-pop);
   overflow: hidden; z-index: 20;
   padding: 5px;
+  transform-origin: top right;
+  animation: menuPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+@keyframes menuPop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .menu-dropdown button {
   display: block; width: 100%; text-align: left;
   padding: 8px 10px; border: none; background: transparent;
   color: var(--text); font-size: 12.5px; font-weight: 500;
   border-radius: 7px; cursor: default;
+  transition: background 0.14s ease, transform 0.14s ease, padding 0.14s ease;
 }
-.menu-dropdown button:hover { background: var(--hover-fill); }
+.menu-dropdown button:hover { background: var(--hover-fill); padding-left: 14px; }
 .menu-remove { color: var(--red); }
 
 /* emoji picker popover (Change icon) — anchored like the menu, wide enough for a 6-col grid */
@@ -274,11 +427,13 @@ html, body {
   position: absolute; right: 11px; top: 38px; z-index: 25;
   width: 236px; padding: 10px;
   background: var(--card-hover-bg);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border: 1px solid var(--border-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: none;
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-pop);
+  box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 0 1px var(--glass-edge-soft), var(--shadow-pop);
+  transform-origin: top right;
+  animation: menuPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .icon-picker-head {
   display: flex; align-items: center; justify-content: space-between;
@@ -305,31 +460,21 @@ html, body {
 .icon-choice.selected { background: var(--hover-fill); box-shadow: inset 0 0 0 2px var(--accent); }
 
 .gauge-wrap { position: relative; width: 116px; height: 116px; margin-bottom: 14px; }
-/* soft ambient glow behind the ring, tinted by battery state */
-.gauge-wrap::before {
-  content: '';
-  position: absolute; inset: 12px;
-  border-radius: 50%;
-  background: var(--glow, transparent);
-  filter: blur(22px);
-  opacity: 0.35;
-  transition: background 0.5s ease;
-}
 .gauge { position: relative; width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
-.gauge-track { fill: none; stroke: var(--border-strong); stroke-width: 8.5; }
+.gauge-track { fill: none; stroke: var(--border-strong); stroke-width: 7; opacity: 0.6; }
 .gauge-fill {
   fill: none; stroke: url(#gradHigh); stroke-width: 8.5; stroke-linecap: round;
   stroke-dasharray: 326.7; stroke-dashoffset: 326.7;
-  transition: stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  /* soft colored glow (set per battery level) makes the ring read as luminous glass */
+  filter: drop-shadow(0 0 3px var(--ring-glow, transparent));
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease;
 }
 .gauge-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; }
 .gauge-value { display: flex; align-items: center; justify-content: center; gap: 1px; }
 .gauge-pct {
   font-size: 25px; font-weight: 700; letter-spacing: -1px; font-variant-numeric: tabular-nums;
   line-height: 1;
-  background-image: var(--pct-grad, linear-gradient(180deg, var(--text), var(--text)));
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent; color: transparent;
+  color: var(--pct-color, var(--text)); /* solid color, no gradient text */
 }
 .gauge-pct.small {
   font-size: 15px; font-weight: 600; letter-spacing: -0.2px;
@@ -385,7 +530,12 @@ html, body {
 .charge-pill svg { fill: currentColor; }
 
 /* ---- charging state ---- */
-.device-card.charging { border-color: rgba(52, 199, 89, 0.4); }
+.device-card.charging {
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    inset 0 0 0 1.5px rgba(52, 199, 89, 0.45),
+    var(--shadow-card);
+}
 .device-card.charging .gauge-fill { animation: chargePulse 1.9s ease-in-out infinite; }
 .device-card.charging .gauge-track { animation: trackGlow 1.9s ease-in-out infinite; }
 .device-card.charging .charge-pill { display: inline-flex; }
@@ -408,16 +558,23 @@ html, body {
 .list { display: flex; flex-direction: column; gap: 10px; }
 .list-item {
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  background: var(--card-bg);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: none;
   border-radius: var(--radius-lg);
   padding: 14px 16px;
-  box-shadow: var(--shadow-card);
-  transition: background 0.15s ease;
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    inset 0 0 0 1px var(--glass-edge-soft),
+    var(--shadow-card);
+  transition: background 0.15s ease, transform 0.16s ease, box-shadow 0.16s ease;
 }
-.list-item:hover { background: var(--card-hover-bg); }
+.list-item:hover {
+  background: var(--card-hover-bg);
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 0 1px var(--glass-edge-soft), var(--shadow-pop);
+}
 .list-item-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .list-item-emoji { font-size: 20px; flex-shrink: 0; }
 .list-item-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -432,13 +589,16 @@ html, body {
 /* ---------- calibrate ---------- */
 .calibrate-body { max-width: 720px; }
 .step-card {
-  background: var(--card-bg);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: none;
   border-radius: var(--radius-lg);
   padding: 20px; margin-bottom: 14px;
-  box-shadow: var(--shadow-card);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    inset 0 0 0 1px var(--glass-edge-soft),
+    var(--shadow-card);
 }
 .step-title { font-size: 13.5px; font-weight: 700; margin-bottom: 7px; }
 .step-desc { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.55; }
@@ -473,7 +633,7 @@ html, body {
 .scan-tip-icon { font-size: 18px; line-height: 1.3; flex-shrink: 0; }
 .scan-live-head { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 14px; }
 .scan-progress { height: 8px; border-radius: 999px; background: var(--hover-fill); overflow: hidden; }
-.scan-bar { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #30d158, #63e6be); transition: width 0.15s linear; }
+.scan-bar { height: 100%; width: 0; border-radius: 999px; background: var(--green); transition: width 0.15s linear; }
 .scan-remaining { margin-top: 8px; font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 
 /* ---------- settings ---------- */
@@ -483,18 +643,20 @@ html, body {
 }
 .settings-group-title:first-of-type { margin-top: 4px; }
 .settings-panel {
-  /* Opaque background (no backdrop-filter): the settings view is a tall stack of
-     these panels, and re-blurring the backdrop behind each one every frame made
-     scrolling janky. The gradient behind is faint, so a flat surface looks the
-     same and scrolls smoothly. */
   background: var(--panel-bg);
-  border: 1px solid var(--border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: none;
   border-radius: var(--radius-lg);
   max-width: 540px;
-  box-shadow: var(--shadow-card);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    inset 0 0 0 1px var(--glass-edge-soft),
+    var(--shadow-card);
   overflow: hidden;
 }
-.settings-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; }
+.settings-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; transition: background 0.16s ease; }
+.settings-row:hover { background: var(--hover-fill); }
 .settings-row + .settings-row { border-top: 1px solid var(--border); }
 .settings-row.disabled { opacity: 0.4; pointer-events: none; }
 .settings-label { display: flex; flex-direction: column; gap: 2px; }
@@ -508,28 +670,46 @@ html, body {
 .toggle {
   position: relative; width: 42px; height: 25px; flex-shrink: 0;
   border: none; border-radius: 999px; background: var(--border-strong);
-  cursor: default; transition: background 0.22s ease; padding: 0;
+  cursor: default; transition: background 0.22s ease, transform 0.12s ease; padding: 0;
 }
+.toggle:active { transform: scale(0.94); }
 .toggle-knob {
   position: absolute; top: 2.5px; left: 2.5px; width: 20px; height: 20px;
-  border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-  transition: transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+  border-radius: 999px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  /* springy slide with a touch of overshoot => gel feel */
+  transition: transform 0.36s cubic-bezier(0.34, 1.55, 0.5, 1);
 }
 .toggle.on { background: var(--accent); }
 .toggle.on .toggle-knob { transform: translateX(17px); }
+/* elongate toward the direction of travel while pressed (the iOS liquid stretch) */
+.toggle:active .toggle-knob { transform: scaleX(1.35); transform-origin: left center; }
+.toggle.on:active .toggle-knob { transform: translateX(17px) scaleX(1.35); transform-origin: right center; }
 
-/* segmented control */
+/* segmented control — a glass "thumb" slides + squishes between options */
 .segmented {
+  position: relative;
   display: inline-flex; background: var(--hover-fill);
   border-radius: 9px; padding: 2px; gap: 2px;
 }
+.seg-thumb {
+  position: absolute; top: 2px; left: 0; height: calc(100% - 4px);
+  border-radius: 7px;
+  background: var(--card-hover-bg);
+  box-shadow: inset 0 1px 0 var(--glass-edge), 0 1px 3px rgba(0,0,0,0.14);
+  /* springy slide (transform) + a quick gel-squish (width) => liquid morph */
+  transition: transform 0.42s cubic-bezier(0.34, 1.4, 0.5, 1), width 0.42s cubic-bezier(0.34, 1.4, 0.5, 1);
+  pointer-events: none; z-index: 0;
+}
+.seg-thumb.armed { will-change: transform, width; }
 .segmented button {
+  position: relative; z-index: 1;
   border: none; background: transparent; color: var(--text-secondary);
   font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 7px;
-  cursor: default; transition: background 0.15s ease, color 0.15s ease;
+  cursor: default; transition: color 0.2s ease, transform 0.12s ease;
 }
 .segmented button:hover { color: var(--text); }
-.segmented button.active { background: var(--card-hover-bg); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.segmented button:active { transform: scale(0.92); }
+.segmented button.active { color: var(--text); }
 
 /* accent swatches */
 .swatches { display: inline-flex; gap: 8px; }
@@ -538,8 +718,9 @@ html, body {
   border: 2px solid transparent; cursor: default;
   transition: transform 0.12s ease; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
 }
-.swatches button:hover { transform: scale(1.12); }
-.swatches button.active { border-color: var(--text); }
+.swatches button:hover { transform: scale(1.18); }
+.swatches button:active { transform: scale(0.95); }
+.swatches button.active { border-color: var(--text); animation: pillPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
 .settings-footer {
   display: flex; align-items: center; justify-content: space-between;
@@ -566,3 +747,43 @@ body.density-compact .device-estimate { display: none; }
 
 .spinner { width: 16px; height: 16px; border: 2px solid var(--border-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- reduce animations ----------
+   Master kill switch (Settings → Reduce animations). Neutralizes every
+   animation, transition, hover-transform and the drifting background blobs.
+   Uses 0.001ms rather than `none` so JS that waits on animationend/transitionend
+   (e.g. the nav ripple cleanup) still fires. The spinner keeps turning — it's a
+   loading indicator, not decoration. */
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+body.reduce-motion .spinner { animation-duration: 0.7s !important; animation-iteration-count: infinite !important; }
+/* freeze the floating background blobs in place */
+body.reduce-motion .bg-bubbles span { animation: none !important; }
+/* drop hover/press transforms so nothing jumps without easing */
+body.reduce-motion .btn:hover,
+body.reduce-motion .btn:active,
+body.reduce-motion .list-item:hover,
+body.reduce-motion .device-card:hover,
+body.reduce-motion .icon-btn:hover,
+body.reduce-motion .icon-btn:active,
+body.reduce-motion .device-type-icon:hover,
+body.reduce-motion .device-type-icon:active,
+body.reduce-motion .segmented button:active,
+body.reduce-motion .toggle:active,
+body.reduce-motion .toggle:active .toggle-knob,
+body.reduce-motion .toggle.on:active .toggle-knob,
+body.reduce-motion .wc-btn:active,
+body.reduce-motion .swatches button:hover,
+body.reduce-motion .swatches button:active,
+body.reduce-motion .nav-item:active {
+  transform: none !important;
+}
+body.reduce-motion .device-card::after { display: none; } /* no cursor-tracked glare */

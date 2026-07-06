@@ -7,6 +7,7 @@ const DEFAULT_SETTINGS = {
   theme: 'system',          // 'system' | 'light' | 'dark'
   density: 'detailed',      // 'detailed' | 'compact'
   accent: '#0a84ff',        // accent color
+  reduceMotion: false,      // disable all UI animations/transitions
   notifyEnabled: true,
   notifyThreshold: 20,      // notify when battery drops below this %
   notifyCharged: false,     // notify when a device finishes charging

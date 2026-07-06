@@ -117,6 +117,22 @@ function renderHistory(card, dev, charging, offline) {
 document.getElementById('win-min').addEventListener('click', () => window.batteryHub.minimizeWindow && window.batteryHub.minimizeWindow());
 document.getElementById('win-close').addEventListener('click', () => window.batteryHub.closeWindow && window.batteryHub.closeWindow());
 
+// ---------- liquid-glass specular tracking ----------
+// The reflection highlight on each card follows the cursor (CSS reads --mx/--my
+// in the .device-card::after radial gradient). Delegated + rAF-throttled.
+
+let specularRaf = 0;
+document.addEventListener('mousemove', (e) => {
+  const card = e.target.closest && e.target.closest('.device-card');
+  if (!card || specularRaf) return;
+  specularRaf = requestAnimationFrame(() => {
+    specularRaf = 0;
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', `${((e.clientX - r.left) / r.width) * 100}%`);
+    card.style.setProperty('--my', `${((e.clientY - r.top) / r.height) * 100}%`);
+  });
+});
+
 // ---------- navigation ----------
 
 function switchView(view) {
@@ -130,7 +146,20 @@ function switchView(view) {
 }
 
 document.querySelectorAll('.nav-item[data-view]').forEach((el) => {
-  el.addEventListener('click', () => switchView(el.dataset.view));
+  el.addEventListener('click', (e) => {
+    if (document.body.classList.contains('reduce-motion')) { switchView(el.dataset.view); return; }
+    // ripple bursting out from the click point
+    const r = el.getBoundingClientRect();
+    const size = Math.max(r.width, r.height);
+    const ripple = document.createElement('span');
+    ripple.className = 'nav-ripple';
+    ripple.style.width = ripple.style.height = `${size}px`;
+    ripple.style.left = `${e.clientX - r.left - size / 2}px`;
+    ripple.style.top = `${e.clientY - r.top - size / 2}px`;
+    el.appendChild(ripple);
+    ripple.addEventListener('animationend', () => ripple.remove());
+    switchView(el.dataset.view);
+  });
 });
 
 // ---------- dashboard ----------
@@ -279,16 +308,18 @@ function buildDeviceCard(dev) {
   return card;
 }
 
-const GRAD_HIGH = 'linear-gradient(135deg, #30d158, #63e6be)';
-const GRAD_MID = 'linear-gradient(135deg, #ff9f0a, #ffd60a)';
-const GRAD_LOW = 'linear-gradient(135deg, #ff5f6d, #ff453a)';
+// Solid, flat colors (Apple-style) — no gradients on the ring or the number.
+const COLOR_HIGH = '#30d158';
+const COLOR_MID = '#ff9f0a';
+const COLOR_LOW = '#ff453a';
+const COLOR_OFF = '#8e8e93';
 
 function gaugeStyleFor(pct, charging, offline) {
-  if (offline) return { stroke: 'var(--text-tertiary)', glow: 'transparent', text: 'linear-gradient(180deg, #8e8e93, #8e8e93)' };
-  if (charging) return { stroke: 'url(#gradHigh)', glow: 'rgba(52, 199, 89, 0.55)', text: GRAD_HIGH };
-  if (pct <= 20) return { stroke: 'url(#gradLow)', glow: 'rgba(255, 69, 58, 0.5)', text: GRAD_LOW };
-  if (pct <= 45) return { stroke: 'url(#gradMid)', glow: 'rgba(255, 159, 10, 0.45)', text: GRAD_MID };
-  return { stroke: 'url(#gradHigh)', glow: 'rgba(52, 199, 89, 0.4)', text: GRAD_HIGH };
+  if (offline) return { stroke: 'var(--text-tertiary)', text: COLOR_OFF, glow: 'transparent' };
+  if (charging) return { stroke: 'url(#gradHigh)', text: COLOR_HIGH, glow: 'rgba(48, 209, 88, 0.28)' };
+  if (pct <= 20) return { stroke: 'url(#gradLow)', text: COLOR_LOW, glow: 'rgba(255, 69, 58, 0.28)' };
+  if (pct <= 45) return { stroke: 'url(#gradMid)', text: COLOR_MID, glow: 'rgba(255, 159, 10, 0.28)' };
+  return { stroke: 'url(#gradHigh)', text: COLOR_HIGH, glow: 'rgba(48, 209, 88, 0.24)' };
 }
 
 // Smoothly counts the percentage label from its previous value to the new one.
@@ -325,15 +356,15 @@ function applyReading(card, dev) {
     card.pctLabel.textContent = offline ? 'off' : '…';
     card.pctLabel.classList.add('small');
     card.gaugeFill.style.strokeDashoffset = `${GAUGE_CIRCUMFERENCE}`;
-    card.gaugeWrap.style.setProperty('--glow', 'transparent');
+    card.gaugeWrap.style.setProperty('--ring-glow', 'transparent');
   } else {
     animatePct(card, pct);
     const offset = GAUGE_CIRCUMFERENCE * (1 - pct / 100);
     card.gaugeFill.style.strokeDashoffset = `${offset}`;
     const style = gaugeStyleFor(pct, charging, offline);
     card.gaugeFill.style.stroke = style.stroke;
-    card.gaugeWrap.style.setProperty('--glow', style.glow);
-    card.pctLabel.style.setProperty('--pct-grad', style.text);
+    card.gaugeWrap.style.setProperty('--ring-glow', style.glow);
+    card.pctLabel.style.setProperty('--pct-color', style.text);
   }
 
   card.bolt.classList.toggle('show', charging);
@@ -711,6 +742,7 @@ const currentSettings = {};
 
 function applyClientSettings(s) {
   document.body.classList.toggle('density-compact', s.density === 'compact');
+  document.body.classList.toggle('reduce-motion', !!s.reduceMotion);
   document.documentElement.style.setProperty('--accent', s.accent || '#0a84ff');
 }
 
@@ -730,7 +762,43 @@ function reflectSettingControls(s) {
   document.querySelectorAll('.settings-row[data-depends]').forEach((row) => {
     row.classList.toggle('disabled', !s[row.dataset.depends]);
   });
+  positionSegThumbs();
 }
+
+// Slide the glass "thumb" of each segmented control to its active option.
+// The CSS transition on .seg-thumb does the springy morph between options.
+// Thumbs are created synchronously; if a control isn't laid out yet (its view is
+// still hidden) we retry shortly so the thumb lands in the right spot when shown.
+function positionSegThumbs(root) {
+  const run = () => {
+    let retry = false;
+    (root || document).querySelectorAll('.segmented[data-setting]').forEach((seg) => {
+      let thumb = seg.querySelector('.seg-thumb');
+      if (!thumb) {
+        thumb = document.createElement('span');
+        thumb.className = 'seg-thumb';
+        seg.insertBefore(thumb, seg.firstChild);
+      }
+      const active = seg.querySelector('button.active');
+      if (!active) { thumb.style.opacity = '0'; return; }
+      if (active.offsetWidth === 0) { thumb.style.opacity = '0'; retry = true; return; }
+      const firstShow = !thumb.dataset.ready;
+      if (firstShow) thumb.style.transition = 'none'; // don't slide in from x=0 on first paint
+      thumb.style.opacity = '1';
+      thumb.style.width = `${active.offsetWidth}px`;
+      thumb.style.transform = `translateX(${active.offsetLeft}px)`;
+      if (firstShow) {
+        void thumb.offsetWidth; // flush, then restore the springy transition
+        thumb.style.transition = '';
+        thumb.dataset.ready = '1';
+      }
+      thumb.classList.add('armed');
+    });
+    if (retry) setTimeout(run, 40);
+  };
+  run();
+}
+window.addEventListener('resize', () => positionSegThumbs());
 
 async function updateSetting(key, value) {
   const s = await window.batteryHub.setSettings({ [key]: value });
