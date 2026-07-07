@@ -4,9 +4,18 @@
   <p>A clean, live battery monitor for your wireless devices on Windows — mice, keyboards, headsets and controllers, all in one place.</p>
 </div>
 
-![Battery Hub dashboard](docs/screenshot.png)
+Every wireless device gets its own card with a colour-coded charge ring, a mini history graph and a rough **“time left”** estimate — plus a **live battery icon in the system tray** for each one. All wrapped in a modern **liquid-glass** interface with light and dark themes.
 
-Each device gets a card with its charge level, a colour-coded ring, a mini history graph, a rough **“time left”** estimate, and its own **battery icon in the system tray**. You also get low-battery notifications, light/dark themes, and drag-to-reorder cards.
+## ✨ Features
+
+- 🔋 **Live battery for every device** — mice, keyboards, headsets, controllers and more, each on its own card with a colour-coded ring (green → yellow → red).
+- 🪟 **Liquid-glass UI** — a translucent Windows 11 acrylic design that picks up the colours behind it, in light & dark, with selectable accent colours and compact/detailed layouts.
+- 📊 **History & smart estimates** — a sparkline of the recent trend and a “time left” estimate that keeps learning as your battery drains.
+- 🛎️ **System-tray icons** — a per-device battery icon by the clock that fills and changes colour with the charge, so you can glance without opening the app.
+- 🔔 **Low-battery alerts** — a Windows notification when a device drops below your threshold.
+- ✨ **Smooth animations** — subtle motion throughout, with a **Reduce animations** switch for those who prefer none.
+- 🖱️ **Make it yours** — rename devices, pick a custom icon, drag to reorder, and choose your theme.
+- 🔄 **Auto-updates** — new versions download and install themselves.
 
 ---
 
@@ -66,6 +75,7 @@ Open **Settings** in the sidebar:
 - **Theme** — System, Light, or Dark.
 - **Accent colour** — pick the highlight colour.
 - **Card density** — *Detailed* (big cards) or *Compact* (fit more on screen).
+- **Reduce animations** — turn off all motion and hover effects for a calmer, faster feel.
 - **Low-battery alerts** — turn on/off and set the % threshold.
 - **Tray battery icons** — show/hide the per-device tray icons.
 - **Close to tray** — closing the window keeps it running quietly in the tray.
@@ -74,6 +84,7 @@ Open **Settings** in the sidebar:
 
 **Handy extras:**
 - **Drag** a card to reorder your devices.
+- Click a card’s **icon** to pick a different one (mouse, keyboard, headset…).
 - Click the **⋯** menu on a card to **Rename**, **Refresh now**, or **Remove** it.
 
 ---
