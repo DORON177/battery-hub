@@ -1,116 +1,79 @@
 <div align="center">
-  <img src="assets/icon.png" width="96" alt="Battery Hub" />
+  <img src="assets/icon.png" width="88" alt="Battery Hub" />
   <h1>Battery Hub</h1>
-  <p>A clean, live battery monitor for your wireless devices on Windows — mice, keyboards, headsets and controllers, all in one place.</p>
+  <p><strong>Live battery monitoring for wireless mice, keyboards, headsets and controllers on Windows.</strong></p>
+
+  <a href="https://github.com/DORON177/battery-hub/releases/latest"><img src="https://img.shields.io/github/v/release/DORON177/battery-hub?sort=semver" alt="Latest release" /></a>
+  <a href="https://github.com/DORON177/battery-hub/releases"><img src="https://img.shields.io/github/downloads/DORON177/battery-hub/total" alt="Downloads" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/DORON177/battery-hub" alt="License" /></a>
+  <img src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011-0078D6" alt="Platform: Windows 10/11" />
 </div>
 
-Every wireless device gets its own card with a colour-coded charge ring, a mini history graph and a rough **“time left”** estimate — plus a **live battery icon in the system tray** for each one. All wrapped in a modern **liquid-glass** interface with light and dark themes.
-
-## ✨ Features
-
-- 🔋 **Live battery for every device** — mice, keyboards, headsets, controllers and more, each on its own card with a colour-coded ring (green → yellow → red).
-- 🪟 **Liquid-glass UI** — a translucent Windows 11 acrylic design that picks up the colours behind it, in light & dark, with selectable accent colours and compact/detailed layouts.
-- 📊 **History & smart estimates** — a sparkline of the recent trend and a “time left” estimate that keeps learning as your battery drains.
-- 🛎️ **System-tray icons** — a per-device battery icon by the clock that fills and changes colour with the charge, so you can glance without opening the app.
-- 🔔 **Low-battery alerts** — a Windows notification when a device drops below your threshold.
-- ✨ **Smooth animations** — subtle motion throughout, with a **Reduce animations** switch for those who prefer none.
-- 🖱️ **Make it yours** — rename devices, pick a custom icon, drag to reorder, and choose your theme.
-- 🔄 **Auto-updates** — new versions download and install themselves.
-
 ---
 
-## 📥 Tutorial 1 — Install it
+Battery Hub reads the battery level of your wireless HID devices and shows each one on a live dashboard, with a per-device indicator in the system tray. Built with Electron.
 
-1. Go to the **[latest release](../../releases/latest)** and download **`Battery Hub Setup x.y.z.exe`**.
-2. Double-click it to run.
-3. Windows will likely show a blue **“Windows protected your PC”** box. This only appears because the app isn’t code-signed (a paid certificate) — it is **not** a virus. Click:
-   - **More info** → **Run anyway**
-4. It installs just for you (no admin needed) and adds **Start-menu** and **Desktop** shortcuts.
-5. Launch **Battery Hub**. That’s it — you’ll land on the **Devices** screen.
+## Features
 
-> To uninstall later: *Windows Settings → Apps → Battery Hub → Uninstall*.
+- **Multi-device dashboard** — mice, keyboards, headsets and controllers, each with a colour-coded charge ring.
+- **System-tray icons** — a live battery indicator per device beside the clock.
+- **History & estimates** — a recent-trend sparkline and a *time-left* estimate derived from the drain rate.
+- **Low-battery notifications** — Windows alerts when a device falls below a configurable threshold.
+- **Guided calibration** — a 30-second scan detects the battery byte for devices that aren't recognised automatically.
+- **Liquid-glass interface** — translucent Windows 11 acrylic design with light/dark themes and a reduce-motion option.
+- **Auto-updates** — delivered through GitHub Releases.
 
----
+## Installation
 
-## 🔌 Tutorial 2 — Add your first device
+Download the latest `Battery Hub Setup x.y.z.exe` from the [releases page](https://github.com/DORON177/battery-hub/releases/latest) and run it. Battery Hub installs per-user and requires no administrator rights.
 
-Click **Add Device** in the sidebar.
+> The installer isn't code-signed, so Windows SmartScreen may show a warning. Select **More info → Run anyway**.
 
-**If your device is recognised**, it shows an *auto-detected* badge — just click **Add**. Done.
+## Usage
 
-**If it isn’t recognised**, click **Calibrate & Add** and follow the 30-second scan:
+### Adding a device
 
-1. Press **Start 30-second Scan**.
-2. **While it’s scanning, turn the device off and back on** (once or twice). Many wireless devices only report their battery the moment they power on — this is the surest way to catch it.
-3. When the scan finishes, it shows the numbers the device sent. **Click the one that matches your current battery %** (usually a value between 0 and 100).
-4. If that number isn’t exactly your battery % (some devices report a different scale), tick the box and type your real % — the app will convert it automatically from then on.
-5. Click **Save & Add Device**.
+Open **Add Device**. Recognised devices show an *auto-detected* badge — click **Add**. Otherwise choose **Calibrate & Add**:
 
-Your device now appears on the **Devices** screen and updates on its own.
+1. Start the 30-second scan.
+2. Power the device off and on while it scans — many wireless devices only report their battery on power-up.
+3. Select the value that matches your current battery percentage.
+4. If the device reports on a different scale, enter your real percentage and it's converted automatically from then on.
 
----
+### Reading a card
 
-## 🔋 Tutorial 3 — Read your batteries
+Each card shows the current percentage and ring (green / yellow / red), a charging indicator, a history sparkline, an estimated time remaining, and the age of the last reading. Every device also appears as a tray icon that fills and changes colour with the charge.
 
-Each card tells you everything at a glance:
+### Settings
 
-| What you see | What it means |
-| --- | --- |
-| **Big % + ring** | Current charge. **Green** = healthy, **yellow** = getting low, **red** = low. |
-| **⚡ Charging pill** | The device is plugged in / charging (the ring pulses green). |
-| **Thin line at the bottom** | A **sparkline** of the recent battery trend. Appears once a little history builds up. |
-| **“~8d 17h left”** | A rough estimate of time remaining, based on how fast it’s draining. |
-| **“Updated 55s ago”** | When the last reading came in. |
+Theme and accent colour, card density, reduce animations, low-battery threshold, tray behaviour, launch at login, and refresh interval.
 
-**System tray:** every device also shows a little **battery icon** near the clock (click the `^` arrow if Windows hides it). It fills up and changes colour with the charge, so you can check without opening the app. Click it to open Battery Hub or quit.
-
-**Notifications:** when a device drops below your threshold, Windows pops a low-battery alert (once per drop).
-
----
-
-## ⚙️ Tutorial 4 — Make it yours (Settings)
-
-Open **Settings** in the sidebar:
-
-- **Theme** — System, Light, or Dark.
-- **Accent colour** — pick the highlight colour.
-- **Card density** — *Detailed* (big cards) or *Compact* (fit more on screen).
-- **Reduce animations** — turn off all motion and hover effects for a calmer, faster feel.
-- **Low-battery alerts** — turn on/off and set the % threshold.
-- **Tray battery icons** — show/hide the per-device tray icons.
-- **Close to tray** — closing the window keeps it running quietly in the tray.
-- **Launch at login** / **Start minimized** — have it start with Windows.
-- **Refresh interval** — how often devices are re-checked.
-
-**Handy extras:**
-- **Drag** a card to reorder your devices.
-- Click a card’s **icon** to pick a different one (mouse, keyboard, headset…).
-- Click the **⋯** menu on a card to **Rename**, **Refresh now**, or **Remove** it.
-
----
-
-## 🧯 Troubleshooting
-
-- **“Can’t read this device’s battery.”** Some devices block battery requests at the driver level — unfortunately those can’t be read.
-- **Nothing captured during a scan?** Run it again and be sure to **turn the device off and on** while it scans.
-- **It crashed?** A log is kept at `%APPDATA%\battery-hub\battery-hub.log` — helpful for reporting issues.
-
----
-
-## 🛠️ Build from source (for developers)
+## Build from source
 
 Requires [Node.js](https://nodejs.org).
 
 ```bash
 npm install
-npm start        # run the app in dev mode
+npm start        # run in development
 npm run dist     # build the Windows installer into dist/
 ```
 
-- **`src/main`** — Electron main process: HID polling, tray, notifications. Native `node-hid` runs in an isolated `utilityProcess` so a driver crash can’t take the app down.
-- **`src/renderer`** — the UI.
-- **`src/main/hid/drivers`** — per-device battery drivers.
-- **`scripts/make-icon.js`** — regenerates the app + tray icons.
+## Project structure
+
+| Path | Purpose |
+| --- | --- |
+| `src/main` | Electron main process — HID polling, tray, notifications, updates. |
+| `src/main/hid/drivers` | Per-device battery drivers. |
+| `src/renderer` | Application UI. |
+| `scripts` | Icon generation and build tooling. |
+
+Native `node-hid` runs in an isolated utility process, so a driver fault can't bring the app down.
+
+## Troubleshooting
+
+- **"Can't read this device's battery."** Some devices block battery requests at the driver level and can't be read.
+- **Nothing captured during calibration.** Rerun the scan and power the device off and on while it runs.
+- **Crash logs** are written to `%APPDATA%\battery-hub\battery-hub.log`.
 
 ## License
 
