@@ -15,13 +15,7 @@
 // }
 const HID = require('node-hid');
 const { findChannel } = require('../catalog');
-
-function toPercent(raw, profile) {
-  const { scaleMin, scaleMax } = profile;
-  if (scaleMax === scaleMin) return Math.max(0, Math.min(100, raw));
-  const pct = ((raw - scaleMin) / (scaleMax - scaleMin)) * 100;
-  return Math.max(0, Math.min(100, Math.round(pct)));
-}
+const { toPercent } = require('../scale'); // pure + unit-tested
 
 function readBattery(logicalDevice, profile) {
   return new Promise((resolve, reject) => {

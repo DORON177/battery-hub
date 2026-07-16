@@ -1,0 +1,74 @@
+name: Device support request
+description: Ask for a device that Battery Hub can't read to be supported
+title: "[Device] "
+labels: ["device-support"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping grow the device library. The details below are what's needed
+        to work out a device's battery protocol — without them a request usually can't
+        go anywhere.
+
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      description: Make and model, exactly as printed on the device or its box.
+      placeholder: e.g. Logitech G Pro X Superlight 2
+    validations:
+      required: true
+
+  - type: input
+    id: connection
+    attributes:
+      label: Connection
+      description: How it's connected when the battery can't be read.
+      placeholder: e.g. USB dongle (2.4 GHz), Bluetooth, or USB cable
+    validations:
+      required: true
+
+  - type: input
+    id: ids
+    attributes:
+      label: Vendor / Product ID
+      description: >
+        Found in Device Manager → the device → Properties → Details →
+        Hardware Ids (looks like `HID\VID_046D&PID_C54D`).
+      placeholder: VID_046D / PID_C54D
+    validations:
+      required: true
+
+  - type: textarea
+    id: scan
+    attributes:
+      label: Calibration scan output
+      description: >
+        Run **Add Device → Calibrate & Add → Start 30-second Scan**, and turn the device
+        off and on while it scans. Paste what the scan captured (or a screenshot).
+        If it captured nothing at all, say so.
+      render: text
+    validations:
+      required: true
+
+  - type: input
+    id: actual
+    attributes:
+      label: Actual battery level during the scan
+      description: The real percentage at the time, if the device or its own software reports one.
+      placeholder: e.g. 62%
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Other software that reads this device's battery, or anything else useful.
+
+  - type: input
+    id: version
+    attributes:
+      label: Battery Hub version
+      description: Shown at the bottom of Settings.
+      placeholder: e.g. 1.1.5
+    validations:
+      required: true
