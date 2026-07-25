@@ -80,6 +80,10 @@
             </button>
           </header>
           <div class="device-grid" id="device-grid"></div>
+          <div class="hidden-bar" id="hidden-bar" hidden>
+            <span id="hidden-count"></span>
+            <button class="link-btn" id="hidden-toggle">Show</button>
+          </div>
           <div class="empty-state" id="dashboard-empty" hidden>
             <div class="empty-icon">🔋</div>
             <p class="empty-title">No devices yet</p>
@@ -286,6 +290,7 @@
         <button class="menu-refresh">Refresh now</button>
         <button class="menu-rename">Rename</button>
         <button class="menu-recalibrate">Recalibrate</button>
+        <button class="menu-hide">Hide</button>
         <button class="menu-remove">Remove</button>
       </div>
 

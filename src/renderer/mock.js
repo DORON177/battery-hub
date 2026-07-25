@@ -52,6 +52,8 @@ if (!window.batteryHub) {
     addDevice: async () => ({}),
     removeDevice: async () => true,
     renameDevice: async (id, name) => { if (sample[id]) sample[id].customName = name; return sample[id]; },
+    setDeviceIcon: async (id, icon) => { if (sample[id]) sample[id].customIcon = icon; return sample[id]; },
+    setDeviceHidden: async (id, hidden) => { if (sample[id]) sample[id].hidden = hidden; return sample[id]; },
     reorderDevices: async (ids) => { ids.forEach((id, i) => { if (sample[id]) sample[id].order = i; }); return sample; },
     capture: async () => {
       await new Promise((r) => setTimeout(r, 2500)); // simulate a scan
