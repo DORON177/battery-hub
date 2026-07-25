@@ -18,13 +18,6 @@ function iconFor(product, driverId) {
   return '🔌';
 }
 
-function pctColor(pct) {
-  if (pct == null) return 'var(--text-secondary)';
-  if (pct <= 20) return 'var(--red)';
-  if (pct <= 45) return 'var(--yellow)';
-  return 'var(--green)';
-}
-
 function timeAgo(ts) {
   if (!ts) return 'never';
   const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
@@ -106,8 +99,11 @@ document.getElementById('win-close').addEventListener('click', () => window.batt
 
 let specularRaf = 0;
 document.addEventListener('mousemove', (e) => {
+  // Cheapest guards first — this runs on every mouse move, so skip the DOM walk
+  // entirely while a frame is already queued or motion is switched off.
+  if (specularRaf || document.body.classList.contains('reduce-motion')) return;
   const card = e.target.closest && e.target.closest('.device-card');
-  if (!card || specularRaf) return;
+  if (!card) return;
   specularRaf = requestAnimationFrame(() => {
     specularRaf = 0;
     const r = card.getBoundingClientRect();
@@ -230,6 +226,14 @@ async function persistCardOrder() {
   await window.batteryHub.reorderDevices(order);
 }
 
+// One delegated handler closes any open card menu on an outside click. Registered
+// once at module scope: doing this per card inside buildDeviceCard added a document
+// listener for every card on every dashboard refresh and never removed them, so they
+// accumulated for the life of the session and pinned the detached cards in memory.
+document.addEventListener('click', () => {
+  document.querySelectorAll('.menu-dropdown').forEach((d) => { d.hidden = true; });
+});
+
 function buildDeviceCard(dev) {
   const tpl = document.getElementById('device-card-template');
   const el = tpl.content.firstElementChild.cloneNode(true);
@@ -264,8 +268,6 @@ function buildDeviceCard(dev) {
     document.querySelectorAll('.menu-dropdown').forEach((d) => { if (d !== dropdown) d.hidden = true; });
     dropdown.hidden = !dropdown.hidden;
   });
-  document.addEventListener('click', () => { dropdown.hidden = true; });
-
   el.querySelector('.menu-refresh').addEventListener('click', (e) => {
     e.stopPropagation();
     dropdown.hidden = true;
