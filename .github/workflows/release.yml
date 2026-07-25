@@ -44,8 +44,11 @@ jobs:
         run: |
           $exe = Get-ChildItem dist/*.exe | Select-Object -First 1
           $hash = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLower()
-          "$hash  $($exe.Name)" | Out-File -FilePath dist/SHA256SUMS.txt -Encoding ascii
-          Write-Host "SHA256: $hash  $($exe.Name)"
+          # electron-builder publishes the asset with spaces replaced by dashes; record
+          # that name so `sha256sum -c` matches the file people actually download.
+          $name = $exe.Name -replace ' ', '-'
+          "$hash  $name" | Out-File -FilePath dist/SHA256SUMS.txt -Encoding ascii
+          Write-Host "SHA256: $hash  $name"
           gh release upload $env:GITHUB_REF_NAME dist/SHA256SUMS.txt --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

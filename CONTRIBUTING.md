@@ -62,4 +62,4 @@ Maintainers only:
 3. `git tag vX.Y.Z && git push origin vX.Y.Z` — GitHub Actions builds the installer,
    attaches `SHA256SUMS.txt` and creates a **draft** release.
 4. Publish the draft, or the auto-updater won't offer it.
-5. Update the winget manifests — see `packaging/winget/README.md`.
+5. Update the winget manifests — see `packaging/README.md`.
