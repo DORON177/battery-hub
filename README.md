@@ -93,6 +93,12 @@ Native `node-hid` runs in an isolated utility process, so a driver fault can't b
 - **Nothing captured during calibration.** Rerun the scan and power the device off and on while it runs.
 - **Crash logs** are written to `%APPDATA%\battery-hub\battery-hub.log`.
 
+## Contributing
+
+Device support requests and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+Release history is in [CHANGELOG.md](CHANGELOG.md), and security reports are covered by
+[SECURITY.md](SECURITY.md).
+
 ## License
 
 [MIT](LICENSE) © 2026 DORON177

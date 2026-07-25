@@ -1,0 +1,25 @@
+# Normalise line endings: store LF in the repo, check out native on Windows.
+# Without this, Git warns "LF will be replaced by CRLF" on nearly every commit.
+* text=auto eol=lf
+
+# Windows-only scripts must keep CRLF to run correctly.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary assets — never diff or line-ending-convert these.
+*.png binary
+*.ico binary
+*.exe binary
+*.node binary
+
+# Generated, not hand-written. `linguist-generated` collapses the file in diffs and
+# pull requests and keeps it out of the repository's language statistics. The file is
+# still committed and still required: `npm ci` fails without it, and it is what makes
+# builds reproducible across machines and CI.
+package-lock.json linguist-generated=true -diff
+
+# Keep vendored/support files out of the language breakdown so the repo reports as
+# JavaScript rather than being skewed by packaging metadata.
+packaging/** linguist-vendored=true
+docs/** linguist-documentation=true
