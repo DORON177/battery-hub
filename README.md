@@ -13,6 +13,12 @@
 
 Battery Hub reads the battery level of your wireless HID devices and shows each one on a live dashboard, with a per-device indicator in the system tray. Built with Electron.
 
+<p align="center">
+  <img src="docs/screenshot.png" width="820" alt="Battery Hub dashboard showing five devices with charge rings, history sparklines and time-left estimates" />
+  <br />
+  <sub>The dashboard, shown with sample devices. Regenerate with <code>npx electron scripts/screenshot.js</code>.</sub>
+</p>
+
 ## Features
 
 - **Multi-device dashboard** — mice, keyboards, headsets and controllers, each with a colour-coded charge ring.
