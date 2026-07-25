@@ -27,7 +27,17 @@ Battery Hub reads the battery level of your wireless HID devices and shows each 
 
 Download the latest `Battery Hub Setup x.y.z.exe` from the [releases page](https://github.com/DORON177/battery-hub/releases/latest) and run it. Battery Hub installs per-user and requires no administrator rights.
 
-> The installer isn't code-signed, so Windows SmartScreen may show a warning. Select **More info → Run anyway**.
+Windows SmartScreen shows a **"Windows protected your PC"** prompt because the installer isn't code-signed — select **More info → Run anyway**. Code signing certificates are issued to identified publishers for a recurring fee; this project is unfunded, so builds are unsigned. See [Verifying a download](#verifying-a-download) if you'd like to confirm the file's integrity first.
+
+### Verifying a download
+
+Every release is built and published by [GitHub Actions](.github/workflows/release.yml) directly from a tagged commit — no binaries are uploaded by hand — and each one ships a `SHA256SUMS.txt`. To confirm your download matches, run:
+
+```powershell
+(Get-FileHash "Battery-Hub-Setup-1.1.5.exe" -Algorithm SHA256).Hash
+```
+
+and compare the result with the checksum in that release's `SHA256SUMS.txt`. Pasting the same hash into [VirusTotal](https://www.virustotal.com/gui/home/search) will show any scan results for the exact file.
 
 ## Usage
 
@@ -47,6 +57,8 @@ Each card shows the current percentage and ring (green / yellow / red), a chargi
 ### Settings
 
 Theme and accent colour, card density, reduce animations, low-battery threshold, tray behaviour, launch at login, and refresh interval.
+
+Devices can be renamed, given a custom icon, dragged to reorder, or **hidden** from the ⋯ menu. Hiding keeps the device and its calibration but stops polling and removes its tray icon; hidden devices are listed below the grid and can be restored at any time.
 
 ## Build from source
 

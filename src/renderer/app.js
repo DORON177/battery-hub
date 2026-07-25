@@ -6,6 +6,7 @@ const state = {
   live: [],
   cardEls: new Map(),
   calibration: null,
+  showHidden: false,
 };
 
 function iconFor(product, driverId) {
@@ -146,18 +147,36 @@ document.querySelectorAll('.nav-item[data-view]').forEach((el) => {
 
 // ---------- dashboard ----------
 
+// "N hidden — Show/Hide" strip under the grid; the only route back for a hidden device.
+function renderHiddenBar(hiddenCount) {
+  const bar = document.getElementById('hidden-bar');
+  const label = document.getElementById('hidden-count');
+  const toggle = document.getElementById('hidden-toggle');
+  if (!bar) return;
+  bar.hidden = hiddenCount === 0;
+  if (hiddenCount === 0) return;
+  label.textContent = `${hiddenCount} hidden device${hiddenCount > 1 ? 's' : ''}`;
+  toggle.textContent = state.showHidden ? 'Hide' : 'Show';
+}
+
 async function refreshDashboard() {
   state.saved = await window.batteryHub.listSavedDevices();
   const grid = document.getElementById('device-grid');
   const empty = document.getElementById('dashboard-empty');
   const count = document.getElementById('dashboard-count');
-  const ids = Object.keys(state.saved).sort(
+  const allIds = Object.keys(state.saved).sort(
     (a, b) => (state.saved[a].order ?? 1e9) - (state.saved[b].order ?? 1e9)
   );
+  // Hidden devices drop off the grid unless the user has expanded them.
+  const hiddenIds = allIds.filter((id) => state.saved[id].hidden);
+  const ids = state.showHidden ? allIds : allIds.filter((id) => !state.saved[id].hidden);
 
-  empty.hidden = ids.length > 0;
-  count.textContent = ids.length
-    ? `${ids.length} device${ids.length > 1 ? 's' : ''} monitored`
+  renderHiddenBar(hiddenIds.length);
+
+  empty.hidden = allIds.length > 0;
+  const monitored = allIds.length - hiddenIds.length;
+  count.textContent = monitored
+    ? `${monitored} device${monitored > 1 ? 's' : ''} monitored`
     : '';
   grid.innerHTML = '';
   state.cardEls.clear();
@@ -165,10 +184,16 @@ async function refreshDashboard() {
   ids.forEach((id, i) => {
     const card = buildDeviceCard(state.saved[id]);
     card.el.style.setProperty('--i', i);
+    card.el.classList.toggle('is-hidden-device', !!state.saved[id].hidden);
     grid.appendChild(card.el);
     state.cardEls.set(id, card);
   });
 }
+
+document.getElementById('hidden-toggle').addEventListener('click', () => {
+  state.showHidden = !state.showHidden;
+  refreshDashboard();
+});
 
 // ---------- drag-to-reorder ----------
 
@@ -257,6 +282,16 @@ function buildDeviceCard(dev) {
     e.stopPropagation();
     dropdown.hidden = true;
     openIconPicker(card, dev);
+  });
+  // Hide keeps the device (and its calibration) but stops polling and tray icons.
+  // Hidden devices are listed under the grid so they can be restored.
+  const hideBtn = el.querySelector('.menu-hide');
+  hideBtn.textContent = dev.hidden ? 'Unhide' : 'Hide';
+  hideBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    dropdown.hidden = true;
+    await window.batteryHub.setDeviceHidden(dev.id, !dev.hidden);
+    refreshDashboard();
   });
   el.querySelector('.menu-remove').addEventListener('click', async (e) => {
     e.stopPropagation();

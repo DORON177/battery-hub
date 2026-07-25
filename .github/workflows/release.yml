@@ -36,3 +36,16 @@ jobs:
         run: npm run dist -- --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Publish a SHA-256 checksum alongside the installer. The app isn't code-signed,
+      # so this gives users a way to verify the download is byte-for-byte what CI built.
+      - name: Generate and upload SHA-256 checksum
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem dist/*.exe | Select-Object -First 1
+          $hash = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLower()
+          "$hash  $($exe.Name)" | Out-File -FilePath dist/SHA256SUMS.txt -Encoding ascii
+          Write-Host "SHA256: $hash  $($exe.Name)"
+          gh release upload $env:GITHUB_REF_NAME dist/SHA256SUMS.txt --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

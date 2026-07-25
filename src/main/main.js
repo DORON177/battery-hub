@@ -256,6 +256,18 @@ ipcMain.handle('devices:set-icon', (evt, { id, icon }) => {
   return store.upsertDevice(id, { customIcon: icon || null });
 });
 
+// Hide a device without forgetting it: the poller skips hidden devices, so this also
+// drops its tray icon and pending notification state. Unhiding restores all of it.
+ipcMain.handle('devices:set-hidden', (evt, { id, hidden }) => {
+  const saved = store.upsertDevice(id, { hidden: !!hidden });
+  if (hidden) {
+    notifier.reset(id);
+    tray.removeDevice(id);
+  }
+  restartPoller();
+  return saved;
+});
+
 ipcMain.handle('devices:capture', async (evt, id) => {
   const live = (await hidClient.enumerate()).find((d) => d.id === id);
   if (!live) throw new Error('device not connected');
