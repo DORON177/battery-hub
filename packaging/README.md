@@ -36,3 +36,20 @@ winget install DORON177.BatteryHub
 
 Microsoft's automated validation installs the package in a sandbox before a moderator
 approves the PR.
+
+## Sandbox install failures
+
+Validation may fail with `APPINSTALLER_CLI_ERROR_SHELLEXEC_INSTALL_FAILED` (-1978335226)
+and `ShellExecute installer failed: 3221225477`. 3221225477 is `0xC0000005`,
+STATUS_ACCESS_VIOLATION: electron-builder's assisted NSIS installer launches the app
+itself after a silent install, that launch faults in a headless sandbox, and NSIS exits
+with the fault. Every file is already on disk by then, so the install has in fact
+succeeded — which is why the installer manifest lists -1073741819 under
+`InstallerSuccessCodes`.
+
+The accompanying `ERROR_PATH_NOT_FOUND` from `Downloader.cpp` is winget failing to strip
+the mark-of-the-web from its own download and is unrelated.
+
+Keep `InstallerSuccessCodes` until the installer stops auto-launching the app (setting
+`nsis.runAfterFinish: false` in `package.json` would do it), then drop the entry so real
+crashes are not swallowed.
