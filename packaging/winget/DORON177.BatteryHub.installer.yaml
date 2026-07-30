@@ -7,6 +7,13 @@ InstallModes:
   - interactive
   - silent
   - silentWithProgress
+# -1073741819 is 0xC0000005, STATUS_ACCESS_VIOLATION. electron-builder's assisted NSIS
+# installer starts the app itself once a silent install finishes; in a headless
+# validation sandbox that launch faults and NSIS propagates the fault as its own exit
+# code, so winget reports the install as failed after it has already written every file.
+# Accepting the code keeps `winget install` from failing on an install that succeeded.
+InstallerSuccessCodes:
+  - -1073741819
 UpgradeBehavior: install
 ReleaseDate: 2026-07-25
 Installers:

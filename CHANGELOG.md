@@ -6,6 +6,12 @@ All notable changes to this project are documented here. Versions follow
 
 ## [Unreleased]
 
+### Fixed
+- winget manifest now accepts exit code -1073741819 (`STATUS_ACCESS_VIOLATION`) as a
+  successful install. The NSIS installer starts the app once a silent install finishes
+  and that launch faults in a headless validation sandbox, failing `winget install` even
+  though every file had been written.
+
 ## [1.2.0] — 2026-07-25
 
 First stable release, consolidating the 1.0.x and 1.1.x series.
