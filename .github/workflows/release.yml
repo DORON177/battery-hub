@@ -37,18 +37,27 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build and upload the branded installer
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm run installer
+          gh release upload $env:GITHUB_REF_NAME (Get-ChildItem dist/Battery-Hub-Installer-*.exe).FullName --clobber
+
       # Publish a SHA-256 checksum alongside the installer. The app isn't code-signed,
       # so this gives users a way to verify the download is byte-for-byte what CI built.
       - name: Generate and upload SHA-256 checksum
         shell: pwsh
         run: |
-          $exe = Get-ChildItem dist/*.exe | Select-Object -First 1
-          $hash = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLower()
           # electron-builder publishes the asset with spaces replaced by dashes; record
           # that name so `sha256sum -c` matches the file people actually download.
-          $name = $exe.Name -replace ' ', '-'
-          "$hash  $name" | Out-File -FilePath dist/SHA256SUMS.txt -Encoding ascii
-          Write-Host "SHA256: $hash  $name"
+          Get-ChildItem dist/*.exe | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
+            $name = $_.Name -replace ' ', '-'
+            Write-Host "SHA256: $hash  $name"
+            "$hash  $name"
+          } | Out-File -FilePath dist/SHA256SUMS.txt -Encoding ascii
           gh release upload $env:GITHUB_REF_NAME dist/SHA256SUMS.txt --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
