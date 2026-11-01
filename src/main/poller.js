@@ -2,6 +2,7 @@ const { kysona, mchose, generic } = require('./hid/drivers');
 const hidClient = require('./hid/hid-client');
 const monitor = require('./monitor');
 const store = require('./store');
+const { pushHistory } = require('./history');
 
 let timer = null;
 let polling = false; // guard: HID channels allow only one opener at a time, so never
@@ -28,11 +29,18 @@ function driverFor(cfg) {
   return generic;
 }
 
-const { pushHistory } = require('./history');
+// A read can take seconds, so the user may remove or hide a device while one is in flight.
+// Writing the late result back would resurrect a removed device as a ghost entry, or put a
+// hidden device's tray icon back.
+function isTracked(id) {
+  const cfg = store.getDevices()[id];
+  return !!cfg && !cfg.hidden;
+}
 
 // Persist a fresh reading and push it to the renderer. Shared by the poll path and
 // the event-driven monitor path.
 function commitReading(id, reading, onUpdate) {
+  if (!isTracked(id)) return;
   const charging = reading.charging === null || reading.charging === undefined
     ? inferCharging(id, reading.capacity)
     : reading.charging;
@@ -61,6 +69,7 @@ async function pollOnce(onUpdate, { force = false } = {}) {
 }
 
 function onHeadsetStatus(id, state, onUpdate) {
+  if (!isTracked(id)) return;
   let patch;
   if (state === 'disconnected') patch = { online: false, lastError: 'not connected' };
   else if (state === 'off') patch = { online: true, lastError: 'headset is off' };
@@ -117,7 +126,7 @@ async function pollAllDevices(onUpdate) {
 
   for (const id of Object.keys(saved)) {
     const cfg = saved[id];
-    if (cfg.hidden) continue;
+    if (!isTracked(id)) continue;
     const driver = driverFor(cfg);
 
     // Event-driven devices (headset): a long-lived subprocess owns the connection and
@@ -158,6 +167,8 @@ async function pollAllDevices(onUpdate) {
 
     if (result.status === 'ok') {
       commitReading(id, result.reading, onUpdate);
+    } else if (!isTracked(id)) {
+      trend.delete(id);
     } else if (result.status === 'no-candidates') {
       trend.delete(id);
       const patch = { lastError: 'not connected', online: false };

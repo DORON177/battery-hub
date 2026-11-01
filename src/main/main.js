@@ -288,7 +288,6 @@ ipcMain.handle('devices:poll-now', async () => {
 ipcMain.handle('settings:get', () => store.getSettings());
 
 ipcMain.handle('settings:set', (evt, patch) => {
-  const before = store.getSettings();
   const after = store.setSettings(patch);
 
   if ('theme' in patch) applyTheme();

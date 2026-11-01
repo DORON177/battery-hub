@@ -1,0 +1,81 @@
+const test = require('node:test');
+const assert = require('node:assert');
+const Module = require('node:module');
+
+// Replace the Electron/native-backed modules so the poller's logic runs in plain Node.
+const devices = {};
+const store = {
+  getDevices: () => devices,
+  upsertDevice: (id, patch) => { devices[id] = { ...(devices[id] || {}), ...patch, id }; return devices[id]; },
+  getPollIntervalSec: () => 60,
+};
+let finishRead;
+const hidClient = {
+  enumerate: async () => [{ id: 'mouse' }],
+  readBattery: () => new Promise((resolve, reject) => { finishRead = { resolve, reject }; }),
+};
+const monitor = { isActive: () => false, start() {}, stopAll() {} };
+const drivers = { kysona: {}, mchose: { eventDriven: true }, generic: {} };
+
+const load = Module._load;
+Module._load = function (request, ...rest) {
+  if (request === './store') return store;
+  if (request === './hid/hid-client') return hidClient;
+  if (request === './monitor') return monitor;
+  if (request === './hid/drivers') return drivers;
+  return load.call(this, request, ...rest);
+};
+const poller = require('../src/main/poller');
+Module._load = load;
+
+const flush = () => new Promise((r) => setImmediate(r));
+const addMouse = () => { devices.mouse = { id: 'mouse', driverId: 'generic', product: 'Mouse' }; };
+
+async function pollWithChangeMidRead(change, settle) {
+  const updates = [];
+  const done = poller.pollOnce((d) => updates.push(d), { force: true });
+  await flush();
+  change();
+  settle();
+  await done;
+  return updates;
+}
+
+test('a reading that lands after removal does not resurrect the device', async () => {
+  addMouse();
+  const updates = await pollWithChangeMidRead(
+    () => { delete devices.mouse; },
+    () => finishRead.resolve({ capacity: 50, charging: false }),
+  );
+  assert.equal(devices.mouse, undefined);
+  assert.equal(updates.length, 0);
+});
+
+test('a failed read that lands after removal does not resurrect the device', async () => {
+  addMouse();
+  await pollWithChangeMidRead(
+    () => { delete devices.mouse; },
+    () => finishRead.reject(new Error('timed out')),
+  );
+  assert.equal(devices.mouse, undefined);
+});
+
+test('a reading that lands after hiding is not broadcast', async () => {
+  addMouse();
+  const updates = await pollWithChangeMidRead(
+    () => { devices.mouse.hidden = true; },
+    () => finishRead.resolve({ capacity: 50, charging: false }),
+  );
+  assert.equal(updates.length, 0);
+  assert.equal(devices.mouse.lastReading, undefined);
+});
+
+test('a normal reading is still committed', async () => {
+  addMouse();
+  const updates = await pollWithChangeMidRead(
+    () => {},
+    () => finishRead.resolve({ capacity: 50, charging: false }),
+  );
+  assert.equal(devices.mouse.lastReading.capacity, 50);
+  assert.equal(updates.length, 1);
+});

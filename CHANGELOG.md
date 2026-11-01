@@ -6,6 +6,25 @@ All notable changes to this project are documented here. Versions follow
 
 ## [Unreleased]
 
+### Fixed
+- Time-left estimates were far too short. Flat stretches of history were left out of the
+  drain-rate calculation, so each 1% drop was divided by only the last few minutes before
+  it. A device that lost 15% in 17 hours showed about 1 hour left instead of about 51.
+- Card hover lift never applied, and offline cards were never dimmed: the entry animation
+  kept overriding both after it finished.
+- Choosing an accent colour left the selection tint and button hover blue.
+- Removing or hiding a device during a battery read could bring it back as an empty entry
+  or restore its tray icon.
+- Restarting monitoring could leave a headset reader process running untracked, after
+  which another one was started alongside it.
+
+### Changed
+- Tab switches are much smoother: frame gaps fall from about 60 ms to under 17 ms, with
+  the worst stall dropping from 129 ms to about 25 ms. Blur filters were removed from
+  surfaces that had nothing behind them to blur; they were being rendered in software and
+  drew faint wavy lines on the cards.
+- Removed the unused background layer and its colour tokens.
+
 ## [1.2.0] — 2026-07-25
 
 First stable release, consolidating the 1.0.x and 1.1.x series.
@@ -18,8 +37,7 @@ First stable release, consolidating the 1.0.x and 1.1.x series.
 - Unit tests (`npm test`) covering the drain-rate estimate, history retention and HID
   driver parsing, run in CI on every push and pull request.
 - Issue template for unsupported-device requests.
-- winget package manifests, so the app can be installed with
-  `winget install DORON177.BatteryHub`.
+- Windows Package Manager listing: `winget install DORON177.BatteryHub`.
 - Contributing, security and changelog documentation.
 
 ### Fixed
@@ -35,19 +53,18 @@ First stable release, consolidating the 1.0.x and 1.1.x series.
 
 ## [1.1.5] — 2026-07-07
 
+### Fixed
+- Laggy scrolling in Settings.
+
+## [1.1.4] — 2026-07-06
+
 ### Added
 - Liquid-glass interface with a translucent Windows 11 acrylic backdrop, in light and dark.
 - Animated view transitions, hover and press feedback, and a **Reduce animations** setting
   that disables all motion.
 
 ### Changed
-- Smoother scrolling in Settings.
-
-## [1.1.4] — 2026-07-06
-
-### Changed
-- Refreshed visual design: frosted title bar, softer shadows, squarer corners and
-  colour-reflecting glass surfaces.
+- Opening the card menu now closes the icon picker.
 
 ## [1.1.3] — 2026-07-05
 
@@ -55,15 +72,18 @@ First stable release, consolidating the 1.0.x and 1.1.x series.
 - Change a device's icon by clicking the icon itself.
 
 ### Changed
-- Battery "time left" estimates now average every discharge interval in the stored
-  history, so they stay stable and survive restarts.
+- Time-left estimates now use the whole stored history, so they survive restarts.
 - Icon picker limited to computer peripherals.
 
 ## [1.1.2] — 2026-07-04
 
 ### Added
 - Device icon picker.
+- App logo as the tray icon in single-list mode.
 - Automated release pipeline via GitHub Actions.
+
+### Changed
+- Smoother scrolling in Settings.
 
 ## [1.1.1] — 2026-07-04
 
