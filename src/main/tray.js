@@ -1,5 +1,6 @@
 const { Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
+const { moodFor } = require('./mood');
 
 // System-tray battery indicators, in one of two modes:
 //   'perDevice' — one tray icon per paired device (default)
@@ -10,17 +11,16 @@ const path = require('path');
 // Windows' shell COM layer (combase.dll). Here we just load the matching file for a Tray.
 
 const TRAY_DIR = path.join(__dirname, '..', '..', 'assets', 'tray');
-const APP_ICON = path.join(__dirname, '..', '..', 'assets', 'icon.png');
 
-let handlers = { open: () => {}, quit: () => {} };
+let handlers = { open: () => {}, quit: () => {}, flyout: () => {} };
 let mode = 'perDevice';
 const devices = new Map();     // id -> info { name, capacity, charging, offline }  (source of truth)
 const perTrays = new Map();    // id -> { tray, lastKey }   (perDevice mode)
 let listTray = null;           // single Tray                (list mode)
 const imageCache = new Map();  // file -> nativeImage
 
-function setHandlers(open, quit) {
-  handlers = { open, quit };
+function setHandlers(open, quit, flyout) {
+  handlers = { open, quit, flyout };
 }
 
 function imageFile(fill, charging, offline) {
@@ -40,17 +40,15 @@ function imageFor(fill, charging, offline) {
   return { img, file };
 }
 
-// The app's own logo, resized to a crisp tray size and cached. Used in 'list'
-// mode, where the single icon represents Battery Hub as a whole rather than one
-// device's battery level.
-let appImg = null;
-function appImage() {
-  if (!appImg) {
-    let img = nativeImage.createFromPath(APP_ICON);
-    if (!img.isEmpty()) img = img.resize({ width: 16, height: 16, quality: 'best' });
-    appImg = img;
+// The face shown in 'list' mode, where one icon stands for every device.
+function moodImage(mood) {
+  const file = `mood-${mood}.png`;
+  let img = imageCache.get(file);
+  if (!img) {
+    img = nativeImage.createFromPath(path.join(TRAY_DIR, file));
+    imageCache.set(file, img);
   }
-  return appImg;
+  return img;
 }
 
 function statusText(info) {
@@ -87,7 +85,7 @@ function renderPerDeviceOne(id) {
 
   if (!entry) {
     const tray = new Tray(img);
-    tray.on('click', () => handlers.open());
+    tray.on('click', () => handlers.flyout(tray.getBounds()));
     entry = { tray, lastKey: key };
     perTrays.set(id, entry);
   } else {
@@ -115,13 +113,12 @@ function renderList() {
     return;
   }
 
-  // A single icon standing for the app as a whole — show Battery Hub's own logo.
-  // Per-device levels live in the tooltip + right-click menu built below.
-  const img = appImage();
+  // One icon for all devices: its face follows the battery that most needs attention.
+  const img = moodImage(moodFor(list));
 
   if (!listTray) {
     listTray = new Tray(img);
-    listTray.on('click', () => handlers.open());
+    listTray.on('click', () => handlers.flyout(listTray.getBounds()));
   } else {
     listTray.setImage(img);
   }
@@ -169,4 +166,6 @@ function destroyAll() {
   destroyTrays();
 }
 
-module.exports = { setHandlers, setMode, updateDevice, removeDevice, sync, destroyAll };
+const list = () => Array.from(devices.values());
+
+module.exports = { setHandlers, setMode, updateDevice, removeDevice, sync, destroyAll, list };

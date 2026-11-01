@@ -1,0 +1,41 @@
+:root {
+  --text: #16181b; --sub: #5b6068; --track: rgba(0, 0, 0, 0.12); --tint: rgba(250, 251, 252, 0.3);
+  --ok: #0d9e78; --warn: #c97a06; --bad: #d03b35; --hover: rgba(0, 0, 0, 0.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #f3f4f6; --sub: #b9bdc4; --track: rgba(255, 255, 255, 0.16); --tint: rgba(44, 47, 52, 0.28);
+    --ok: #2fd5a0; --warn: #f5a93a; --bad: #ff6b66; --hover: rgba(255, 255, 255, 0.08);
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; overflow: hidden; background: transparent; }
+body { height: 100%; overflow: hidden; background: var(--tint); }
+body { color: var(--text); font: 13px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; user-select: none; cursor: default; }
+.panel { height: 100%; padding: 8px 14px 8px; }
+/* Windows animates the glass (see flyout.js); everything in it rises, rows settling one by one. */
+.panel.enter { animation: rise 0.34s cubic-bezier(0, 0, 0, 1); }
+.panel.leave { animation: drop 0.09s cubic-bezier(0.55, 0, 1, 1) forwards; }
+@keyframes rise { from { transform: translateY(22px); } to { transform: none; } }
+@keyframes drop { to { transform: translateY(14px); } }
+.panel.enter .row { animation: rowIn 0.28s cubic-bezier(0, 0, 0, 1) backwards; animation-delay: calc(var(--n) * 38ms + 50ms); }
+.panel.enter .fill { animation: barIn 0.5s cubic-bezier(0, 0, 0, 1) backwards; animation-delay: calc(var(--n) * 38ms + 90ms); }
+@keyframes rowIn { from { transform: translateY(9px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes barIn { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+header { display: flex; align-items: center; justify-content: space-between; height: 38px; }
+h1 { font-size: 13px; font-weight: 600; }
+button { width: 28px; height: 28px; margin-right: -6px; border: 0; border-radius: 5px; background: transparent; color: var(--text); display: flex; align-items: center; justify-content: center; }
+button:hover { background: var(--hover); }
+button svg { fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+.row { height: 45px; display: grid; grid-template-columns: 20px minmax(0, 1fr) 40px; gap: 10px; align-items: center; }
+.icon { display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.name { display: flex; align-items: center; gap: 4px; }
+.name span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.name svg { flex: none; color: var(--ok); }
+.pct { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.track { height: 4px; margin-top: 6px; border-radius: 2px; background: var(--track); overflow: hidden; }
+.fill { display: block; height: 100%; border-radius: 2px; background: var(--ok); transform-origin: left center; }
+.row[data-tone="warn"] .fill { background: var(--warn); } .row[data-tone="warn"] .pct { color: var(--warn); }
+.row[data-tone="bad"] .fill { background: var(--bad); } .row[data-tone="bad"] .pct { color: var(--bad); }
+.row.off .pct, .row.off .name { color: var(--sub); font-weight: 400; }
+.empty { color: var(--sub); padding: 14px 0; }

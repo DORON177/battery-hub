@@ -3,42 +3,38 @@
 const { app, BrowserWindow } = require('electron');
 const fs = require('fs');
 const path = require('path');
+const { flat } = require('./brand-marks');
 
 const ASSETS = path.join(__dirname, '..', 'assets');
 if (!fs.existsSync(ASSETS)) fs.mkdirSync(ASSETS, { recursive: true });
 
-// Clean, flat icon: one solid circle, one white lightning bolt. No gradients, no
-// sheen, no shadow. This exact PNG is reused as the in-app brand mark so the icon
-// looks identical inside and outside the app.
-const BRAND_COLOR = '#0a84ff';
-const drawScript = (size) => `
-(() => {
-  const s = ${size};
-  const c = document.createElement('canvas');
-  c.width = s; c.height = s;
-  const x = c.getContext('2d');
-  const cx = s / 2, cy = s / 2, r = s * 0.5;
-
-  // Solid flat circle.
-  x.beginPath();
-  x.arc(cx, cy, r, 0, Math.PI * 2);
-  x.closePath();
-  x.fillStyle = ${JSON.stringify(BRAND_COLOR)};
-  x.fill();
-
-  // Lightning bolt, geometrically centered (24x24 path, bbox x[4..18] y[2..22] -> center 11,12).
-  const pts = [[13,2],[4,14],[10,14],[9,22],[18,10],[12,10]];
-  const boltScale = s / 24 * 0.9;
-  x.translate(cx - 11 * boltScale, cy - 12 * boltScale);
-  x.beginPath();
-  x.moveTo(pts[0][0]*boltScale, pts[0][1]*boltScale);
-  for (let i = 1; i < pts.length; i++) x.lineTo(pts[i][0]*boltScale, pts[i][1]*boltScale);
-  x.closePath();
-  x.fillStyle = '#ffffff';
-  x.fill();
+// Sizes up to 32px are the hand-tuned marks from brand-marks.js; a render shrunk that far turns
+// to mush. Larger sizes come from the 3D render in assets/brand, halved stepwise for quality.
+const BRAND = path.join(ASSETS, 'brand');
+const toDataUrl = (type, data) => `data:${type};base64,${Buffer.from(data).toString('base64')}`;
+const rasterScript = (src, size) => `
+(async () => {
+  const im = new Image();
+  im.src = ${JSON.stringify(src)};
+  await im.decode();
+  let from = im, w = im.naturalWidth;
+  while (w > size * 2) {
+    w = Math.ceil(w / 2);
+    const step = document.createElement('canvas'); step.width = step.height = w;
+    const sx = step.getContext('2d'); sx.imageSmoothingQuality = 'high';
+    sx.drawImage(from, 0, 0, w, w);
+    from = step;
+  }
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const x = c.getContext('2d'); x.imageSmoothingQuality = 'high';
+  x.drawImage(from, 0, 0, size, size);
   return c.toDataURL('image/png');
 })()
-`;
+`.replace(/\bsize\b/g, String(size));
+async function raster(win, src, size) {
+  const url = await win.webContents.executeJavaScript(rasterScript(src, size));
+  return Buffer.from(url.split(',')[1], 'base64');
+}
 
 // Horizontal battery glyph used for the system-tray icons: white shell + terminal, an
 // inner fill bar sized to capacity and coloured by state, a bolt overlay when charging.
@@ -122,18 +118,17 @@ app.whenReady().then(async () => {
   const win = new BrowserWindow({ show: false, webPreferences: { offscreen: true } });
   await win.loadURL('data:text/html,<html><body></body></html>');
 
-  const sizes = [16, 24, 32, 48, 64, 128, 256];
+  const render = toDataUrl('image/png', fs.readFileSync(path.join(BRAND, 'watcher.png')));
+  const mark = (size, mood) => toDataUrl('image/svg+xml', flat(size, mood));
   const pngs = [];
-  for (const size of sizes) {
-    const dataUrl = await win.webContents.executeJavaScript(drawScript(size));
-    const buffer = Buffer.from(dataUrl.split(',')[1], 'base64');
-    pngs.push({ size, buffer });
-    if (size === 256) fs.writeFileSync(path.join(ASSETS, 'icon.png'), buffer);
-    // Same PNG the renderer shows as its brand mark, so in-app == taskbar icon.
-    if (size === 128) fs.writeFileSync(path.join(__dirname, '..', 'src', 'renderer', 'app-icon.png'), buffer);
-  }
-
+  for (const size of [16, 20, 24, 32]) pngs.push({ size, buffer: await raster(win, mark(size), size) });
+  for (const size of [48, 64, 128, 256]) pngs.push({ size, buffer: await raster(win, render, size) });
+  const big = pngs[pngs.length - 1].buffer;
+  fs.writeFileSync(path.join(ASSETS, 'icon.png'), big);
   fs.writeFileSync(path.join(ASSETS, 'icon.ico'), buildIco(pngs));
+  const RENDERER = path.join(__dirname, '..', 'src', 'renderer');
+  fs.writeFileSync(path.join(RENDERER, 'watcher.png'), big);          // About page, empty state
+  fs.writeFileSync(path.join(RENDERER, 'app-icon.png'), pngs[3].buffer); // title bar
 
   // --- Pre-render the system-tray battery glyphs to static PNGs (one per 5% bucket,
   // plus charging + offline). Rendering these once at build time means the running app
@@ -151,6 +146,12 @@ app.whenReady().then(async () => {
     fs.writeFileSync(path.join(TRAY_DIR, v.file), Buffer.from(dataUrl.split(',')[1], 'base64'));
   }
 
-  console.log(`Wrote assets/icon.png, icon-32.png, icon.ico, src/renderer/app-icon.png, and ${variants.length} tray glyphs`);
+  // The face in the tray: 16px plus an @2x file, which Windows picks up on scaled displays.
+  for (const mood of ['full', 'low', 'sleep', 'charge']) {
+    fs.writeFileSync(path.join(TRAY_DIR, `mood-${mood}.png`), await raster(win, mark(16, mood), 16));
+    fs.writeFileSync(path.join(TRAY_DIR, `mood-${mood}@2x.png`), await raster(win, mark(32, mood), 32));
+  }
+
+  console.log(`Wrote assets/icon.png, icon.ico, renderer icons, and ${variants.length} tray glyphs + mood faces`);
   app.quit();
 });

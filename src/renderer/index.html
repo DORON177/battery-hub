@@ -9,7 +9,7 @@
 <body>
   <div class="app">
     <div class="titlebar">
-      <div class="titlebar-title">Battery Hub</div>
+      <div class="titlebar-title"><img src="app-icon.png" width="16" height="16" alt="" draggable="false" />Battery Hub</div>
       <div class="window-controls">
         <button class="wc-btn wc-min" id="win-min" title="Minimize" tabindex="-1">
           <svg width="10" height="10" viewBox="0 0 10 10"><rect x="1" y="4.5" width="8" height="1" rx="0.5"/></svg>
@@ -22,33 +22,19 @@
 
     <div class="body">
       <nav class="sidebar">
-        <div class="brand">
-          <img class="brand-icon" src="app-icon.png" alt="" draggable="false" />
-          <div class="brand-name">Battery Hub</div>
-        </div>
         <div class="nav-items">
           <button class="nav-item active" data-view="dashboard">
-            <span class="nav-icon" aria-hidden="true">
-              <svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="2.5" width="5" height="5" rx="1.4"/><rect x="9" y="2.5" width="5" height="5" rx="1.4"/><rect x="2" y="8.5" width="5" height="5" rx="1.4"/><rect x="9" y="8.5" width="5" height="5" rx="1.4"/></svg>
-            </span>
+            <span class="nav-icon" data-icon="grid" aria-hidden="true"></span>
             <span>Devices</span>
           </button>
           <button class="nav-item" data-view="discover">
-            <span class="nav-icon" aria-hidden="true">
-              <svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 3.2 V12.8 M3.2 8 H12.8" stroke-width="1.6" stroke-linecap="round"/></svg>
-            </span>
+            <span class="nav-icon" data-icon="add" aria-hidden="true"></span>
             <span>Add Device</span>
           </button>
-          <button class="nav-item" data-view="settings">
-            <span class="nav-icon" aria-hidden="true">
-              <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2" stroke-width="1.4" fill="none"/><path d="M8 1.4v1.8M8 12.8v1.8M1.4 8h1.8M12.8 8h1.8M3.3 3.3l1.3 1.3M11.4 11.4l1.3 1.3M12.7 3.3l-1.3 1.3M4.6 11.4l-1.3 1.3" stroke-width="1.2" stroke-linecap="round"/></svg>
-            </span>
+          <button class="nav-item nav-bottom" data-view="settings">
+            <span class="nav-icon" data-icon="settings" aria-hidden="true"></span>
             <span>Settings</span>
           </button>
-        </div>
-        <div class="sidebar-footer">
-          <span class="status-dot" id="status-dot"></span>
-          <span id="sidebar-status">Live</span>
         </div>
       </nav>
 
@@ -57,35 +43,19 @@
           <header class="view-header">
             <div>
               <h1>Devices</h1>
-              <p class="view-sub" id="dashboard-count"></p>
             </div>
             <button class="btn btn-ghost" id="refresh-btn">
               <svg class="refresh-icon" width="14" height="14" viewBox="0 0 14 14"><path d="M12 7a5 5 0 1 1-1.5-3.5 M12 1.5 V4 H9.5" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <span>Refresh</span>
             </button>
           </header>
-          <div class="overview" id="overview" hidden>
-            <div class="stat stat-next">
-              <span class="stat-label">Next to charge</span>
-              <span class="stat-value" id="overview-next"></span>
-              <span class="stat-note" id="overview-next-note"></span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Charging</span>
-              <span class="stat-value" id="overview-charging"></span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Connected</span>
-              <span class="stat-value" id="overview-connected"></span>
-            </div>
-          </div>
           <div class="device-grid" id="device-grid"></div>
           <div class="hidden-bar" id="hidden-bar" hidden>
             <span id="hidden-count"></span>
             <button class="link-btn" id="hidden-toggle">Show</button>
           </div>
           <div class="empty-state" id="dashboard-empty" hidden>
-            <div class="empty-icon">🔋</div>
+            <img class="empty-icon" src="watcher.png" width="96" height="96" alt="" draggable="false" />
             <p class="empty-title">No devices yet</p>
             <p class="empty-desc">Go to <b>Add Device</b> to start monitoring.</p>
           </div>
@@ -140,25 +110,22 @@
             </div>
             <div class="settings-row">
               <div class="settings-label">
-                <span class="settings-title">Accent color</span>
-                <span class="settings-hint">Used for highlights and controls.</span>
-              </div>
-              <div class="swatches" data-setting="accent">
-                <button data-value="#0a84ff" style="--sw:#0a84ff" title="Blue"></button>
-                <button data-value="#34c759" style="--sw:#34c759" title="Green"></button>
-                <button data-value="#ff9f0a" style="--sw:#ff9f0a" title="Orange"></button>
-                <button data-value="#ff375f" style="--sw:#ff375f" title="Pink"></button>
-                <button data-value="#bf5af2" style="--sw:#bf5af2" title="Purple"></button>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-label">
                 <span class="settings-title">Card density</span>
                 <span class="settings-hint">Detailed cards or a compact grid.</span>
               </div>
               <div class="segmented" data-setting="density">
                 <button data-value="detailed">Detailed</button>
                 <button data-value="compact">Compact</button>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-label">
+                <span class="settings-title">Device order</span>
+                <span class="settings-hint">Most urgent first, or drag cards into your own order.</span>
+              </div>
+              <div class="segmented" data-setting="sortMode">
+                <button data-value="urgent">Most urgent</button>
+                <button data-value="manual">My order</button>
               </div>
             </div>
             <div class="settings-row">
@@ -191,12 +158,21 @@
             </div>
             <div class="settings-row">
               <div class="settings-label">
+                <span class="settings-title">Charging notification</span>
+                <span class="settings-hint">Notify when a device starts charging.</span>
+              </div>
+              <button class="toggle" data-setting="notifyCharging" role="switch"><span class="toggle-knob"></span></button>
+            </div>
+            <div class="settings-row">
+              <div class="settings-label">
                 <span class="settings-title">Charged notification</span>
                 <span class="settings-hint">Notify when a device finishes charging.</span>
               </div>
               <button class="toggle" data-setting="notifyCharged" role="switch"><span class="toggle-knob"></span></button>
             </div>
           </div>
+
+          <div id="local-tools"></div>
 
           <div class="settings-group-title">System tray</div>
           <div class="settings-panel">
@@ -257,6 +233,7 @@
           <div class="settings-group-title">About</div>
           <div class="settings-panel">
             <div class="settings-row">
+              <img class="about-icon" src="watcher.png" width="56" height="56" alt="" draggable="false" />
               <div class="settings-label">
                 <span class="settings-title">Battery Hub</span>
                 <span class="settings-hint" id="app-version">Version —</span>
@@ -342,18 +319,6 @@
       <div class="card-main">
       <div class="gauge-wrap">
         <svg viewBox="0 0 120 120" class="gauge">
-          <defs>
-            <!-- glassy 3-stop gradients: a bright glossy highlight, the core color, a deeper edge -->
-            <linearGradient id="gradHigh" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#7bf5a8"/><stop offset="45%" stop-color="#34d15f"/><stop offset="100%" stop-color="#12a848"/>
-            </linearGradient>
-            <linearGradient id="gradMid" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ffe08a"/><stop offset="45%" stop-color="#ffb02e"/><stop offset="100%" stop-color="#f08400"/>
-            </linearGradient>
-            <linearGradient id="gradLow" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ff8a94"/><stop offset="45%" stop-color="#ff5a52"/><stop offset="100%" stop-color="#e5352c"/>
-            </linearGradient>
-          </defs>
           <circle cx="60" cy="60" r="52" class="gauge-track" />
           <circle cx="60" cy="60" r="52" class="gauge-fill" />
         </svg>
@@ -389,6 +354,7 @@
   </template>
 
   <script src="mock.js"></script>
+  <script src="icons.js"></script>
   <script src="estimate.js"></script>
   <script src="app.js"></script>
   <script src="detail.js"></script>

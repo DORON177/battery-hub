@@ -6,13 +6,14 @@ const DEFAULT_SETTINGS = {
   pollIntervalSec: 60,
   theme: 'system',          // 'system' | 'light' | 'dark'
   density: 'detailed',      // 'detailed' | 'compact'
-  accent: '#0a84ff',        // accent color
+  sortMode: 'urgent',       // 'urgent' | 'manual'
   reduceMotion: false,      // disable all UI animations/transitions
   notifyEnabled: true,
   notifyThreshold: 20,      // notify when battery drops below this %
+  notifyCharging: true,     // notify when a device starts charging
   notifyCharged: false,     // notify when a device finishes charging
   trayEnabled: true,        // show tray battery icons
-  trayMode: 'perDevice',    // 'perDevice' | 'list'
+  trayMode: 'list',         // 'perDevice' | 'list'
   closeToTray: true,        // hide to tray instead of quitting on close
   launchAtLogin: false,
   startMinimized: false,
@@ -25,6 +26,14 @@ const store = new Store({
     settings: { ...DEFAULT_SETTINGS },
   },
 });
+
+// Settings written before the redesign hold the old defaults; move those to the new ones once,
+// so a choice made after this point is never overridden.
+if (!store.get('uiV2')) {
+  const { accent, ...old } = store.get('settings');
+  store.set('settings', { ...old, trayMode: 'list' });
+  store.set('uiV2', true);
+}
 
 // ---- devices ----
 function getDevices() {

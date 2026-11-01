@@ -33,6 +33,17 @@ contextBridge.exposeInMainWorld('batteryHub', {
   },
   openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
 
+  localTools: () => ipcRenderer.invoke('local-tools:list'),
+  runLocalTool: (id) => ipcRenderer.send('local-tools:run', id),
+
+  // tray flyout
+  getFlyoutData: () => ipcRenderer.invoke('flyout:data'),
+  onFlyoutData: (cb) => ipcRenderer.on('flyout-data', (evt, data) => cb(data)),
+  onFlyoutOpen: (cb) => ipcRenderer.on('flyout-open', (evt, animated) => cb(animated)),
+  onFlyoutClose: (cb) => ipcRenderer.on('flyout-close', () => cb()),
+  hideFlyout: () => ipcRenderer.send('flyout:hide'),
+  openApp: () => ipcRenderer.send('flyout:open-app'),
+
   // window / app
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   closeWindow: () => ipcRenderer.send('window:close'),

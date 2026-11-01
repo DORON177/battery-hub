@@ -9,14 +9,13 @@ const state = {
   showHidden: false,
 };
 
-function iconFor(product, driverId) {
-  const p = (product || '').toLowerCase();
-  if (driverId === 'mchose' || p.includes('headset') || p.includes('headphone') || p.includes('earbud') || p.includes('buds')) return '🎧';
-  if (driverId === 'kysona' || p.includes('mouse')) return '🖱️';
-  if (p.includes('keyboard')) return '⌨️';
-  if (p.includes('controller') || p.includes('gamepad') || p.includes('dualsense')) return '🎮';
-  return '🔌';
+// A picked emoji wins; otherwise the device-type icon.
+function paintDeviceIcon(el, dev) {
+  if (dev.customIcon) el.textContent = dev.customIcon;
+  else el.innerHTML = iconSvg(iconFor(dev.product, dev.driverId));
 }
+
+document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = iconSvg(el.dataset.icon, 18); });
 
 function timeAgo(ts) {
   if (!ts) return 'never';
@@ -44,11 +43,11 @@ function buildSparkPoints(history) {
 }
 
 function sparkColor(pct, charging) {
-  if (charging) return 'var(--green)';
+  if (charging) return 'var(--level-high)';
   if (pct == null) return 'var(--text-tertiary)';
-  if (pct <= 20) return 'var(--red)';
-  if (pct <= 45) return 'var(--yellow)';
-  return 'var(--green)';
+  if (pct <= 20) return 'var(--level-low)';
+  if (pct <= 45) return 'var(--level-mid)';
+  return 'var(--level-high)';
 }
 
 function formatDuration(hours) {
@@ -143,23 +142,20 @@ document.querySelectorAll('.nav-item[data-view]').forEach((el) => {
 
 // ---------- dashboard ----------
 
-// The summary above the cards. Device names go through textContent like everywhere else.
-function renderOverview() {
-  const summary = summarize(Object.values(state.saved));
-  document.getElementById('overview').hidden = summary.total === 0;
-  const { next } = summary;
-  document.getElementById('overview-next').textContent = next
-    ? next.device.customName || next.device.product || 'Device'
-    : 'Nothing right now';
-  let note = '';
-  if (next) {
-    note = next.hoursLeft == null
-      ? `${next.capacity}%`
-      : `${next.capacity}% · ~${formatDuration(next.hoursLeft)} left`;
-  }
-  document.getElementById('overview-next-note').textContent = note;
-  document.getElementById('overview-charging').textContent = summary.charging;
-  document.getElementById('overview-connected').textContent = `${summary.connected} of ${summary.total}`;
+function orderedIds() {
+  const urgent = currentSettings.sortMode !== 'manual';
+  return Object.keys(state.saved).sort((a, b) => (urgent
+    ? urgencyCompare(state.saved[a], state.saved[b])
+    : (state.saved[a].order ?? 1e9) - (state.saved[b].order ?? 1e9)));
+}
+
+// Levels change while the app is open, so keep the urgent order current without rebuilding.
+function resortCards() {
+  if (currentSettings.sortMode === 'manual') return;
+  const grid = document.getElementById('device-grid');
+  const wanted = orderedIds().map((id) => state.cardEls.get(id)).filter(Boolean).map((c) => c.el);
+  if (wanted.every((el, i) => grid.children[i] === el)) return;
+  wanted.forEach((el) => { el.style.animation = 'none'; grid.appendChild(el); });
 }
 
 // "N hidden — Show/Hide" strip under the grid; the only route back for a hidden device.
@@ -178,10 +174,7 @@ async function refreshDashboard() {
   state.saved = await window.batteryHub.listSavedDevices();
   const grid = document.getElementById('device-grid');
   const empty = document.getElementById('dashboard-empty');
-  const count = document.getElementById('dashboard-count');
-  const allIds = Object.keys(state.saved).sort(
-    (a, b) => (state.saved[a].order ?? 1e9) - (state.saved[b].order ?? 1e9)
-  );
+  const allIds = orderedIds();
   // Hidden devices drop off the grid unless the user has expanded them.
   const hiddenIds = allIds.filter((id) => state.saved[id].hidden);
   const ids = state.showHidden ? allIds : allIds.filter((id) => !state.saved[id].hidden);
@@ -189,11 +182,6 @@ async function refreshDashboard() {
   renderHiddenBar(hiddenIds.length);
 
   empty.hidden = allIds.length > 0;
-  renderOverview();
-  const monitored = allIds.length - hiddenIds.length;
-  count.textContent = monitored
-    ? `${monitored} device${monitored > 1 ? 's' : ''} monitored`
-    : '';
   grid.innerHTML = '';
   state.cardEls.clear();
 
@@ -259,7 +247,7 @@ function buildDeviceCard(dev) {
   const el = tpl.content.firstElementChild.cloneNode(true);
 
   el.dataset.id = dev.id;
-  el.draggable = true;
+  el.draggable = currentSettings.sortMode === 'manual';
   el.tabIndex = 0;
   el.setAttribute('aria-haspopup', 'dialog');
   el.setAttribute('aria-label', `${dev.customName || dev.product || 'Device'}: open details`);
@@ -273,7 +261,12 @@ function buildDeviceCard(dev) {
     e.preventDefault();
     openDetail(dev.id);
   });
+  let pressedControl = false;
+  el.addEventListener('pointerdown', (e) => {
+    pressedControl = !!e.target.closest('button, input, .device-type-icon, .menu-dropdown');
+  });
   el.addEventListener('dragstart', (e) => {
+    if (pressedControl) { e.preventDefault(); return; }
     e.dataTransfer.effectAllowed = 'move';
     try { e.dataTransfer.setData('text/plain', dev.id); } catch (_) {}
     // Apply the hidden-source style only AFTER the browser has snapshotted the drag
@@ -287,7 +280,7 @@ function buildDeviceCard(dev) {
   });
 
   el.querySelector('.device-name').textContent = dev.customName || dev.product || 'Device';
-  el.querySelector('.device-type-icon').textContent = dev.customIcon || iconFor(dev.product, dev.driverId);
+  paintDeviceIcon(el.querySelector('.device-type-icon'), dev);
 
   const menuBtn = el.querySelector('.menu-btn');
   const dropdown = el.querySelector('.menu-dropdown');
@@ -361,20 +354,14 @@ function buildDeviceCard(dev) {
 }
 
 // Status colors for the percentage text. The ring itself uses the gradients in index.html.
-const COLOR_HIGH = '#30d158';
-const COLOR_MID = '#ff9f0a';
-const COLOR_LOW = '#ff453a';
-const COLOR_OFF = '#8e8e93';
-
 function gaugeStyleFor(pct, charging, offline) {
-  if (offline) return { stroke: 'var(--text-tertiary)', text: COLOR_OFF, glow: 'transparent' };
-  if (charging) return { stroke: 'url(#gradHigh)', text: COLOR_HIGH, glow: 'rgba(48, 209, 88, 0.28)' };
-  if (pct <= 20) return { stroke: 'url(#gradLow)', text: COLOR_LOW, glow: 'rgba(255, 69, 58, 0.28)' };
-  if (pct <= 45) return { stroke: 'url(#gradMid)', text: COLOR_MID, glow: 'rgba(255, 159, 10, 0.28)' };
-  return { stroke: 'url(#gradHigh)', text: COLOR_HIGH, glow: 'rgba(48, 209, 88, 0.24)' };
+  if (offline) return { stroke: 'var(--text-tertiary)', text: 'var(--text-tertiary)' };
+  if (charging) return { stroke: 'var(--level-high)', text: 'var(--level-high)' };
+  if (pct <= 20) return { stroke: 'var(--level-low)', text: 'var(--level-low)' };
+  if (pct <= 45) return { stroke: 'var(--level-mid)', text: 'var(--level-mid)' };
+  return { stroke: 'var(--level-high)', text: 'var(--level-high)' };
 }
 
-// Smoothly counts the percentage label from its previous value to the new one.
 function animatePct(card, to) {
   const from = card.lastPct;
   card.lastPct = to;
@@ -408,14 +395,12 @@ function applyReading(card, dev) {
     card.pctLabel.textContent = offline ? 'off' : '…';
     card.pctLabel.classList.add('small');
     card.gaugeFill.style.strokeDashoffset = `${GAUGE_CIRCUMFERENCE}`;
-    card.gaugeWrap.style.setProperty('--ring-glow', 'transparent');
   } else {
     animatePct(card, pct);
     const offset = GAUGE_CIRCUMFERENCE * (1 - pct / 100);
     card.gaugeFill.style.strokeDashoffset = `${offset}`;
     const style = gaugeStyleFor(pct, charging, offline);
     card.gaugeFill.style.stroke = style.stroke;
-    card.gaugeWrap.style.setProperty('--ring-glow', style.glow);
     card.pctLabel.style.setProperty('--pct-color', style.text);
   }
 
@@ -444,7 +429,7 @@ window.batteryHub.onBatteryUpdate((dev) => {
   state.saved[dev.id] = dev;
   const card = state.cardEls.get(dev.id);
   if (card) applyReading(card, dev);
-  renderOverview();
+  resortCards();
   updateDetail(dev.id);
 });
 
@@ -484,7 +469,7 @@ async function refreshDiscover() {
     const badge = d.suggestedDriver ? '<span class="badge">auto-detected</span>' : '';
     row.innerHTML = `
       <div class="list-item-main">
-        <span class="list-item-emoji">${iconFor(d.product, d.suggestedDriver)}</span>
+        <span class="list-item-emoji">${iconSvg(iconFor(d.product, d.suggestedDriver))}</span>
         <div class="list-item-info">
           <div class="list-item-title">${escapeHtml(d.product)}${badge}</div>
           <div class="list-item-sub">${escapeHtml(d.manufacturer || 'Unknown manufacturer')} · ${d.channelCount} channels</div>
@@ -786,7 +771,7 @@ function openIconPicker(card, dev) {
 
 async function applyDeviceIcon(card, dev, icon, pop) {
   dev.customIcon = icon || null;
-  card.el.querySelector('.device-type-icon').textContent = dev.customIcon || iconFor(dev.product, dev.driverId);
+  paintDeviceIcon(card.el.querySelector('.device-type-icon'), dev);
   if (pop) pop.remove();
   await window.batteryHub.setDeviceIcon(dev.id, dev.customIcon);
 }
@@ -798,7 +783,6 @@ const currentSettings = {};
 function applyClientSettings(s) {
   document.body.classList.toggle('density-compact', s.density === 'compact');
   document.body.classList.toggle('reduce-motion', !!s.reduceMotion);
-  document.documentElement.style.setProperty('--accent', s.accent || '#0a84ff');
 }
 
 function reflectSettingControls(s) {
@@ -807,9 +791,6 @@ function reflectSettingControls(s) {
   });
   document.querySelectorAll('.segmented[data-setting]').forEach((seg) => {
     seg.querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.value === s[seg.dataset.setting]));
-  });
-  document.querySelectorAll('.swatches[data-setting]').forEach((sw) => {
-    sw.querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.value === s[sw.dataset.setting]));
   });
   document.querySelectorAll('input[data-setting]').forEach((inp) => {
     inp.value = s[inp.dataset.setting];
@@ -860,6 +841,7 @@ async function updateSetting(key, value) {
   Object.assign(currentSettings, s);
   applyClientSettings(s);
   reflectSettingControls(s);
+  if (key === 'sortMode') refreshDashboard();
 }
 
 function wireSettingsControls() {
@@ -867,9 +849,6 @@ function wireSettingsControls() {
     t.addEventListener('click', () => updateSetting(t.dataset.setting, !currentSettings[t.dataset.setting]));
   });
   document.querySelectorAll('.segmented[data-setting] button').forEach((b) => {
-    b.addEventListener('click', () => updateSetting(b.parentElement.dataset.setting, b.dataset.value));
-  });
-  document.querySelectorAll('.swatches[data-setting] button').forEach((b) => {
     b.addEventListener('click', () => updateSetting(b.parentElement.dataset.setting, b.dataset.value));
   });
   document.querySelectorAll('input[data-setting]').forEach((inp) => {
@@ -885,6 +864,39 @@ function wireSettingsControls() {
   });
   const quitBtn = document.getElementById('quit-app-btn');
   if (quitBtn) quitBtn.addEventListener('click', () => window.batteryHub.quitApp && window.batteryHub.quitApp());
+}
+
+// Personal test panel. Only appears when the git-ignored src/main/local-tools.js is present, so
+// it exists in local builds and never in a release.
+async function initLocalTools() {
+  const tools = window.batteryHub.localTools && await window.batteryHub.localTools();
+  if (!tools) return;
+  const host = document.getElementById('local-tools');
+  const title = document.createElement('div');
+  title.className = 'settings-group-title';
+  title.textContent = 'Notification test (this PC only)';
+  const panel = document.createElement('div');
+  panel.className = 'settings-panel';
+  for (const tool of tools) {
+    const row = document.createElement('div');
+    row.className = 'settings-row';
+    const label = document.createElement('div');
+    label.className = 'settings-label';
+    const name = document.createElement('span');
+    name.className = 'settings-title';
+    name.textContent = tool.title;
+    const hint = document.createElement('span');
+    hint.className = 'settings-hint';
+    hint.textContent = tool.hint;
+    label.append(name, hint);
+    const send = document.createElement('button');
+    send.className = 'btn btn-ghost';
+    send.textContent = tool.action;
+    send.addEventListener('click', () => window.batteryHub.runLocalTool(tool.id));
+    row.append(label, send);
+    panel.append(row);
+  }
+  host.append(title, panel);
 }
 
 async function loadSettings() {
@@ -967,7 +979,6 @@ setInterval(() => {
     const dev = state.saved[id];
     if (dev) applyReading(card, dev);
   }
-  renderOverview();
 }, 15000);
 
 (async () => {
@@ -976,4 +987,5 @@ setInterval(() => {
   initAbout();
   await loadSettings();
   await refreshDashboard();
+  initLocalTools();
 })();
