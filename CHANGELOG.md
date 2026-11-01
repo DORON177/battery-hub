@@ -6,11 +6,21 @@ All notable changes to this project are documented here. Versions follow
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-01
+
 ### Added
-- Overview above the cards showing which device needs charging next, how soon, and how
-  many devices are charging and connected.
+- New logo and a redesigned window with square device cards and a large level ring.
+- New installer window with the character and a progress bar: no setup pages, and the app
+  opens when it finishes.
+- Charging notification when a device starts charging, on by default.
+- Devices can sort most urgent first (the default) or stay in your own order.
+- Tray flyout: click the tray icon to see every battery. The single tray icon now has a
+  face that follows the battery that most needs attention.
 - Device detail panel: click a card for a 24-hour or 7-day battery chart, drain rate, time
   left, last charge and voltage.
+
+### Removed
+- Accent colour setting. The app now always uses its teal.
 
 ### Fixed
 - Time-left estimates were far too short. Flat stretches of history were left out of the
@@ -18,7 +28,6 @@ All notable changes to this project are documented here. Versions follow
   it. A device that lost 15% in 17 hours showed about 1 hour left instead of about 51.
 - Card hover lift never applied, and offline cards were never dimmed: the entry animation
   kept overriding both after it finished.
-- Choosing an accent colour left the selection tint and button hover blue.
 - Removing or hiding a device during a battery read could bring it back as an empty entry
   or restore its tray icon.
 - Restarting monitoring could leave a headset reader process running untracked, after
@@ -140,7 +149,8 @@ First stable release, consolidating the 1.0.x and 1.1.x series.
 Initial public release: live battery monitoring for wireless HID devices, per-device tray
 icons, low-battery notifications, history sparklines and the guided calibration wizard.
 
-[Unreleased]: https://github.com/DORON177/battery-hub/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/DORON177/battery-hub/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/DORON177/battery-hub/releases/tag/v1.3.0
 [1.2.0]: https://github.com/DORON177/battery-hub/releases/tag/v1.2.0
 [1.1.5]: https://github.com/DORON177/battery-hub/releases/tag/v1.1.5
 [1.1.4]: https://github.com/DORON177/battery-hub/releases/tag/v1.1.4
