@@ -53,7 +53,7 @@ function moodImage(mood) {
 
 function statusText(info) {
   if (info.offline || info.capacity == null) return 'Not connected';
-  if (info.charging) return `Charging · ${info.capacity}%`;
+  if (info.charging) return `Charging, ${info.capacity}%`;
   return `${info.capacity}%`;
 }
 
@@ -94,7 +94,7 @@ function renderPerDeviceOne(id) {
   }
 
   const status = statusText(info);
-  entry.tray.setToolTip(`${info.name} — ${status}`);
+  entry.tray.setToolTip(`${info.name}: ${status}`);
   entry.tray.setContextMenu(Menu.buildFromTemplate([
     { label: info.name, enabled: false },
     { label: status, enabled: false },
@@ -123,9 +123,9 @@ function renderList() {
     listTray.setImage(img);
   }
 
-  listTray.setToolTip(['Battery Hub', ...list.map((d) => `${d.name} — ${statusText(d)}`)].join('\n'));
+  listTray.setToolTip(['Battery Hub', ...list.map((d) => `${d.name}: ${statusText(d)}`)].join('\n'));
   const items = [{ label: 'Battery Hub', enabled: false }, { type: 'separator' }];
-  for (const d of list) items.push({ label: `${d.name} — ${statusText(d)}`, enabled: false });
+  for (const d of list) items.push({ label: `${d.name}: ${statusText(d)}`, enabled: false });
   items.push(
     { type: 'separator' },
     { label: 'Open Battery Hub', click: () => handlers.open() },

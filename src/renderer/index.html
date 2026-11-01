@@ -29,7 +29,7 @@
           </button>
           <button class="nav-item" data-view="discover">
             <span class="nav-icon" data-icon="add" aria-hidden="true"></span>
-            <span>Add Device</span>
+            <span>Add device</span>
           </button>
           <button class="nav-item nav-bottom" data-view="settings">
             <span class="nav-icon" data-icon="settings" aria-hidden="true"></span>
@@ -57,14 +57,14 @@
           <div class="empty-state" id="dashboard-empty" hidden>
             <img class="empty-icon" src="watcher.png" width="96" height="96" alt="" draggable="false" />
             <p class="empty-title">No devices yet</p>
-            <p class="empty-desc">Go to <b>Add Device</b> to start monitoring.</p>
+            <p class="empty-desc">Go to <b>Add device</b> to start monitoring.</p>
           </div>
         </section>
 
         <section id="view-discover" class="view">
           <header class="view-header">
             <div>
-              <h1>Add Device</h1>
+              <h1>Add device</h1>
               <p class="view-sub">Pick a device to start tracking its battery.</p>
             </div>
             <button class="btn btn-ghost" id="rescan-btn">
@@ -81,7 +81,7 @@
               <button class="btn btn-ghost btn-icon" id="calibrate-back" title="Back">
                 <svg width="14" height="14" viewBox="0 0 14 14"><path d="M8.5 2.5 L4 7 l4.5 4.5" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
-              <h1 id="calibrate-title">Calibrate device</h1>
+              <h1 id="calibrate-title">Set up device</h1>
             </div>
           </header>
           <div class="calibrate-body" id="calibrate-body"></div>
@@ -91,7 +91,6 @@
           <header class="view-header">
             <div>
               <h1>Settings</h1>
-              <p class="view-sub">Preferences for Battery Hub.</p>
             </div>
           </header>
 
@@ -202,7 +201,7 @@
             </div>
           </div>
 
-          <div class="settings-group-title">Startup &amp; monitoring</div>
+          <div class="settings-group-title">Startup and monitoring</div>
           <div class="settings-panel">
             <div class="settings-row">
               <div class="settings-label">
@@ -236,7 +235,7 @@
               <img class="about-icon" src="watcher.png" width="56" height="56" alt="" draggable="false" />
               <div class="settings-label">
                 <span class="settings-title">Battery Hub</span>
-                <span class="settings-hint" id="app-version">Version —</span>
+                <span class="settings-hint" id="app-version">Version</span>
               </div>
               <button class="btn btn-ghost" id="check-updates-btn">Check for updates</button>
             </div>
@@ -245,12 +244,11 @@
                 <span class="settings-title" id="update-status-title"></span>
                 <span class="settings-hint" id="update-status-hint"></span>
               </div>
-              <button class="btn btn-primary" id="install-update-btn" hidden>Restart &amp; install</button>
+              <button class="btn btn-primary" id="install-update-btn" hidden>Restart and install</button>
             </div>
           </div>
 
           <div class="settings-footer">
-            <span>Battery Hub · monitoring your devices</span>
             <button class="btn btn-danger" id="quit-app-btn">Quit Battery Hub</button>
           </div>
         </section>

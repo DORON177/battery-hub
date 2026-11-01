@@ -10,8 +10,7 @@ function row(d, n) {
   if (!off && !d.charging) el.dataset.tone = d.capacity <= 10 ? 'bad' : d.capacity <= 20 ? 'warn' : 'ok';
   const icon = document.createElement('div');
   icon.className = 'icon';
-  if (d.customIcon) icon.textContent = d.customIcon;
-  else icon.innerHTML = iconSvg(iconFor(d.product, d.driverId), 18);
+  icon.innerHTML = iconSvg(deviceIconName(d), 18);
   const body = document.createElement('div');
   const name = document.createElement('div');
   name.className = 'name';
