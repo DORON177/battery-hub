@@ -9,10 +9,8 @@ const state = {
   showHidden: false,
 };
 
-// A picked emoji wins; otherwise the device-type icon.
 function paintDeviceIcon(el, dev) {
-  if (dev.customIcon) el.textContent = dev.customIcon;
-  else el.innerHTML = iconSvg(iconFor(dev.product, dev.driverId));
+  el.innerHTML = iconSvg(deviceIconName(dev));
 }
 
 document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = iconSvg(el.dataset.icon, 18); });
@@ -459,7 +457,7 @@ async function refreshDiscover() {
 
   const unadded = live.filter((d) => !saved[d.id]);
   if (unadded.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p class="empty-title">No new devices</p><p class="empty-desc">Plug something in and hit Rescan.</p></div>';
+    list.innerHTML = '<div class="empty-state"><p class="empty-title">No new devices</p><p class="empty-desc">Plug something in and hit Rescan.</p></div>';
     return;
   }
 
@@ -472,13 +470,13 @@ async function refreshDiscover() {
         <span class="list-item-emoji">${iconSvg(iconFor(d.product, d.suggestedDriver))}</span>
         <div class="list-item-info">
           <div class="list-item-title">${escapeHtml(d.product)}${badge}</div>
-          <div class="list-item-sub">${escapeHtml(d.manufacturer || 'Unknown manufacturer')} · ${d.channelCount} channels</div>
+          <div class="list-item-sub">${escapeHtml(d.manufacturer || 'Unknown manufacturer')} · ${d.channelCount} channel${d.channelCount === 1 ? '' : 's'}</div>
         </div>
       </div>
     `;
     const btn = document.createElement('button');
     btn.className = 'btn btn-primary';
-    btn.textContent = d.suggestedDriver ? 'Add' : 'Calibrate & Add';
+    btn.textContent = d.suggestedDriver ? 'Add' : 'Set up';
     btn.addEventListener('click', async () => {
       if (d.suggestedDriver) {
         btn.disabled = true;
@@ -511,24 +509,16 @@ document.getElementById('rescan-btn').addEventListener('click', refreshDiscover)
 async function startCalibration(id, product, manufacturer) {
   state.calibration = { id, product, manufacturer, frames: [], selected: null };
   switchView('calibrate');
-  document.getElementById('calibrate-title').textContent = `Calibrate: ${product}`;
+  document.getElementById('calibrate-title').textContent = `Set up ${product}`;
   const body = document.getElementById('calibrate-body');
   body.innerHTML = `
     <div class="step-card">
-      <div class="step-title">Step 1 — Scan for the device's signal</div>
+      <div class="step-title">1. Scan the device</div>
       <div class="step-desc">
-        Battery Hub will listen to this device for <b>30 seconds</b> and record everything it sends.
+        The scan takes 30 seconds. While it runs, turn the device off and on once or twice, because
+        many devices only report their battery at power on. If the device has its own app, keep it open.
       </div>
-      <div class="scan-tip">
-        <span class="scan-tip-icon">🔌</span>
-        <div>
-          <b>While it's scanning, turn the device off and back on</b> — once or twice.
-          Many wireless devices only report their battery the moment they power on, so this is
-          the surest way to catch it. If the device has its own app showing the battery %, keep
-          it open too.
-        </div>
-      </div>
-      <button class="btn btn-primary" id="start-capture-btn">Start 30-second Scan</button>
+      <button class="btn btn-primary" id="start-capture-btn">Start scan</button>
     </div>
     <div id="capture-results"></div>
   `;
@@ -548,7 +538,7 @@ async function runCapture() {
     <div class="step-card scan-live">
       <div class="scan-live-head">
         <span class="spinner"></span>
-        <span>Listening… <b>turn your device off and on now</b></span>
+        <span>Turn your device off and on now</span>
       </div>
       <div class="scan-progress"><div class="scan-bar" id="scan-bar"></div></div>
       <div class="scan-remaining"><span id="scan-timer">${SCAN_SECONDS}</span>s remaining</div>
@@ -571,13 +561,13 @@ async function runCapture() {
     clearInterval(ticker);
     results.innerHTML = `<div class="step-card"><div class="step-desc">Scan failed: ${escapeHtml(e.message)}</div></div>`;
     btn.disabled = false;
-    btn.textContent = 'Scan Again';
+    btn.textContent = 'Scan again';
     return;
   }
 
   clearInterval(ticker);
   btn.disabled = false;
-  btn.textContent = 'Scan Again';
+  btn.textContent = 'Scan again';
   state.calibration.frames = frames;
   renderCaptureResults();
 }
@@ -597,7 +587,7 @@ function renderCaptureResults() {
     ).join('');
     return `
       <div class="frame-row">
-        <div class="frame-row-head">channel 0x${f.usagePage.toString(16)} · ${f.reportKind} report ${f.reportId} · seen ${f.count}×</div>
+        <div class="frame-row-head">Channel 0x${f.usagePage.toString(16)}, ${f.reportKind} report ${f.reportId}, seen ${f.count} times</div>
         <div class="byte-grid">${cells}</div>
       </div>
     `;
@@ -605,29 +595,29 @@ function renderCaptureResults() {
 
   container.innerHTML = `
     <div class="step-card">
-      <div class="step-title">Step 2 — Pick the battery byte</div>
+      <div class="step-title">2. Pick the battery value</div>
       <div class="step-desc">
-        Each row is one distinct message this device sent. Click the number that matches (or tracks) the battery percentage —
-        commonly a value between 0 and 100.
+        Each row is a message from the device. Click the number that matches its battery level,
+        usually a value from 0 to 100.
       </div>
       <div class="frame-table">${rows}</div>
     </div>
     <div class="step-card" id="calibrate-form-card" hidden>
-      <div class="step-title">Step 3 — Confirm the value</div>
+      <div class="step-title">3. Confirm</div>
       <div class="calibrate-form">
         <div class="form-row">
-          <label>Raw value right now:</label>
+          <label>Selected value</label>
           <span id="raw-value-display" style="font-weight:700"></span>
         </div>
         <div class="checkbox-row">
           <input type="checkbox" id="passthrough-check" checked />
-          <label for="passthrough-check">This number already IS the battery percentage</label>
+          <label for="passthrough-check">This number is the battery percentage</label>
         </div>
         <div class="form-row" id="known-pct-row" hidden>
-          <label>Actual battery % right now (check the device's own app):</label>
+          <label>Battery level shown in the device's own app</label>
           <input type="number" id="known-pct-input" min="1" max="100" value="100" />
         </div>
-        <button class="btn btn-primary" id="save-calibration-btn">Save &amp; Add Device</button>
+        <button class="btn btn-primary" id="save-calibration-btn">Save and add</button>
       </div>
     </div>
   `;
@@ -723,10 +713,8 @@ function startRename(card, dev) {
 
 // ---------- change icon ----------
 
-// A small, device-flavoured emoji palette. Picking one stores a customIcon override;
-// "Auto" clears it and falls back to iconFor().
-// Computer peripherals only.
-const ICON_CHOICES = ['🖱️', '⌨️', '🎧', '🎤', '🔊', '📷', '🎮', '🖊️'];
+// Picking one stores a customIcon override; "Auto" clears it and falls back to iconFor().
+const ICON_CHOICES = [['mouse', 'Mouse'], ['keyboard', 'Keyboard'], ['headset', 'Headset'], ['mic', 'Microphone'], ['speaker', 'Speaker'], ['camera', 'Camera'], ['controller', 'Controller'], ['pen', 'Pen']];
 
 function openIconPicker(card, dev) {
   document.querySelectorAll('.icon-picker').forEach((p) => p.remove()); // one at a time
@@ -748,12 +736,14 @@ function openIconPicker(card, dev) {
 
   const grid = document.createElement('div');
   grid.className = 'icon-picker-grid';
-  for (const emo of ICON_CHOICES) {
+  for (const [name, label] of ICON_CHOICES) {
     const b = document.createElement('button');
     b.className = 'icon-choice';
-    b.textContent = emo;
-    if (dev.customIcon === emo) b.classList.add('selected');
-    b.addEventListener('click', () => applyDeviceIcon(card, dev, emo, pop));
+    b.title = label;
+    b.setAttribute('aria-label', label);
+    b.innerHTML = iconSvg(name);
+    if (dev.customIcon && deviceIconName(dev) === name) b.classList.add('selected');
+    b.addEventListener('click', () => applyDeviceIcon(card, dev, name, pop));
     grid.appendChild(b);
   }
 
@@ -941,10 +931,10 @@ async function initAbout() {
     window.batteryHub.onUpdateEvent((e) => {
       switch (e.status) {
         case 'checking': if (manual) show('Checking for updates…', ''); break;
-        case 'available': show(`Update available — v${e.version}`, 'Downloading in the background…', false); break;
+        case 'available': show(`Update available: v${e.version}`, 'Downloading in the background…', false); break;
         case 'downloading': show('Downloading update…', `${e.percent}%`, false); break;
         case 'downloaded':
-          show(`Update ready — v${e.version}`, 'Restart to finish installing.', true);
+          show(`Update ready: v${e.version}`, 'Restart to finish installing.', true);
           installBtn.onclick = () => window.batteryHub.installUpdate();
           break;
         case 'not-available': manual ? show("You're up to date", 'You have the latest version.', false) : hideRow(); break;

@@ -340,20 +340,20 @@ html, body {
 
 /* emoji picker popover (Change icon) — anchored like the menu, wide enough for a 6-col grid */
 .icon-picker {
-  position: absolute; right: 11px; top: 38px; z-index: 25;
-  width: 236px; padding: 10px;
+  position: absolute; right: 6px; top: 42px; z-index: 25;
+  width: 176px; padding: 8px;
   background: var(--sheet-bg);
   border: none;
   border-radius: var(--radius-md);
   box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 0 1px var(--glass-edge-soft), var(--shadow-pop);
   transform-origin: top right;
-  animation: menuPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: menuPop 0.16s cubic-bezier(0, 0, 0, 1);
 }
 .icon-picker-head {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 8px; padding: 0 2px;
 }
-.icon-picker-head span { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.icon-picker-head span { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
 .icon-picker-auto {
   border: 1px solid var(--border-strong); background: transparent;
   color: var(--text); font-size: 11px; font-weight: 600;
@@ -361,17 +361,16 @@ html, body {
   transition: background 0.15s ease, color 0.15s ease;
 }
 .icon-picker-auto:hover { background: var(--hover-fill); }
-.icon-picker-auto.selected { background: var(--accent); color: #fff; border-color: transparent; }
-.icon-picker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; }
+.icon-picker-auto.selected { background: var(--hover-fill); color: var(--text); border-color: transparent; }
+.icon-picker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; }
 .icon-choice {
-  border: none; background: transparent; cursor: default;
-  font-size: 18px; line-height: 1;
-  width: 100%; aspect-ratio: 1; border-radius: 8px;
+  border: none; background: transparent; cursor: default; color: var(--text-secondary);
+  width: 100%; aspect-ratio: 1; border-radius: var(--radius-md);
   display: flex; align-items: center; justify-content: center;
-  transition: background 0.12s ease, transform 0.12s ease;
+  transition: background 0.12s ease, color 0.12s ease;
 }
-.icon-choice:hover { background: var(--hover-fill); transform: scale(1.12); }
-.icon-choice.selected { background: var(--hover-fill); box-shadow: inset 0 0 0 2px var(--accent); }
+.icon-choice:hover { background: var(--hover-fill); color: var(--text); }
+.icon-choice.selected { background: var(--hover-fill); color: var(--accent); }
 
 .device-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* Menus are taller than a card, so lift the card above the row below while one is open. */
@@ -415,8 +414,7 @@ html, body {
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
 }
-.device-type-icon:hover { background: var(--card-hover-bg); border-color: var(--accent); transform: scale(1.08); }
-.device-type-icon:active { transform: scale(0.96); }
+.device-type-icon:hover { background: var(--card-hover-bg); border-color: var(--border-strong); }
 .device-name {
   font-size: 14px; font-weight: 600; letter-spacing: -0.1px; line-height: 1.25;
   min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
@@ -597,7 +595,7 @@ html, body {
   box-shadow: inset 0 1px 0 var(--glass-edge), inset 0 0 0 1px var(--glass-edge-soft), var(--shadow-pop);
 }
 .list-item-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.list-item-emoji { font-size: 20px; flex-shrink: 0; }
+.list-item-emoji { display: flex; flex-shrink: 0; color: var(--text-secondary); }
 .list-item-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .list-item-title { font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .list-item-sub { font-size: 11.5px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -619,10 +617,10 @@ html, body {
     inset 0 0 0 1px var(--glass-edge-soft),
     var(--shadow-card);
 }
-.step-title { font-size: 13.5px; font-weight: 700; margin-bottom: 7px; }
-.step-desc { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.55; }
+.step-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.step-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.5; max-width: 60ch; }
 .frame-table { display: flex; flex-direction: column; gap: 8px; max-height: 330px; overflow-y: auto; }
-.frame-row { border: 1px solid var(--border); border-radius: 10px; padding: 9px 10px; }
+.frame-row { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 9px 10px; }
 .frame-row-head { color: var(--text-secondary); margin-bottom: 7px; font-size: 11px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
 .byte-grid { display: flex; flex-wrap: wrap; gap: 4px; }
 .byte-cell {
@@ -641,15 +639,6 @@ html, body {
 .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-secondary); }
 
 /* pairing scan */
-.scan-tip {
-  display: flex; gap: 10px; align-items: flex-start;
-  background: var(--green-soft);
-  border: 1px solid rgba(52, 199, 89, 0.28);
-  border-radius: var(--radius-md);
-  padding: 12px 14px; margin-bottom: 16px;
-  font-size: 12.5px; line-height: 1.5; color: var(--text);
-}
-.scan-tip-icon { font-size: 18px; line-height: 1.3; flex-shrink: 0; }
 .scan-live-head { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 14px; }
 .scan-progress { height: 8px; border-radius: 999px; background: var(--hover-fill); overflow: hidden; }
 .scan-bar { height: 100%; width: 0; border-radius: 999px; background: var(--green); transition: width 0.15s linear; }
@@ -734,7 +723,7 @@ html, body {
 
 
 .settings-footer {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: flex-end;
   max-width: 540px; margin-top: 22px; padding: 4px 2px;
   font-size: 11.5px; color: var(--text-tertiary);
 }

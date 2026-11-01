@@ -47,7 +47,7 @@ Windows SmartScreen shows a **"Windows protected your PC"** prompt because the i
 Every release is built and published by [GitHub Actions](.github/workflows/release.yml) directly from a tagged commit — no binaries are uploaded by hand — and each one ships a `SHA256SUMS.txt`. To confirm your download matches, run:
 
 ```powershell
-(Get-FileHash "Battery-Hub-Installer-1.3.0.exe" -Algorithm SHA256).Hash
+(Get-FileHash "Battery-Hub-Installer-1.3.1.exe" -Algorithm SHA256).Hash
 ```
 
 and compare the result with the checksum in that release's `SHA256SUMS.txt`. Pasting the same hash into [VirusTotal](https://www.virustotal.com/gui/home/search) will show any scan results for the exact file.
