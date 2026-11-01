@@ -64,6 +64,21 @@
               <span>Refresh</span>
             </button>
           </header>
+          <div class="overview" id="overview" hidden>
+            <div class="stat stat-next">
+              <span class="stat-label">Next to charge</span>
+              <span class="stat-value" id="overview-next"></span>
+              <span class="stat-note" id="overview-next-note"></span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Charging</span>
+              <span class="stat-value" id="overview-charging"></span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Connected</span>
+              <span class="stat-value" id="overview-connected"></span>
+            </div>
+          </div>
           <div class="device-grid" id="device-grid"></div>
           <div class="hidden-bar" id="hidden-bar" hidden>
             <span id="hidden-count"></span>
@@ -263,6 +278,51 @@
           </div>
         </section>
       </main>
+
+      <div class="sheet-scrim" id="sheet-scrim" hidden></div>
+      <aside class="sheet" id="detail-sheet" role="dialog" aria-modal="true" aria-labelledby="detail-name" hidden>
+        <header class="sheet-head">
+          <div class="sheet-icon" id="detail-icon" aria-hidden="true"></div>
+          <div class="sheet-title">
+            <h2 id="detail-name"></h2>
+            <p id="detail-maker"></p>
+          </div>
+          <button class="wc-btn" id="detail-close" title="Close">
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 1.5 L8.5 8.5 M8.5 1.5 L1.5 8.5" stroke-width="1.1" stroke-linecap="round"/></svg>
+          </button>
+        </header>
+
+        <div class="sheet-hero">
+          <span class="sheet-pct" id="detail-pct"></span>
+          <span class="status-tag" id="detail-status-wrap"><i aria-hidden="true"></i><span id="detail-status"></span></span>
+        </div>
+
+        <dl class="facts">
+          <div><dt>Time left</dt><dd id="detail-left"></dd></div>
+          <div><dt>Drain rate</dt><dd id="detail-rate"></dd></div>
+          <div><dt>Last charged</dt><dd id="detail-charged"></dd></div>
+          <div><dt>Last update</dt><dd id="detail-updated"></dd></div>
+          <div id="detail-voltage-row" hidden><dt>Voltage</dt><dd id="detail-voltage"></dd></div>
+        </dl>
+
+        <div class="chart-head">
+          <h3>Battery history</h3>
+          <div class="segmented" id="detail-range">
+            <button data-value="day" class="active">24 hours</button>
+            <button data-value="week">7 days</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart" id="detail-chart" tabindex="0" role="img"></div>
+          <div class="chart-tooltip" id="detail-tooltip" hidden>
+            <strong id="detail-tooltip-value"></strong>
+            <span id="detail-tooltip-time"></span>
+            <span id="detail-tooltip-state" hidden>Charging</span>
+          </div>
+          <p class="chart-empty" id="detail-chart-empty" hidden>Not enough readings in this period yet.</p>
+        </div>
+        <p class="chart-key" id="detail-chart-key" hidden><i aria-hidden="true"></i>Charging</p>
+      </aside>
     </div>
   </div>
 
@@ -279,6 +339,7 @@
         <button class="menu-remove">Remove</button>
       </div>
 
+      <div class="card-main">
       <div class="gauge-wrap">
         <svg viewBox="0 0 120 120" class="gauge">
           <defs>
@@ -306,13 +367,18 @@
         </div>
       </div>
 
-      <div class="device-type-icon" title="Change icon"></div>
-      <div class="device-name"></div>
-      <div class="device-sub"></div>
-      <div class="device-estimate"></div>
-      <div class="charge-pill">
-        <svg width="10" height="10" viewBox="0 0 24 24"><path d="M13 2 L4 14 h6 l-1 8 9-12 h-6 z"/></svg>
-        <span>Charging</span>
+      <div class="card-info">
+        <div class="card-title">
+          <div class="device-type-icon" title="Change icon"></div>
+          <div class="device-name"></div>
+        </div>
+        <div class="device-sub"></div>
+        <div class="device-estimate"></div>
+        <div class="charge-pill">
+          <svg width="10" height="10" viewBox="0 0 24 24"><path d="M13 2 L4 14 h6 l-1 8 9-12 h-6 z"/></svg>
+          <span>Charging</span>
+        </div>
+      </div>
       </div>
       <div class="sparkline" hidden>
         <svg viewBox="0 0 100 30" preserveAspectRatio="none">
@@ -325,5 +391,6 @@
   <script src="mock.js"></script>
   <script src="estimate.js"></script>
   <script src="app.js"></script>
+  <script src="detail.js"></script>
 </body>
 </html>

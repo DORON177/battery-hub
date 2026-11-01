@@ -80,7 +80,7 @@ function renderHistory(card, dev, charging, offline) {
   }
 
   let est = '';
-  if (!offline && !charging) {
+  if (!offline && !charging && hasRecentReading(dev)) {
     const currentCap = dev.lastReading ? dev.lastReading.capacity : null;
     const hoursLeft = estimateHoursLeft(dev.history, currentCap);
     if (hoursLeft != null) est = `~${formatDuration(hoursLeft)} left`;
@@ -143,6 +143,25 @@ document.querySelectorAll('.nav-item[data-view]').forEach((el) => {
 
 // ---------- dashboard ----------
 
+// The summary above the cards. Device names go through textContent like everywhere else.
+function renderOverview() {
+  const summary = summarize(Object.values(state.saved));
+  document.getElementById('overview').hidden = summary.total === 0;
+  const { next } = summary;
+  document.getElementById('overview-next').textContent = next
+    ? next.device.customName || next.device.product || 'Device'
+    : 'Nothing right now';
+  let note = '';
+  if (next) {
+    note = next.hoursLeft == null
+      ? `${next.capacity}%`
+      : `${next.capacity}% · ~${formatDuration(next.hoursLeft)} left`;
+  }
+  document.getElementById('overview-next-note').textContent = note;
+  document.getElementById('overview-charging').textContent = summary.charging;
+  document.getElementById('overview-connected').textContent = `${summary.connected} of ${summary.total}`;
+}
+
 // "N hidden — Show/Hide" strip under the grid; the only route back for a hidden device.
 function renderHiddenBar(hiddenCount) {
   const bar = document.getElementById('hidden-bar');
@@ -170,6 +189,7 @@ async function refreshDashboard() {
   renderHiddenBar(hiddenIds.length);
 
   empty.hidden = allIds.length > 0;
+  renderOverview();
   const monitored = allIds.length - hiddenIds.length;
   count.textContent = monitored
     ? `${monitored} device${monitored > 1 ? 's' : ''} monitored`
@@ -240,6 +260,19 @@ function buildDeviceCard(dev) {
 
   el.dataset.id = dev.id;
   el.draggable = true;
+  el.tabIndex = 0;
+  el.setAttribute('aria-haspopup', 'dialog');
+  el.setAttribute('aria-label', `${dev.customName || dev.product || 'Device'}: open details`);
+  el.addEventListener('click', (e) => {
+    if (e.target.closest('button, input, .device-type-icon, .menu-dropdown, .icon-picker')) return;
+    if (document.querySelector('.menu-dropdown:not([hidden]), .icon-picker')) return; // this click just dismisses them
+    openDetail(dev.id);
+  });
+  el.addEventListener('keydown', (e) => {
+    if (e.target !== el || (e.key !== 'Enter' && e.key !== ' ')) return;
+    e.preventDefault();
+    openDetail(dev.id);
+  });
   el.addEventListener('dragstart', (e) => {
     e.dataTransfer.effectAllowed = 'move';
     try { e.dataTransfer.setData('text/plain', dev.id); } catch (_) {}
@@ -327,7 +360,7 @@ function buildDeviceCard(dev) {
   return card;
 }
 
-// Solid, flat colors (Apple-style) — no gradients on the ring or the number.
+// Status colors for the percentage text. The ring itself uses the gradients in index.html.
 const COLOR_HIGH = '#30d158';
 const COLOR_MID = '#ff9f0a';
 const COLOR_LOW = '#ff453a';
@@ -411,6 +444,8 @@ window.batteryHub.onBatteryUpdate((dev) => {
   state.saved[dev.id] = dev;
   const card = state.cardEls.get(dev.id);
   if (card) applyReading(card, dev);
+  renderOverview();
+  updateDetail(dev.id);
 });
 
 async function triggerRefresh() {
@@ -792,7 +827,7 @@ function reflectSettingControls(s) {
 function positionSegThumbs(root) {
   const run = () => {
     let retry = false;
-    (root || document).querySelectorAll('.segmented[data-setting]').forEach((seg) => {
+    (root || document).querySelectorAll('.segmented').forEach((seg) => {
       let thumb = seg.querySelector('.seg-thumb');
       if (!thumb) {
         thumb = document.createElement('span');
@@ -932,6 +967,7 @@ setInterval(() => {
     const dev = state.saved[id];
     if (dev) applyReading(card, dev);
   }
+  renderOverview();
 }, 15000);
 
 (async () => {
