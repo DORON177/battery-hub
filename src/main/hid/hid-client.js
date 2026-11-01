@@ -6,6 +6,7 @@ const { utilityProcess } = require('electron');
 const path = require('path');
 
 const WORKER = path.join(__dirname, 'hid-worker.js');
+const WORKER_EXITED = 'hid worker exited';
 
 let child = null;
 let seq = 0;
@@ -35,7 +36,7 @@ function spawn() {
   proc.on('exit', () => {
     if (child !== proc) return;
     child = null;
-    rejectAll('hid worker exited');
+    rejectAll(WORKER_EXITED);
   });
 }
 
@@ -61,9 +62,20 @@ function call(cmd, args, timeoutMs) {
 
 module.exports = {
   enumerate: () => call('enumerate', [], 8000),
-  // Headroom over the drivers' own internal timeouts (generic input-mode waits up to 8s).
-  readBattery: (driverId, device, profile) => call('readBattery', [driverId, device, profile || null], 12000),
-  // Must exceed inspector.js CAPTURE_MS (30s scan) plus channel open/close overhead.
-  capture: (device) => call('capture', [device], 45000),
+  // Headroom over the drivers' own internal timeouts (generic input-mode waits up to 8s). A
+  // worker that dies mid-read says nothing about the device, so that gets one more try.
+  readBattery: (driverId, device, profile) => {
+    const read = () => call('readBattery', [driverId, device, profile || null], 12000);
+    return read().catch((e) => {
+      if (e.message === WORKER_EXITED) return read();
+      throw e;
+    });
+  },
+  // Must exceed inspector.js CAPTURE_MS (30s scan) plus channel setup. A scan leaves handles
+  // open on every channel of the device, and only ending the process releases them safely
+  // (see session.js), so the worker is recycled afterwards.
+  capture: (device) => call('capture', [device], 45000).finally(() => {
+    if (child) { try { child.kill(); } catch (_) {} }
+  }),
   stop: () => { if (child) { try { child.kill(); } catch (_) {} child = null; } rejectAll('hid client stopped'); },
 };

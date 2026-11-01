@@ -17,8 +17,28 @@ All notable changes to this project are documented here. Versions follow
   or restore its tray icon.
 - Restarting monitoring could leave a headset reader process running untracked, after
   which another one was started alongside it.
+- Calibrated devices could be read from the wrong collection when several share a usage
+  page. New calibrations record the exact collection; existing ones behave as before.
+- A calibrated device reporting an all-zero or too-short frame could show 0% or an invalid
+  level. Those frames are now ignored.
+- A device that rejected its first battery request left a timer writing to a closed handle
+  twice a second, for every poll, until the worker restarted.
+- Polls no longer run during a calibration scan, where they could swallow the frames being
+  scanned for.
+- A headset dongle reconnecting, or the app restarting, no longer leaves the card showing
+  "not connected" until the battery next changes.
+- A device moved to another USB port is found on the next poll instead of up to five
+  minutes later.
+- Python launchers that exit without running the reader, such as the Windows store alias,
+  now fall through to the next launcher instead of failing silently.
 
 ### Changed
+- HID devices now stay open between polls and reads run strictly one at a time. Closing a
+  handle with a read in flight frees memory Windows may still be using, which fits the
+  heap-corruption crashes in the background HID process.
+- Calibrated devices that broadcast their battery level are picked up from the frames
+  received since the last poll, instead of only during an 8-second listening window.
+- Calibration scans poll only the reports a device actually supports.
 - Tab switches are much smoother: frame gaps fall from about 60 ms to under 17 ms, with
   the worst stall dropping from 129 ms to about 25 ms. Blur filters were removed from
   surfaces that had nothing behind them to blur; they were being rendered in software and

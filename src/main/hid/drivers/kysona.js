@@ -5,13 +5,14 @@
 //   byte[6]  = capacity percent (0-100)
 //   byte[7]  = charging flag (0/1)
 //   byte[8-9] = voltage in mV, big-endian
-const HID = require('node-hid');
 const { findChannel } = require('../catalog');
+const session = require('../session');
 
 const USAGE_PAGE_COMMAND = 0xFF02;
 const BATTERY_REQUEST = [0x08, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x49];
 const RESPONSE_TIMEOUT_MS = 4000;
 const REPOKE_MS = 500; // this firmware often ignores a single request; poke until it answers
+const READ_SLICE_MS = 100;
 
 const KNOWN_VENDOR_IDS = new Set([0x3554]); // VXE
 
@@ -20,64 +21,33 @@ function matches(logicalDevice) {
   return !!findChannel(logicalDevice, USAGE_PAGE_COMMAND);
 }
 
-function readBattery(logicalDevice) {
-  return new Promise((resolve, reject) => {
-    const channel = findChannel(logicalDevice, USAGE_PAGE_COMMAND);
-    if (!channel) return reject(new Error('no command channel'));
-
-    let dev;
-    try {
-      dev = new HID.HID(channel.path);
-    } catch (e) {
-      return reject(e);
-    }
-
-    let settled = false;
-    let poke = null;
-    let timer = null;
-    const finish = (err, result) => {
-      if (settled) return;
-      settled = true;
-      if (poke) clearInterval(poke);
-      if (timer) clearTimeout(timer);
-      // Settle the promise first, then tear the device down OUTSIDE the current callback
-      // stack. Calling dev.close() from inside node-hid's own 'data'/'error' handler
-      // corrupts the process heap on Windows (crash signature WER 0xc0000374); detaching
-      // listeners and deferring the close with setImmediate avoids that race.
-      if (err) reject(err); else resolve(result);
-      setImmediate(() => {
-        try { dev.removeAllListeners('data'); } catch (_) {}
-        try { dev.removeAllListeners('error'); } catch (_) {}
-        try { dev.close(); } catch (_) {}
-      });
-    };
-
-    dev.on('data', (data) => {
-      const arr = Array.from(data);
-      if (arr[0] === 0x08 && arr[1] === 0x04) {
-        const capacity = arr[6];
-        const charging = !!arr[7];
-        const voltageMv = (arr[8] << 8) | arr[9];
-        // firmware sends a zeroed "not ready yet" frame sometimes; keep waiting for a real one
-        if (capacity > 0 && capacity <= 100) {
-          finish(null, { capacity, charging, voltageMv });
-        }
-      }
-    });
-    dev.on('error', (e) => finish(e));
-
-    const sendRequest = () => {
-      try {
-        dev.write(BATTERY_REQUEST);
-      } catch (e) {
-        finish(e);
-      }
-    };
-
-    sendRequest();
-    poke = setInterval(sendRequest, REPOKE_MS);
-    timer = setTimeout(() => finish(new Error('timeout waiting for battery response')), RESPONSE_TIMEOUT_MS);
-  });
+// Turn one raw frame into a reading, or null if it isn't a usable battery frame.
+function parseFrame(arr) {
+  if (arr[0] !== 0x08 || arr[1] !== 0x04) return null;
+  const capacity = arr[6];
+  // firmware sends a zeroed "not ready yet" frame sometimes; keep waiting for a real one
+  if (!(capacity > 0 && capacity <= 100)) return null;
+  return { capacity, charging: !!arr[7], voltageMv: (arr[8] << 8) | arr[9] };
 }
 
-module.exports = { id: 'kysona', matches, readBattery };
+async function readBattery(logicalDevice) {
+  const channel = findChannel(logicalDevice, USAGE_PAGE_COMMAND);
+  if (!channel) throw new Error('no command channel');
+
+  const dev = await session.acquire(channel.path);
+  await session.readQueued(channel.path, dev); // a late reply to an old request is stale
+
+  const deadline = Date.now() + RESPONSE_TIMEOUT_MS;
+  let nextPoke = 0;
+  while (Date.now() < deadline) {
+    if (Date.now() >= nextPoke) {
+      await dev.write(BATTERY_REQUEST);
+      nextPoke = Date.now() + REPOKE_MS;
+    }
+    const reading = parseFrame(await session.read(channel.path, dev, READ_SLICE_MS));
+    if (reading) return reading;
+  }
+  throw new Error('timeout waiting for battery response');
+}
+
+module.exports = { id: 'kysona', matches, parseFrame, readBattery };

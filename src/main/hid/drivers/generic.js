@@ -5,6 +5,7 @@
 // profile shape:
 // {
 //   usagePage: number,            channel to talk to
+//   usage: number,                collection on that page (absent in older profiles)
 //   reportKind: 'feature' | 'input',
 //   reportId: number,
 //   readLength: number,           bytes to request for feature reads
@@ -13,69 +14,49 @@
 //   scaleMin: number,             raw value that means 0%
 //   scaleMax: number,             raw value that means 100%
 // }
-const HID = require('node-hid');
 const { findChannel } = require('../catalog');
-const { toPercent } = require('../scale'); // pure + unit-tested
+const { toPercent, frameToReading } = require('../scale');
+const session = require('../session');
 
-function readBattery(logicalDevice, profile) {
-  return new Promise((resolve, reject) => {
-    const channel = findChannel(logicalDevice, profile.usagePage);
-    if (!channel) return reject(new Error('calibrated channel not present on this device'));
+const INPUT_TIMEOUT_MS = 8000;
+const READ_SLICE_MS = 100;
 
-    let dev;
-    try {
-      dev = new HID.HID(channel.path);
-    } catch (e) {
-      return reject(e);
-    }
+function matching(frame, profile) {
+  return frame[0] === profile.reportId ? frameToReading(frame, profile) : null;
+}
 
-    if (profile.reportKind === 'feature') {
-      try {
-        const fr = dev.getFeatureReport(profile.reportId, profile.readLength);
-        dev.close();
-        const raw = fr[profile.byteOffset];
-        return resolve({ capacity: toPercent(raw, profile), charging: null, voltageMv: null });
-      } catch (e) {
-        dev.close();
-        return reject(e);
-      }
-    }
+async function readInput(path, dev, profile) {
+  // The handle stays open between polls, so a frame broadcast since the last one is waiting.
+  let latest = null;
+  for (const frame of await session.readQueued(path, dev)) {
+    latest = matching(frame, profile) || latest;
+  }
+  if (latest) return latest;
 
-    // input-report mode: optionally nudge the device with a trigger write, then wait for a
-    // matching frame. Many wireless devices broadcast the frame on their own and reject
-    // writes, so a failed trigger must NOT abort the read — we keep listening either way.
-    let settled = false;
-    const finish = (err, result) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      // Settle first, then tear down outside this (possibly 'data') callback — closing a
-      // node-hid device from inside its own event handler corrupts the heap on Windows.
-      if (err) reject(err); else resolve(result);
-      setImmediate(() => {
-        try { dev.removeAllListeners('data'); } catch (_) {}
-        try { dev.removeAllListeners('error'); } catch (_) {}
-        try { dev.close(); } catch (_) {}
-      });
-    };
+  // Optionally nudge the device, then wait. Many wireless devices broadcast the frame on their
+  // own and reject writes ("Cannot write to hid device"), so a failed trigger must NOT abort
+  // the read.
+  if (profile.trigger) await dev.write(profile.trigger).catch(() => {});
 
-    dev.on('data', (data) => {
-      const arr = Array.from(data);
-      if (arr[0] === profile.reportId) {
-        const raw = arr[profile.byteOffset];
-        finish(null, { capacity: toPercent(raw, profile), charging: null, voltageMv: null });
-      }
-    });
-    dev.on('error', () => {}); // ignore transient read errors; the timeout is the backstop
+  const deadline = Date.now() + INPUT_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const reading = matching(await session.read(path, dev, READ_SLICE_MS), profile);
+    if (reading) return reading;
+  }
+  throw new Error('timeout waiting for device response');
+}
 
-    const timer = setTimeout(() => finish(new Error('timeout waiting for device response')), 8000);
+async function readBattery(logicalDevice, profile) {
+  const channel = findChannel(logicalDevice, profile.usagePage, profile.usage);
+  if (!channel) throw new Error('calibrated channel not present on this device');
 
-    if (profile.trigger) {
-      // Best-effort nudge. If the device rejects writes ("Cannot write to hid device") we
-      // swallow it and rely on the device broadcasting the frame on its own.
-      try { dev.write(profile.trigger); } catch (_) {}
-    }
-  });
+  const dev = await session.acquire(channel.path);
+  if (profile.reportKind !== 'feature') return readInput(channel.path, dev, profile);
+
+  const report = await dev.getFeatureReport(profile.reportId, profile.readLength);
+  const reading = frameToReading(Array.from(report), profile);
+  if (!reading) throw new Error('waiting for device to report');
+  return reading;
 }
 
 module.exports = { id: 'generic', toPercent, readBattery };

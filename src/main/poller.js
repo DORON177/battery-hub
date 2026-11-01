@@ -7,6 +7,7 @@ const { pushHistory } = require('./history');
 let timer = null;
 let polling = false; // guard: HID channels allow only one opener at a time, so never
                      // let an interval tick and a manual Refresh poll overlap.
+let holds = 0;       // something else needs the devices to itself (a calibration scan)
 
 // Short in-memory history of recent capacity readings per device, used to infer
 // charging for devices that don't expose a hardware charging flag: a battery that
@@ -57,8 +58,20 @@ function commitReading(id, reading, onUpdate) {
   onUpdate({ ...cfg, ...patch });
 }
 
+// Run fn with polling held off, after any poll already in flight has finished. A poll during
+// a calibration scan would swallow the frames the scan is listening for.
+async function withPollingPaused(fn) {
+  holds += 1;
+  try {
+    while (polling) await new Promise((r) => setTimeout(r, 50));
+    return await fn();
+  } finally {
+    holds -= 1;
+  }
+}
+
 async function pollOnce(onUpdate, { force = false } = {}) {
-  if (polling) return;
+  if (polling || holds > 0) return;
   polling = true;
   try {
     if (force) invalidateLiveCache(); // manual Refresh always re-scans USB
@@ -71,7 +84,10 @@ async function pollOnce(onUpdate, { force = false } = {}) {
 function onHeadsetStatus(id, state, onUpdate) {
   if (!isTracked(id)) return;
   let patch;
-  if (state === 'disconnected') patch = { online: false, lastError: 'not connected' };
+  if (state === 'connected') {
+    patch = { online: true };
+    if (store.getDevices()[id].lastError === 'not connected') patch.lastError = null;
+  } else if (state === 'disconnected') patch = { online: false, lastError: 'not connected' };
   else if (state === 'off') patch = { online: true, lastError: 'headset is off' };
   else if (state === 'python-missing') patch = { online: true, lastError: 'needs Python + hid module' };
   else patch = { online: true };
@@ -98,7 +114,7 @@ function invalidateLiveCache() { liveCache = null; }
 
 // Resolve a pollable device to a reading. Tries the exact saved id plus any live sibling
 // the same driver recognises (the mouse's wired charging identity), reading each until one
-// answers. Returns { status: 'ok'|'no-candidates'|'error', ... }.
+// answers. Returns { status: 'ok'|'no-candidates'|'stale'|'error', ... }.
 async function attemptRead(cfg, driver, liveList) {
   const exact = liveList.find((d) => d.id === cfg.id);
   const siblings = driver.matches
@@ -116,7 +132,9 @@ async function attemptRead(cfg, driver, liveList) {
       lastError = e;
     }
   }
-  return { status: 'error', error: lastError };
+  // Couldn't reach the device at the path we cached: unplugged, or moved to another port.
+  const stale = /cannot open|could not read/i.test(lastError.message);
+  return { status: stale ? 'stale' : 'error', error: lastError };
 }
 
 async function pollAllDevices(onUpdate) {
@@ -155,11 +173,12 @@ async function pollAllDevices(onUpdate) {
     // device can't be found or read, the cache may be stale (device reconnected, or the
     // mouse switched to its wired charging identity), so refresh the scan once and retry.
     let result = await attemptRead(cfg, driver, live);
-    // Only re-scan when the device is MISSING from the cache (it may have reconnected or
-    // switched to its wired charging identity). A read 'error' means we found it but it
-    // didn't answer (e.g. the mouse is asleep) — re-scanning wouldn't help and would defeat
-    // the cache every poll, so we leave it and keep the last-known value.
-    if (result.status === 'no-candidates' && !rescannedThisPoll) {
+    // Only re-scan when the device is MISSING from the cache or its cached path no longer
+    // works (it may have reconnected or switched to its wired charging identity). A read
+    // 'error' means we found it but it didn't answer (e.g. the mouse is asleep) — re-scanning
+    // wouldn't help and would defeat the cache every poll, so we leave it and keep the
+    // last-known value.
+    if ((result.status === 'no-candidates' || result.status === 'stale') && !rescannedThisPoll) {
       live = await getLiveDevices(true);
       rescannedThisPoll = true;
       result = await attemptRead(cfg, driver, live);
@@ -202,4 +221,4 @@ function restart(onUpdate) {
   start(onUpdate);
 }
 
-module.exports = { start, stop, restart, pollOnce };
+module.exports = { start, stop, restart, pollOnce, withPollingPaused };

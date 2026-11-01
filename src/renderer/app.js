@@ -647,6 +647,7 @@ function renderCaptureResults() {
 
     const profile = {
       usagePage: frame.usagePage,
+      usage: frame.usage,
       reportKind: frame.reportKind,
       reportId: frame.reportId,
       readLength: frame.bytes.length,
