@@ -36,6 +36,7 @@ const hidClient = require('./hid/hid-client');
 const store = require('./store');
 const poller = require('./poller');
 const tray = require('./tray');
+const flyout = require('./flyout');
 const notifier = require('./notifier');
 
 const ICON = path.join(__dirname, '..', '..', 'assets', 'icon.png');
@@ -54,9 +55,12 @@ if (!gotLock) {
 }
 app.on('second-instance', () => showWindow());
 
+const windowColor = () => (nativeTheme.shouldUseDarkColors ? '#1f2226' : '#eceff0');
+
 function applyTheme() {
   const theme = store.getSetting('theme') || 'system';
   nativeTheme.themeSource = theme; // 'system' | 'light' | 'dark'
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setBackgroundColor(windowColor());
 }
 
 function applyLoginItem() {
@@ -82,7 +86,11 @@ function broadcast(deviceState) {
         capacity: reading ? reading.capacity : null,
         charging: !!(reading && reading.charging) && deviceState.online !== false,
         offline: deviceState.online === false,
+        product: deviceState.product,
+        driverId: deviceState.driverId,
+        customIcon: deviceState.customIcon,
       });
+      flyout.update(tray.list());
     } catch (e) { logLine('ERROR', `tray update failed: ${e && e.stack || e}`); }
   }
 }
@@ -133,11 +141,9 @@ function createWindow(forceShow) {
     minWidth: 720,
     minHeight: 500,
     show: false,
-    // Translucent window: Windows 11 native acrylic blurs the desktop/other windows
-    // behind us, so the app's glass surfaces show a real glimpse of what's behind it.
-    // A transparent backgroundColor lets the acrylic backdrop show through.
-    backgroundColor: '#00000000',
-    backgroundMaterial: 'acrylic',
+    // Solid on purpose. A see-through frameless window lets clicks and title-bar drags fall
+    // through to whatever is behind it. Real glass is only on the tray flyout.
+    backgroundColor: windowColor(),
     frame: false,
     titleBarStyle: 'hidden',
     icon: ICON,
@@ -151,9 +157,6 @@ function createWindow(forceShow) {
   mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
 
   mainWindow.once('ready-to-show', () => {
-    // Re-assert the acrylic backdrop (some Windows/Electron builds ignore the
-    // constructor option but honor the setter once the window exists).
-    try { mainWindow.setBackgroundMaterial('acrylic'); } catch (_) {}
     roundWindowCorners(mainWindow);
     if (!startMinimized) mainWindow.show();
   });
@@ -175,6 +178,7 @@ function createWindow(forceShow) {
 
 function quitApp() {
   isQuitting = true;
+  flyout.destroy();
   tray.destroyAll();
   poller.stop();
   hidClient.stop();
@@ -189,9 +193,10 @@ app.whenReady().then(() => {
   logLine('INFO', `app ready (v${app.getVersion()}) — logging to ${LOG_FILE}`);
   applyTheme();
   applyLoginItem();
-  tray.setHandlers(showWindow, quitApp);
+  tray.setHandlers(showWindow, quitApp, (bounds) => flyout.toggle(bounds, tray.list()));
   tray.setMode(store.getSetting('trayMode'));
-  createWindow();
+  createWindow(process.argv.includes('--show')); // the installer opens the window whatever the startup setting
+  flyout.prepare(roundWindowCorners);
   poller.start(broadcast);
 
   app.on('activate', () => {
@@ -237,6 +242,7 @@ ipcMain.handle('devices:remove', (evt, id) => {
   store.removeDevice(id);
   notifier.reset(id);
   tray.removeDevice(id);
+  flyout.update(tray.list());
   restartPoller();
   return true;
 });
@@ -349,3 +355,20 @@ ipcMain.on('window:close', () => {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.close();
 });
 ipcMain.on('app:quit', () => quitApp());
+
+// ---- IPC: tray flyout ----
+
+ipcMain.handle('flyout:data', () => flyout.current());
+ipcMain.on('flyout:hide', () => flyout.hide());
+
+// ---- IPC: personal test tools ----
+// local-tools.js is git-ignored, so this does nothing in a release.
+
+let localTools = null;
+try { localTools = require('./local-tools'); } catch (_) {}
+ipcMain.handle('local-tools:list', () => (localTools ? localTools.list() : null));
+ipcMain.on('local-tools:run', (evt, id) => { if (localTools) localTools.run(id); });
+ipcMain.on('flyout:open-app', () => {
+  flyout.hide();
+  showWindow();
+});

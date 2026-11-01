@@ -20,14 +20,14 @@ app.whenReady().then(async () => {
   const win = new BrowserWindow({
     width: WIDTH,
     height: HEIGHT,
-    show: false,
+    show: true, // hidden windows don't run the cards' entry animation, so they would never appear
+    skipTaskbar: true,
     frame: false,
-    // Opaque background: the shipped app is translucent over the desktop, which would
-    // capture as transparent here. A solid backdrop keeps the PNG readable on GitHub.
-    backgroundColor: '#141416',
-    webPreferences: { contextIsolation: true, nodeIntegration: false },
+    backgroundColor: '#1f2226',
+    webPreferences: { contextIsolation: true, nodeIntegration: false, backgroundThrottling: false },
   });
 
+  win.setOpacity(0);
   await win.loadFile(path.join(__dirname, '..', 'src', 'renderer', 'index.html'));
   // let entry animations settle and the gauges finish their sweep
   await new Promise((r) => setTimeout(r, 2500));

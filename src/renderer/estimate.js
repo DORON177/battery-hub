@@ -61,34 +61,19 @@ function isCharging(device) {
   return !!(device.lastReading && device.lastReading.charging) && !isOffline(device);
 }
 
-// Which of two draining devices will need charging first. Prefer real time estimates, and
-// fall back to the level while either device is still learning its drain rate.
-function needsChargeFirst(a, b) {
-  if (a.hoursLeft != null && b.hoursLeft != null) return a.hoursLeft < b.hoursLeft ? a : b;
-  return a.capacity <= b.capacity ? a : b;
-}
-
-// The numbers at the top of the dashboard. Hidden devices don't count.
-function summarize(devices, now = Date.now()) {
-  const visible = devices.filter((d) => !d.hidden);
-  const connected = visible.filter((d) => !isOffline(d));
-  const draining = connected
-    .filter((d) => d.lastReading && typeof d.lastReading.capacity === 'number' && !isCharging(d))
-    .filter((d) => hasRecentReading(d, now))
-    .map((device) => ({
-      device,
-      capacity: device.lastReading.capacity,
-      hoursLeft: estimateHoursLeft(device.history, device.lastReading.capacity),
-    }));
-  return {
-    total: visible.length,
-    connected: connected.length,
-    charging: connected.filter(isCharging).length,
-    next: draining.length ? draining.reduce(needsChargeFirst) : null,
+// Sort order for "most urgent first": draining devices lowest first, then charging, then
+// devices with nothing to report. Ties keep the user's own order.
+function urgencyCompare(a, b) {
+  const rank = (d) => {
+    if (isOffline(d)) return 3;
+    if (!d.lastReading || typeof d.lastReading.capacity !== 'number') return 2;
+    return isCharging(d) ? 1 : 0;
   };
+  const level = (d) => (d.lastReading && d.lastReading.capacity) || 0;
+  return rank(a) - rank(b) || level(a) - level(b) || (a.order ?? 1e9) - (b.order ?? 1e9);
 }
 
 // Node (tests) only — `module` is undefined in the browser, so this is a no-op there.
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { drainRatePerHour, estimateHoursLeft, hasRecentReading, lastChargedAt, isOffline, isCharging, summarize };
+  module.exports = { drainRatePerHour, estimateHoursLeft, hasRecentReading, lastChargedAt, isOffline, isCharging, urgencyCompare };
 }

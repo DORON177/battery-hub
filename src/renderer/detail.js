@@ -14,6 +14,7 @@ const detail = {
   points: [],    // chart points in the current range, with x/y in pixels
   hover: null,   // index of the point under the crosshair
   closing: null, // timer while the sheet animates out
+  opening: null, // timer until the sheet has landed
 };
 
 const sheet = document.getElementById('detail-sheet');
@@ -205,7 +206,7 @@ function renderDetail() {
   const charged = lastChargedAt(dev.history);
   const voltage = dev.lastReading && dev.lastReading.voltageMv;
 
-  setText('detail-icon', dev.customIcon || iconFor(dev.product, dev.driverId));
+  paintDeviceIcon(document.getElementById('detail-icon'), dev);
   setText('detail-name', dev.customName || dev.product || 'Device');
   setText('detail-maker', dev.manufacturer || '');
   setText('detail-pct', pct == null ? '—' : `${pct}%`);
@@ -224,7 +225,7 @@ function renderDetail() {
   if (voltage) setText('detail-voltage', `${(voltage / 1000).toFixed(2)} V`);
 
   // Keep a reading the user is hovering rather than redrawing it out from under them.
-  if (detail.hover === null) renderChart();
+  if (detail.hover === null && !detail.opening) renderChart();
 }
 
 function openDetail(id) {
@@ -234,9 +235,16 @@ function openDetail(id) {
   sheet.hidden = false;
   sheet.classList.remove('closing');
   scrim.classList.remove('closing');
+  // Drawing the chart is the slow part, so it waits until the panel has landed.
+  clearTimeout(detail.opening);
+  document.getElementById('detail-chart').replaceChildren();
+  detail.opening = setTimeout(() => {
+    detail.opening = null;
+    if (detail.id !== null) renderChart();
+  }, 260);
   renderDetail();
   positionSegThumbs(sheet);
-  document.getElementById('detail-close').focus();
+  document.getElementById('detail-close').focus({ preventScroll: true });
 }
 
 function closeDetail() {
@@ -248,7 +256,7 @@ function closeDetail() {
   detail.closing = setTimeout(() => {
     sheet.hidden = true;
     scrim.hidden = true;
-  }, 180);
+  }, 170);
   if (card) card.el.focus();
 }
 

@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { drainRatePerHour, hasRecentReading, lastChargedAt, summarize } = require('../src/renderer/estimate');
+const { drainRatePerHour, hasRecentReading, lastChargedAt, urgencyCompare } = require('../src/renderer/estimate');
+const { moodFor } = require('../src/main/mood');
 
 const HOUR = 3600000;
 const NOW = 1_700_000_000_000;
@@ -9,7 +10,21 @@ const hist = (rows) => rows.map(([hoursAgo, c, ch = 0]) => ({ t: NOW - hoursAgo 
 function device(capacity, extra = {}) {
   return { id: String(capacity), lastReading: { capacity, charging: false }, lastReadingAt: NOW, online: true, ...extra };
 }
-const summary = (devices) => summarize(devices, NOW);
+
+test('urgent order: lowest draining first, then charging, then nothing to report', () => {
+  const charging = device(5, { id: 'c', lastReading: { capacity: 5, charging: true } });
+  const off = device(1, { id: 'o', online: false });
+  const order = [off, charging, device(80), device(20)].sort(urgencyCompare).map((d) => d.id);
+  assert.deepEqual(order, ['20', '80', 'c', 'o']);
+});
+
+test('tray mood follows the battery that most needs attention', () => {
+  assert.equal(moodFor([{ capacity: 80 }, { capacity: 50 }]), 'full');
+  assert.equal(moodFor([{ capacity: 80 }, { capacity: 22 }]), 'low');
+  assert.equal(moodFor([{ capacity: 8 }, { capacity: 50, charging: true }]), 'sleep');
+  assert.equal(moodFor([{ capacity: 80 }, { capacity: 50, charging: true }]), 'charge');
+  assert.equal(moodFor([{ capacity: 5, offline: true }]), 'full');
+});
 
 test('drainRatePerHour reports the average drain', () => {
   assert.equal(drainRatePerHour(hist([[10, 70], [0, 50]])), 2);
@@ -32,55 +47,8 @@ test('lastChargedAt is null when the battery only ever fell', () => {
   assert.equal(lastChargedAt(undefined), null);
 });
 
-test('summarize counts visible, connected and charging devices', () => {
-  const s = summary([
-    device(80),
-    device(50, { lastReading: { capacity: 50, charging: true } }),
-    device(30, { online: false, lastReading: { capacity: 30, charging: true } }),
-    device(10, { hidden: true }),
-  ]);
-  assert.equal(s.total, 3);
-  assert.equal(s.connected, 2);
-  assert.equal(s.charging, 1, 'an offline device is not charging, whatever it last reported');
-});
-
-test('next to charge is the shortest time left, not the lowest level', () => {
-  const slowDrain = device(30, { history: hist([[70, 37], [0, 30]]) });   // 0.1%/h => 300h
-  const fastDrain = device(40, { history: hist([[10, 60], [0, 40]]) });   // 2%/h => 20h
-  const s = summary([slowDrain, fastDrain]);
-  assert.equal(s.next.device, fastDrain);
-  assert.equal(s.next.hoursLeft, 20);
-});
-
-test('next to charge falls back to the level while a device is still learning', () => {
-  const learning = device(14);
-  const known = device(95, { history: hist([[10, 100], [0, 95]]) });
-  assert.equal(summary([known, learning]).next.device, learning);
-});
-
-test('charging, offline, hidden and unread devices are never next to charge', () => {
-  const s = summary([
-    device(5, { lastReading: { capacity: 5, charging: true } }),
-    device(6, { online: false }),
-    device(7, { hidden: true }),
-    { id: 'new', online: true },
-  ]);
-  assert.equal(s.next, null);
-});
-
-test('a reading older than the kept history never decides what to charge next', () => {
-  const stale = device(10, { lastReadingAt: NOW - 98 * 24 * HOUR, history: hist([[2400, 20], [2352, 10]]) });
-  const fresh = device(80);
-  assert.equal(summary([stale, fresh]).next.device, fresh);
-  assert.equal(summary([stale]).next, null);
-});
-
 test('hasRecentReading covers the seven days of history that is kept', () => {
   assert.equal(hasRecentReading({ lastReadingAt: NOW - 6 * 24 * HOUR }, NOW), true);
   assert.equal(hasRecentReading({ lastReadingAt: NOW - 8 * 24 * HOUR }, NOW), false);
   assert.equal(hasRecentReading({}, NOW), false);
-});
-
-test('summarize handles having no devices', () => {
-  assert.deepEqual(summary([]), { total: 0, connected: 0, charging: 0, next: null });
 });
