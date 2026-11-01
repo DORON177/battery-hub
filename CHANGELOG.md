@@ -6,6 +6,12 @@ All notable changes to this project are documented here. Versions follow
 
 ## [Unreleased]
 
+### Added
+- Overview above the cards showing which device needs charging next, how soon, and how
+  many devices are charging and connected.
+- Device detail panel: click a card for a 24-hour or 7-day battery chart, drain rate, time
+  left, last charge and voltage.
+
 ### Fixed
 - Time-left estimates were far too short. Flat stretches of history were left out of the
   drain-rate calculation, so each 1% drop was divided by only the last few minutes before
@@ -17,6 +23,7 @@ All notable changes to this project are documented here. Versions follow
   or restore its tray icon.
 - Restarting monitoring could leave a headset reader process running untracked, after
   which another one was started alongside it.
+- Time-left estimates no longer appear for a reading more than a week old.
 - Calibrated devices could be read from the wrong collection when several share a usage
   page. New calibrations record the exact collection; existing ones behave as before.
 - A calibrated device reporting an all-zero or too-short frame could show 0% or an invalid
@@ -33,6 +40,7 @@ All notable changes to this project are documented here. Versions follow
   now fall through to the next launcher instead of failing silently.
 
 ### Changed
+- Wider device cards with the ring beside the device details.
 - HID devices now stay open between polls and reads run strictly one at a time. Closing a
   handle with a read in flight frees memory Windows may still be using, which fits the
   heap-corruption crashes in the background HID process.

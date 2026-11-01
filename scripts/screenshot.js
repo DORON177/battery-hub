@@ -12,7 +12,7 @@ const fs = require('fs');
 
 const OUT = path.join(__dirname, '..', 'docs', 'screenshot.png');
 const WIDTH = 1000;
-const HEIGHT = 810;
+const HEIGHT = 880;
 
 app.disableHardwareAcceleration(); // match the app's own runtime config
 

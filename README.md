@@ -23,7 +23,8 @@ Battery Hub reads the battery level of your wireless HID devices and shows each 
 
 - **Multi-device dashboard** — mice, keyboards, headsets and controllers, each with a colour-coded charge ring.
 - **System-tray icons** — a live battery indicator per device beside the clock.
-- **History & estimates** — a recent-trend sparkline and a *time-left* estimate derived from the drain rate.
+- **At-a-glance overview** — which device needs charging next, how soon, and how many are connected.
+- **History & estimates** — click any device for a 24-hour or 7-day battery chart, its drain rate and when it was last charged.
 - **Low-battery notifications** — Windows alerts when a device falls below a configurable threshold.
 - **Guided calibration** — a 30-second scan detects the battery byte for devices that aren't recognised automatically.
 - **Liquid-glass interface** — translucent Windows 11 acrylic design with light/dark themes and a reduce-motion option.
@@ -64,7 +65,7 @@ Open **Add Device**. Recognised devices show an *auto-detected* badge — click 
 
 ### Reading a card
 
-Each card shows the current percentage and ring (green / yellow / red), a charging indicator, a history sparkline, an estimated time remaining, and the age of the last reading. Every device also appears as a tray icon that fills and changes colour with the charge.
+Each card shows the current percentage and ring (green / yellow / red), a charging indicator, a history sparkline, an estimated time remaining, and the age of the last reading. Click a card for its full history. Every device also appears as a tray icon that fills and changes colour with the charge.
 
 ### Settings
 

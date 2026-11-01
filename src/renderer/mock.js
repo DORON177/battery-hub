@@ -6,12 +6,22 @@ if (!window.batteryHub) {
   const now = Date.now();
   // build a {t,c,ch} history from [hoursAgo, capacity, charging?] tuples
   const mkHist = (spec) => spec.map(([h, c, ch]) => ({ t: now - h * 3600000, c, ch: ch ? 1 : 0 }));
+  // A week of history with a charge in the middle, so the detail chart has something to show.
+  const sampleWeek = () => {
+    const rows = [];
+    for (let h = 160; h >= 0; h -= 2) {
+      if (h > 92) rows.push([h, Math.round(62 - (160 - h) * 0.55)]);
+      else if (h > 84) rows.push([h, Math.round(25 + (92 - h) * 9.3), 1]);
+      else rows.push([h, Math.round(100 - (84 - h) * 0.06)]);
+    }
+    return rows;
+  };
   const sample = {
     'mouse': {
       id: 'mouse', product: 'VXE NordicMouse 1K Dongle', manufacturer: 'Compx',
       driverId: 'kysona', online: true, lastReadingAt: now - 3000,
       lastReading: { capacity: 95, charging: false, voltageMv: 4080 },
-      history: mkHist([[6, 100], [5, 99], [4, 98], [3, 97], [2, 96], [1, 95], [0, 95]]),
+      history: mkHist(sampleWeek()),
     },
     'headset': {
       id: 'headset', product: 'MCHOSE V9 Turbo+', manufacturer: 'C-Media Electronics Inc',
