@@ -18,7 +18,7 @@ does `except: continue`.
 Output protocol (one JSON object per line on stdout, flushed):
   {"event": "ready"}
   {"event": "battery", "capacity": 95}
-  {"event": "status",  "state": "disconnected" | "off"}
+  {"event": "status",  "state": "connected" | "disconnected" | "off"}
 """
 import sys
 import json
@@ -65,6 +65,12 @@ def run():
                 last_emitted = "disconnected"
             time.sleep(2)
             continue
+
+        # The headset only speaks when something changes, so say the dongle is back rather
+        # than leaving the app showing "not connected" until the next battery change.
+        if last_emitted is None or last_emitted == "disconnected":
+            emit({"event": "status", "state": "connected"})
+            last_emitted = "connected"
 
         # Inner loop: keep the same handles open, tolerate per-handle read errors.
         while True:

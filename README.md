@@ -97,6 +97,7 @@ Native `node-hid` runs in an isolated utility process, so a driver fault can't b
 
 - **"Can't read this device's battery."** Some devices block battery requests at the driver level and can't be read.
 - **Nothing captured during calibration.** Rerun the scan and power the device off and on while it runs.
+- **MCHOSE V9 Turbo+ shows "needs Python + hid module".** This headset is read through Python. Install [Python](https://www.python.org/downloads/), then run `pip install hidapi`.
 - **Crash logs** are written to `%APPDATA%\battery-hub\battery-hub.log`.
 
 ## Contributing

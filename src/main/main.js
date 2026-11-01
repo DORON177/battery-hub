@@ -268,11 +268,11 @@ ipcMain.handle('devices:set-hidden', (evt, { id, hidden }) => {
   return saved;
 });
 
-ipcMain.handle('devices:capture', async (evt, id) => {
+ipcMain.handle('devices:capture', (evt, id) => poller.withPollingPaused(async () => {
   const live = (await hidClient.enumerate()).find((d) => d.id === id);
   if (!live) throw new Error('device not connected');
   return hidClient.capture(live);
-});
+}));
 
 ipcMain.handle('devices:poll-now', async () => {
   const results = [];

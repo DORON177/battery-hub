@@ -42,7 +42,11 @@ visual state.
 | `packaging/winget` | Windows Package Manager manifests. |
 
 Native `node-hid` calls run in an isolated utility process, so a driver fault can't bring
-the app down. Anything touching HID belongs behind `src/main/hid/hid-client.js`.
+the app down. Anything touching HID belongs behind `src/main/hid/hid-client.js`, and drivers
+get their handles from `src/main/hid/session.js`: read its header before changing how
+handles are opened or closed.
+
+Mock data can't exercise the HID path. Test driver and scan changes against real hardware.
 
 ## Pull requests
 

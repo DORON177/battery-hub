@@ -13,7 +13,7 @@ const readline = require('readline');
 const SCRIPT = path.join(__dirname, 'hid', 'headset_reader.py');
 const PY_CANDIDATES = ['python', 'python3', 'py'];
 
-const active = new Map(); // deviceId -> { child, pyIndex }
+const active = new Map(); // deviceId -> { child }
 
 function spawnReader(pyIndex) {
   return spawn(PY_CANDIDATES[pyIndex], [SCRIPT], { windowsHide: true });
@@ -25,27 +25,32 @@ function start(deviceId, onReading, onStatus) {
   if (active.has(deviceId)) return true;
 
   const attempt = (pyIndex) => {
+    const tryNext = () => {
+      if (pyIndex + 1 < PY_CANDIDATES.length) return attempt(pyIndex + 1);
+      if (onStatus) onStatus('python-missing');
+      return false;
+    };
+
     let child;
     try {
       child = spawnReader(pyIndex);
     } catch (_) {
-      if (pyIndex + 1 < PY_CANDIDATES.length) return attempt(pyIndex + 1);
-      if (onStatus) onStatus('python-missing');
-      return false;
+      return tryNext();
     }
 
-    active.set(deviceId, { child, pyIndex });
+    active.set(deviceId, { child });
+    let started = false; // the reader script is really running under this interpreter
 
     const rl = readline.createInterface({ input: child.stdout });
     rl.on('line', (line) => {
       let msg;
       try { msg = JSON.parse(line); } catch (_) { return; }
-      if (msg.event === 'battery' && onReading) {
+      if (msg.event === 'ready') {
+        started = true;
+      } else if (msg.event === 'battery' && onReading) {
         onReading({ capacity: msg.capacity, charging: null, voltageMv: null });
       } else if (msg.event === 'status' && onStatus) {
         onStatus(msg.state);
-      } else if (msg.event === 'fatal' && onStatus) {
-        onStatus('python-missing');
       }
     });
 
@@ -54,16 +59,15 @@ function start(deviceId, onReading, onStatus) {
     // nothing can stop it, and the next poll spawns another one alongside it.
     const release = () => {
       const entry = active.get(deviceId);
-      if (entry && entry.child === child) active.delete(deviceId);
+      if (!entry || entry.child !== child) return false;
+      active.delete(deviceId);
+      return true;
     };
 
-    child.on('error', () => {
-      release();
-      // command not found -> try the next python launcher
-      if (pyIndex + 1 < PY_CANDIDATES.length) attempt(pyIndex + 1);
-      else if (onStatus) onStatus('python-missing');
-    });
-    child.on('exit', release);
+    // Command not found, or a launcher that exits without running the script: the Windows
+    // "python" store alias, or an interpreter without the hid module. Try the next one.
+    child.on('error', () => { if (release()) tryNext(); });
+    child.on('exit', () => { if (release() && !started) tryNext(); });
     return true;
   };
 
