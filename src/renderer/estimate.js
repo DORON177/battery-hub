@@ -4,9 +4,11 @@
 // and required directly by the unit tests in Node — hence the guarded export at the
 // bottom. Keep this file free of DOM/Electron references so both worlds can load it.
 
-// Walk every discharge interval in the stored history and accumulate the total % lost
-// against the real hours it took. Averaging across all of history (rather than the last
-// couple of points) keeps the estimate steady and lets it survive app restarts.
+// Average the drain rate across the stored history: total % lost over the total time
+// spent not charging. Flat intervals must count towards that time. History only records a
+// point when the level changes or a ~20 min heartbeat passes, so a 1% drop is usually
+// preceded by hours of flat heartbeats; counting only the interval containing the drop
+// divides it by minutes and inflates the rate by an order of magnitude.
 function estimateHoursLeft(history, currentCap) {
   if (currentCap == null || !history || history.length < 2) return null;
   let totalDrop = 0;   // % of battery lost
@@ -15,9 +17,9 @@ function estimateHoursLeft(history, currentCap) {
     const a = history[i - 1];
     const b = history[i];
     if (a.ch || b.ch) continue;             // ignore any interval touching a charge
-    const drop = a.c - b.c;                 // positive => discharged
+    const drop = a.c - b.c;                 // positive => discharged, 0 => flat
     const hours = (b.t - a.t) / 3600000;
-    if (drop <= 0 || hours <= 0) continue;  // skip flat / rising / bad-timestamp intervals
+    if (drop < 0 || hours <= 0) continue;   // skip rising / bad-timestamp intervals
     if (hours > 72) continue;               // skip multi-day gaps (device off / unused)
     totalDrop += drop;
     totalHours += hours;

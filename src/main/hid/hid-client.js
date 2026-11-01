@@ -20,8 +20,9 @@ function rejectAll(reason) {
 }
 
 function spawn() {
-  child = utilityProcess.fork(WORKER, [], { stdio: 'ignore' });
-  child.on('message', (msg) => {
+  const proc = utilityProcess.fork(WORKER, [], { stdio: 'ignore' });
+  child = proc;
+  proc.on('message', (msg) => {
     const p = pending.get(msg.id);
     if (!p) return;
     pending.delete(msg.id);
@@ -30,7 +31,9 @@ function spawn() {
     else p.reject(new Error(msg.error));
   });
   // A crash or clean exit lands here; drop the handle so the next call respawns.
-  child.on('exit', () => {
+  // A stale exit from a worker that has already been replaced must not touch the new one.
+  proc.on('exit', () => {
+    if (child !== proc) return;
     child = null;
     rejectAll('hid worker exited');
   });

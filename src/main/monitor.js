@@ -49,13 +49,21 @@ function start(deviceId, onReading, onStatus) {
       }
     });
 
+    // A killed reader's exit arrives after any replacement has started, so only clear the
+    // slot if it still belongs to this child. Otherwise the replacement goes untracked:
+    // nothing can stop it, and the next poll spawns another one alongside it.
+    const release = () => {
+      const entry = active.get(deviceId);
+      if (entry && entry.child === child) active.delete(deviceId);
+    };
+
     child.on('error', () => {
-      active.delete(deviceId);
+      release();
       // command not found -> try the next python launcher
       if (pyIndex + 1 < PY_CANDIDATES.length) attempt(pyIndex + 1);
       else if (onStatus) onStatus('python-missing');
     });
-    child.on('exit', () => { active.delete(deviceId); });
+    child.on('exit', release);
     return true;
   };
 

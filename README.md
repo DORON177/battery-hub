@@ -31,7 +31,13 @@ Battery Hub reads the battery level of your wireless HID devices and shows each 
 
 ## Installation
 
-Download the latest `Battery Hub Setup x.y.z.exe` from the [releases page](https://github.com/DORON177/battery-hub/releases/latest) and run it. Battery Hub installs per-user and requires no administrator rights.
+With the [Windows Package Manager](https://learn.microsoft.com/windows/package-manager/):
+
+```powershell
+winget install DORON177.BatteryHub
+```
+
+Or download the latest `Battery Hub Setup x.y.z.exe` from the [releases page](https://github.com/DORON177/battery-hub/releases/latest) and run it. Battery Hub installs per-user and requires no administrator rights.
 
 Windows SmartScreen shows a **"Windows protected your PC"** prompt because the installer isn't code-signed — select **More info → Run anyway**. Code signing certificates are issued to identified publishers for a recurring fee; this project is unfunded, so builds are unsigned. See [Verifying a download](#verifying-a-download) if you'd like to confirm the file's integrity first.
 

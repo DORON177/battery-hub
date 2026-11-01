@@ -34,10 +34,23 @@ test('ignores intervals that touch a charge', () => {
   assert.equal(estimateHoursLeft(h, 50), 25);
 });
 
-test('ignores flat and rising intervals', () => {
-  // Flat 80->80 and rising 80->85 contribute nothing; only 85->75 over 5h (2%/h) counts.
+test('counts flat time but ignores rising intervals', () => {
+  // Rising 80->85 is skipped. Flat 80->80 and 85->85 count, so 85->75 is 10% over 15h.
   const h = hist([[20, 80], [15, 80], [10, 85], [5, 85], [0, 75]]);
-  assert.equal(estimateHoursLeft(h, 50), 25);
+  assert.equal(estimateHoursLeft(h, 50), 75);
+});
+
+test('does not inflate the rate when drops are separated by flat heartbeats', () => {
+  // Real history shape: 1% lost every 2h, with a heartbeat every 20 min between drops.
+  // That is 0.5%/h, so 50% is 100h. Counting only the drop intervals would report ~17h.
+  const rows = [];
+  let level = 70;
+  for (let step = 0; step <= 120; step++) {
+    if (step > 0 && step % 6 === 0) level -= 1;
+    rows.push([40 - step / 3, level]);
+  }
+  const hours = estimateHoursLeft(hist(rows), 50);
+  assert.ok(Math.abs(hours - 100) < 3, `expected ~100h, got ${hours}`);
 });
 
 test('ignores multi-day gaps where the device sat unused', () => {
