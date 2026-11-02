@@ -57,6 +57,11 @@ function isOffline(device) {
   return device.online === false;
 }
 
+// Offline because its receiver or dongle reported it switched off, rather than unplugged.
+function isTurnedOff(device) {
+  return isOffline(device) && /\bis off$/i.test(device.lastError || '');
+}
+
 function isCharging(device) {
   return !!(device.lastReading && device.lastReading.charging) && !isOffline(device);
 }
@@ -75,5 +80,5 @@ function urgencyCompare(a, b) {
 
 // Node (tests) only — `module` is undefined in the browser, so this is a no-op there.
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { drainRatePerHour, estimateHoursLeft, hasRecentReading, lastChargedAt, isOffline, isCharging, urgencyCompare };
+  module.exports = { drainRatePerHour, estimateHoursLeft, hasRecentReading, lastChargedAt, isOffline, isTurnedOff, isCharging, urgencyCompare };
 }

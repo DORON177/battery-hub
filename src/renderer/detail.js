@@ -24,7 +24,7 @@ const tooltip = document.getElementById('detail-tooltip');
 
 function statusOf(dev) {
   const pct = dev.lastReading ? dev.lastReading.capacity : null;
-  if (isOffline(dev)) return { label: 'Not connected', tone: 'off' };
+  if (isOffline(dev)) return { label: isTurnedOff(dev) ? 'Turned off' : 'Not connected', tone: 'off' };
   if (isCharging(dev)) return { label: 'Charging', tone: 'good' };
   if (pct == null) return { label: 'Waiting for a reading', tone: 'off' };
   if (!hasRecentReading(dev)) return { label: 'No recent reading', tone: 'off' };

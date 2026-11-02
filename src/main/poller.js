@@ -7,6 +7,9 @@ const store = require('./store');
 const { pushHistory } = require('./history');
 const { isExpectedFailure } = require('./diagnostics');
 
+// What drivers throw when a receiver or dongle reports the device itself is switched off.
+const TURNED_OFF = /\bis off$/i;
+
 let timer = null;
 let polling = false; // guard: HID channels allow only one opener at a time, so never
                      // let an interval tick and a manual Refresh poll overlap.
@@ -89,7 +92,7 @@ function onHeadsetStatus(id, state, onUpdate) {
     patch = { online: true };
     if (store.getDevices()[id].lastError === 'not connected') patch.lastError = null;
   } else if (state === 'disconnected') patch = { online: false, lastError: 'not connected' };
-  else if (state === 'off') patch = { online: true, lastError: 'headset is off' };
+  else if (state === 'off') patch = { online: false, lastError: 'headset is off' };
   else if (state === 'python-missing') patch = { online: true, lastError: 'needs Python + hid module' };
   else patch = { online: true };
   store.upsertDevice(id, patch);
@@ -291,6 +294,11 @@ async function pollAllDevices(onUpdate) {
       }
       const patch = { lastError: 'not connected', online: false };
       store.upsertDevice(id, patch);
+      onUpdate({ ...store.getDevices()[id] });
+    } else if (TURNED_OFF.test(result.error.message)) {
+      // The receiver or dongle answered for it, so it is really off rather than asleep.
+      trend.delete(id);
+      store.upsertDevice(id, { lastError: result.error.message, online: false, failedReads: 0 });
       onUpdate({ ...store.getDevices()[id] });
     } else {
       const saved = store.getDevices()[id];

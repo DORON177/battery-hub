@@ -127,3 +127,22 @@ test('a normal reading is still committed', async () => {
   assert.equal(devices.mouse.lastReading.capacity, 50);
   assert.equal(updates.length, 1);
 });
+
+test('a device its receiver reports as off goes offline and keeps its last level', async () => {
+  addMouse();
+  await pollWithChangeMidRead(() => {}, () => finishRead.resolve({ capacity: 35, charging: false }));
+  await failRead('device is off');
+  assert.equal(devices.mouse.online, false);
+  assert.equal(devices.mouse.lastReading.capacity, 35);
+  assert.equal(devices.mouse.failedReads, 0);
+  await pollWithChangeMidRead(() => {}, () => finishRead.resolve({ capacity: 34, charging: false }));
+  assert.equal(devices.mouse.online, true);
+});
+
+test('a device that only times out stays online, since it may just be asleep', async () => {
+  addMouse();
+  devices.mouse.online = true;
+  devices.mouse.lastReadingAt = Date.now();
+  await failRead('timeout waiting for battery response');
+  assert.equal(devices.mouse.online, true);
+});

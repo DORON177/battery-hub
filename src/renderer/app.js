@@ -410,7 +410,7 @@ function applyReading(card, dev) {
   // if we have never gotten a reading.
   let sub;
   if (offline) {
-    sub = 'Not connected';
+    sub = isTurnedOff(dev) ? 'Turned off' : 'Not connected';
   } else if (dev.failedReads >= READS_BEFORE_REPORT) {
     sub = "Can't read this device. Click for help";
   } else if (reading) {

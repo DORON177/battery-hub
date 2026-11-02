@@ -90,3 +90,15 @@ test('every alert has a title, a message and an icon', () => {
     assert.ok(alert.title && alert.body.includes('Mouse') && alert.icon);
   }
 });
+
+test('a device with its own alert level uses it instead of the one in Settings', () => {
+  notifier.check(device(40, false, { alertThreshold: 30 }));
+  notifier.check(device(30, false, { alertThreshold: 30 }));
+  assert.deepEqual(sent.map((n) => n.title), ['Low battery']);
+  notifier.reset('d');
+  sent.length = 0;
+  [40, 25, 21].forEach((c) => notifier.check(device(c, false, { alertThreshold: null })));
+  assert.equal(sent.length, 0);
+  notifier.check(device(20, false, { alertThreshold: null }));
+  assert.equal(sent.length, 1);
+});
