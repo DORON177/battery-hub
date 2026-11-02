@@ -56,7 +56,7 @@ and compare the result with the checksum in that release's `SHA256SUMS.txt`. Pas
 
 ### Adding a device
 
-Open **Add Device**. Recognised devices show an *auto-detected* badge — click **Add**. Otherwise choose **Calibrate & Add**:
+Open **Add device**. Recognised devices are listed first with a *Supported* badge: click **Add**. For anything else, choose **Set up**:
 
 1. Start the 30-second scan.
 2. Power the device off and on while it scans — many wireless devices only report their battery on power-up.
@@ -84,12 +84,38 @@ npm run dist     # build the Windows installer into dist/
 npm run installer  # wrap it in the branded installer window
 ```
 
+## Supported devices
+
+Battery Hub reads these directly. Anything else can usually be added with **Set up**.
+
+| Family | Devices |
+| --- | --- |
+| Bluetooth | Any paired device that reports its battery to Windows |
+| Xbox | Wireless controllers |
+| PlayStation | DualSense, DualSense Edge, DualShock 4 (USB and Bluetooth) |
+| Logitech | Mice and keyboards using HID++ 2.0 (Bolt, Unifying, Lightspeed); G PRO, G533, G535, G633, G733, G933, G935 headsets |
+| Razer | 81 wireless mice and keyboards |
+| SteelSeries | Arctis 1, 7, 7+, 9, Nova 3P, Nova 5, Nova 7, Nova Pro Wireless headsets; Aerox, Prime and Rival 3 Wireless mice |
+| HyperX | Cloud Alpha Wireless, Cloud Flight, Cloud II Wireless |
+| Corsair | Void and Virtuoso headsets |
+| Audeze | Maxwell, Maxwell 2 |
+| MCHOSE | V9 Turbo+, X9 |
+| VXE | NordicMouse and other Kysona-based mice |
+
+Tested on real hardware: VXE NordicMouse, MCHOSE V9 Turbo+, DualSense on USB and Bluetooth, and Logitech MX Master 4 over Bluetooth. The rest are built from the protocols documented by the projects below and checked against those byte layouts, so please [report a device](https://github.com/DORON177/battery-hub/issues/new?template=device-support.yml) if one misbehaves.
+
+Protocol work comes from [HeadsetControl](https://github.com/Sapd/HeadsetControl), [OpenRazer](https://github.com/openrazer/openrazer), [rivalcfg](https://github.com/flozz/rivalcfg) and the Linux kernel's HID drivers.
+
+A device connected more than one way, such as a controller on its cable and over Bluetooth, shows as one card when both connections report the same Bluetooth address.
+
+Reading a PlayStation controller over Bluetooth switches it to its full report mode until it's turned off, as Steam and DS4Windows do. A few older games may not see the controller in that mode. You can turn this off in Settings.
+
 ## Project structure
 
 | Path | Purpose |
 | --- | --- |
 | `src/main` | Electron main process — HID polling, tray, notifications, updates. |
-| `src/main/hid/drivers` | Per-device battery drivers. |
+| `src/main/hid/drivers` | Per-device battery drivers; `table.js` lists simple request/response devices. |
 | `src/renderer` | Application UI. |
 | `scripts` | Icon generation and build tooling. |
 
@@ -100,6 +126,8 @@ Native `node-hid` runs in an isolated utility process, so a driver fault can't b
 - **"Can't read this device's battery."** Some devices block battery requests at the driver level and can't be read.
 - **Nothing captured during calibration.** Rerun the scan and power the device off and on while it runs.
 - **MCHOSE V9 Turbo+ shows "needs Python + hid module".** This headset is read through Python. Install [Python](https://www.python.org/downloads/), then run `pip install hidapi`.
+- **A device won't work.** After two failed scans, or three failed reads in a row (open the device's card), a Send device report button appears. It fills in a device request on GitHub for you to check and submit.
+- **Something else isn't working.** Open Settings > Help and press Run check. It tests your install, this PC and your devices, tells you where the problem is, and can open a filled-in support request.
 - **Crash logs** are written to `%APPDATA%\battery-hub\battery-hub.log`.
 
 ## Contributing

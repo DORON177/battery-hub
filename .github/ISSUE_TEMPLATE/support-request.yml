@@ -1,0 +1,20 @@
+name: Support request
+description: Something isn't working. Sent from Settings > Help in Battery Hub.
+title: "Support request"
+labels: ["question"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What went wrong?
+      description: What you expected, what happened instead, and which device it was.
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Check report
+      description: Filled in by Battery Hub. Run the check in Settings > Help if this is empty.
+      render: text
+    validations:
+      required: false

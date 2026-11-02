@@ -1,6 +1,9 @@
 // Fluent UI System Icons (MIT, Microsoft), 20px regular. The set has no computer mouse, so that
 // one is drawn here to match its weight.
 const ICON_PATHS = {
+  "checkOk": "M10 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16m0 1a7 7 0 1 0 0 14 7 7 0 0 0 0-14m3.36 4.65c.17.17.2.44.06.63l-.06.07-4 4a.5.5 0 0 1-.64.07l-.07-.06-2-2a.5.5 0 0 1 .63-.77l.07.06L9 11.3l3.65-3.65c.2-.2.51-.2.7 0",
+  "checkWarn": "M7.37 3.56a3 3 0 0 1 5.26 0l5.5 10A3 3 0 0 1 15.5 18h-11a3 3 0 0 1-2.63-4.44zm4.38.48a2 2 0 0 0-3.5 0l-5.5 10A2 2 0 0 0 4.5 17h11a2 2 0 0 0 1.75-2.96zM10 12.75a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5m0-6.25c.28 0 .5.22.5.5v4a.5.5 0 0 1-1 0V7c0-.28.22-.5.5-.5",
+  "checkFail": "M10 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16m0 1a7 7 0 1 0 0 14 7 7 0 0 0 0-14M7.8 7.11l.08.06L10 9.3l2.12-2.12a.5.5 0 0 1 .64-.06l.07.06c.17.18.2.44.06.64l-.06.07L10.7 10l2.12 2.12c.17.17.2.44.06.64l-.06.07a.5.5 0 0 1-.64.06l-.07-.06L10 10.7l-2.12 2.12a.5.5 0 0 1-.64.06l-.07-.06a.5.5 0 0 1-.06-.64l.06-.07L9.3 10 7.17 7.88a.5.5 0 0 1-.06-.64l.06-.07a.5.5 0 0 1 .64-.06",
   "mic": "M10 13a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3m0-1a2 2 0 0 1-2-2V5a2 2 0 1 1 4 0v5a2 2 0 0 1-2 2M5 9.5c.28 0 .5.22.5.5a4.5 4.5 0 1 0 9 0 .5.5 0 0 1 1 0 5.5 5.5 0 0 1-5 5.48v2.02a.5.5 0 0 1-1 0v-2.02a5.5 5.5 0 0 1-5-5.48c0-.28.22-.5.5-.5",
   "speaker": "M12 3a1 1 0 0 0-1.68-.73l-3.88 3.6A.5.5 0 0 1 6.1 6H3.5C2.67 6 2 6.67 2 7.5v5c0 .83.67 1.5 1.5 1.5h2.6a.5.5 0 0 1 .34.13l3.88 3.6a1 1 0 0 0 1.68-.74zM7.12 6.6 11 3v14l-3.88-3.6A1.5 1.5 0 0 0 6.1 13H3.5a.5.5 0 0 1-.5-.5v-5c0-.28.22-.5.5-.5h2.6c.38 0 .75-.14 1.02-.4m8.14-1.97a.5.5 0 0 1 .7.04 8 8 0 0 1 0 10.66.5.5 0 0 1-.74-.66 7 7 0 0 0 0-9.34.5.5 0 0 1 .04-.7m-1.18 8.3a.5.5 0 0 1-.18-.68 4.5 4.5 0 0 0 0-4.5.5.5 0 1 1 .86-.5 5.5 5.5 0 0 1 0 5.5.5.5 0 0 1-.68.18",
   "camera": "M10 6a4 4 0 1 0 0 8 4 4 0 0 0 0-8m-3 4a3 3 0 1 1 6 0 3 3 0 0 1-6 0m1.12-8a1.5 1.5 0 0 0-1.34.83L6.2 4H4.5A2.5 2.5 0 0 0 2 6.5v8A2.5 2.5 0 0 0 4.5 17h11a2.5 2.5 0 0 0 2.5-2.5v-8A2.5 2.5 0 0 0 15.5 4h-1.69l-.58-1.17A1.5 1.5 0 0 0 11.89 2zm-.44 1.28A.5.5 0 0 1 8.12 3h3.77q.3 0 .45.28l.72 1.44a.5.5 0 0 0 .45.28h2c.82 0 1.5.67 1.5 1.5v8c0 .83-.68 1.5-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5v-8C3 5.67 3.67 5 4.5 5h2a.5.5 0 0 0 .44-.28z",
@@ -18,8 +21,9 @@ const ICON_PATHS = {
 
 function iconFor(product, driverId) {
   const p = (product || '').toLowerCase();
-  if (driverId === 'mchose' || p.includes('headset') || p.includes('headphone') || p.includes('earbud') || p.includes('buds')) return 'headset';
-  if (driverId === 'kysona' || p.includes('mouse')) return 'mouse';
+  if (driverId === 'mchose' || driverId === 'audeze' || p.includes('headset') || p.includes('headphone') || p.includes('earbud') || p.includes('buds')) return 'headset';
+  if (driverId === 'playstation' || p.includes('xbox')) return 'controller';
+  if (driverId === 'kysona' || p.includes('mouse') || /\bmx (master|anywhere)\b|\b(g|gpro) ?\d{3}\b/.test(p)) return 'mouse';
   if (p.includes('keyboard')) return 'keyboard';
   if (p.includes('controller') || p.includes('gamepad') || p.includes('dualsense')) return 'controller';
   return 'plug';

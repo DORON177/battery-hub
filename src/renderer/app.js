@@ -378,6 +378,8 @@ function animatePct(card, to) {
   requestAnimationFrame(step);
 }
 
+const READS_BEFORE_REPORT = 3;
+
 function applyReading(card, dev) {
   const reading = dev.lastReading;
   const pct = reading ? reading.capacity : null;
@@ -409,6 +411,8 @@ function applyReading(card, dev) {
   let sub;
   if (offline) {
     sub = 'Not connected';
+  } else if (dev.failedReads >= READS_BEFORE_REPORT) {
+    sub = "Can't read this device. Click for help";
   } else if (reading) {
     sub = `Updated ${timeAgo(dev.lastReadingAt)}`;
   } else if (dev.lastError && /waiting/i.test(dev.lastError)) {
@@ -422,6 +426,8 @@ function applyReading(card, dev) {
 
   renderHistory(card, dev, charging, offline);
 }
+
+if (window.batteryHub.onDevicesChanged) window.batteryHub.onDevicesChanged(() => refreshDashboard());
 
 window.batteryHub.onBatteryUpdate((dev) => {
   state.saved[dev.id] = dev;
@@ -464,13 +470,13 @@ async function refreshDiscover() {
   for (const d of unadded) {
     const row = document.createElement('div');
     row.className = 'list-item';
-    const badge = d.suggestedDriver ? '<span class="badge">auto-detected</span>' : '';
+    const badge = d.suggestedDriver ? '<span class="badge">Supported</span>' : '';
     row.innerHTML = `
       <div class="list-item-main">
         <span class="list-item-emoji">${iconSvg(iconFor(d.product, d.suggestedDriver))}</span>
         <div class="list-item-info">
           <div class="list-item-title">${escapeHtml(d.product)}${badge}</div>
-          <div class="list-item-sub">${escapeHtml(d.manufacturer || 'Unknown manufacturer')} · ${d.channelCount} channel${d.channelCount === 1 ? '' : 's'}</div>
+          <div class="list-item-sub">${escapeHtml(d.manufacturer || 'Unknown manufacturer')}${d.channelCount ? ` · ${d.channelCount} channel${d.channelCount === 1 ? '' : 's'}` : ''}</div>
         </div>
       </div>
     `;
@@ -521,8 +527,10 @@ async function startCalibration(id, product, manufacturer) {
       <button class="btn btn-primary" id="start-capture-btn">Start scan</button>
     </div>
     <div id="capture-results"></div>
+    <div id="scan-report"></div>
   `;
   document.getElementById('start-capture-btn').addEventListener('click', runCapture);
+  offerScanReport(state.calibration);
 }
 
 const SCAN_SECONDS = 30;
@@ -532,6 +540,7 @@ async function runCapture() {
   const results = document.getElementById('capture-results');
   btn.disabled = true;
   btn.textContent = 'Scanning…';
+  document.getElementById('scan-report').replaceChildren();
 
   // Live countdown + progress bar while the (30s) scan runs.
   results.innerHTML = `
@@ -559,9 +568,11 @@ async function runCapture() {
     frames = await window.batteryHub.capture(state.calibration.id);
   } catch (e) {
     clearInterval(ticker);
-    results.innerHTML = `<div class="step-card"><div class="step-desc">Scan failed: ${escapeHtml(e.message)}</div></div>`;
+    const message = plainError(e);
+    results.innerHTML = `<div class="step-card"><div class="step-desc">Scan failed: ${escapeHtml(message)}</div></div>`;
     btn.disabled = false;
     btn.textContent = 'Scan again';
+    noteScan(state.calibration, [], message);
     return;
   }
 
@@ -570,6 +581,7 @@ async function runCapture() {
   btn.textContent = 'Scan again';
   state.calibration.frames = frames;
   renderCaptureResults();
+  noteScan(state.calibration, frames, null);
 }
 
 function renderCaptureResults() {
@@ -635,14 +647,11 @@ function renderCaptureResults() {
     });
   });
 
-  container.addEventListener('change', (e) => {
-    if (e.target.id === 'passthrough-check') {
-      document.getElementById('known-pct-row').hidden = e.target.checked;
-    }
+  document.getElementById('passthrough-check').addEventListener('change', (e) => {
+    document.getElementById('known-pct-row').hidden = e.target.checked;
   });
 
-  container.addEventListener('click', async (e) => {
-    if (e.target.id !== 'save-calibration-btn') return;
+  document.getElementById('save-calibration-btn').addEventListener('click', async (e) => {
     const { frameIdx, byteIdx } = state.calibration.selected;
     const frame = frames[frameIdx];
     const raw = frame.bytes[byteIdx];

@@ -224,6 +224,8 @@ function renderDetail() {
   document.getElementById('detail-voltage-row').hidden = !voltage;
   if (voltage) setText('detail-voltage', `${(voltage / 1000).toFixed(2)} V`);
 
+  offerReadReport(dev);
+
   // Keep a reading the user is hovering rather than redrawing it out from under them.
   if (detail.hover === null && !detail.opening) renderChart();
 }

@@ -89,4 +89,4 @@ function stopAll() {
   for (const id of Array.from(active.keys())) stop(id);
 }
 
-module.exports = { start, stop, isActive, stopAll };
+module.exports = { start, stop, isActive, stopAll, PY_CANDIDATES };

@@ -15,7 +15,11 @@ const hidClient = {
   readBattery: () => new Promise((resolve, reject) => { finishRead = { resolve, reject }; }),
 };
 const monitor = { isActive: () => false, start() {}, stopAll() {} };
-const drivers = { kysona: {}, mchose: { eventDriven: true }, generic: {} };
+const drivers = { driverById: () => ({}), detectDriver: () => null };
+const system = {
+  scan: async () => [], list: () => [], get: () => null, hasScanned: () => true,
+  startWatching() {}, stopWatching() {}, isSystemId: (id) => /^(bt|xinput):/.test(id),
+};
 
 const load = Module._load;
 Module._load = function (request, ...rest) {
@@ -23,12 +27,13 @@ Module._load = function (request, ...rest) {
   if (request === './hid/hid-client') return hidClient;
   if (request === './monitor') return monitor;
   if (request === './hid/drivers') return drivers;
+  if (request === './system-batteries') return system;
   return load.call(this, request, ...rest);
 };
 const poller = require('../src/main/poller');
 Module._load = load;
 
-const flush = () => new Promise((r) => setImmediate(r));
+const flush = async () => { for (let i = 0; i < 6; i++) await new Promise((r) => setImmediate(r)); };
 const addMouse = () => { devices.mouse = { id: 'mouse', driverId: 'generic', product: 'Mouse' }; };
 
 async function pollWithChangeMidRead(change, settle) {
@@ -68,6 +73,49 @@ test('a reading that lands after hiding is not broadcast', async () => {
   );
   assert.equal(updates.length, 0);
   assert.equal(devices.mouse.lastReading, undefined);
+});
+
+test('a card reads its direct connection first and falls back to Windows', async () => {
+  devices.pad = { id: 'pad', driverId: 'generic', links: [{ id: 'bt:x', driverId: 'system', profile: null }] };
+  const original = system.get;
+  system.get = () => ({ capacity: 40, connected: true });
+  hidClient.enumerate = async () => []; // the direct connection is gone
+  await poller.pollOnce(() => {}, { force: true });
+  system.get = original;
+  hidClient.enumerate = async () => [{ id: 'mouse' }];
+  assert.equal(devices.pad.lastReading.capacity, 40);
+  delete devices.pad;
+});
+
+test('a card is offline only when every connection is gone', async () => {
+  devices.pad = { id: 'pad', driverId: 'generic', links: [{ id: 'bt:x', driverId: 'system', profile: null }] };
+  hidClient.enumerate = async () => [];
+  await poller.pollOnce(() => {}, { force: true });
+  hidClient.enumerate = async () => [{ id: 'mouse' }];
+  assert.equal(devices.pad.online, false);
+  delete devices.pad;
+});
+
+const failRead = (message) => pollWithChangeMidRead(() => {}, () => finishRead.reject(new Error(message)));
+
+test('real read failures are counted, and a reading clears them', async () => {
+  addMouse();
+  await failRead('no command channel');
+  await failRead('no command channel');
+  assert.equal(devices.mouse.failedReads, 2);
+  await pollWithChangeMidRead(() => {}, () => finishRead.resolve({ capacity: 50, charging: false }));
+  assert.equal(devices.mouse.failedReads, 0);
+});
+
+test('a device that has never answered is counted, a sleeping one is not', async () => {
+  addMouse();
+  await failRead('timeout waiting for battery response');
+  assert.equal(devices.mouse.failedReads, 1);
+  devices.mouse.lastReadingAt = Date.now();
+  await failRead('timeout waiting for battery response');
+  assert.equal(devices.mouse.failedReads, 0);
+  await failRead('mouse is off');
+  assert.equal(devices.mouse.failedReads, 0);
 });
 
 test('a normal reading is still committed', async () => {
