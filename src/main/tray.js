@@ -52,7 +52,7 @@ function moodImage(mood) {
 }
 
 function statusText(info) {
-  if (info.offline || info.capacity == null) return 'Not connected';
+  if (info.offline || info.capacity == null) return info.offLabel || 'Not connected';
   if (info.charging) return `Charging, ${info.capacity}%`;
   return `${info.capacity}%`;
 }

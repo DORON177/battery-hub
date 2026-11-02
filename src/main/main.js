@@ -40,6 +40,7 @@ const flyout = require('./flyout');
 const system = require('./system-batteries');
 const diagnostics = require('./diagnostics');
 const notifier = require('./notifier');
+const { offLabel } = require('../renderer/estimate'); // shared with the window, so the tray says the same
 
 const ICON = path.join(__dirname, '..', '..', 'assets', 'icon.png');
 let mainWindow = null;
@@ -88,6 +89,7 @@ function broadcast(deviceState) {
         capacity: reading ? reading.capacity : null,
         charging: !!(reading && reading.charging) && deviceState.online !== false,
         offline: deviceState.online === false,
+        offLabel: offLabel(deviceState),
         product: deviceState.product,
         driverId: deviceState.driverId,
         customIcon: deviceState.customIcon,

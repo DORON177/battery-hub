@@ -150,7 +150,8 @@ const reportName = (device) => (String(device.id).startsWith('bt:') ? 'Bluetooth
 const ASLEEP = /^(not connected|waiting\b)|\bis off$/i;
 const TURNED_OFF_IN_SETTINGS = /in Settings$/;
 const NEEDS_PYTHON = /^needs Python/;
-const NO_ANSWER = /timeout|timed out/i;
+const NO_ANSWER = /timeout|timed out|not answering/i;
+const OFF_OR_ASLEEP = /\bis (off|not answering)$/i;
 
 // A failed read that doesn't count against the device: it is off, or it has worked before and
 // has gone quiet, which usually means it's asleep.
@@ -170,7 +171,7 @@ function checkDevice(device, now = Date.now()) {
   const make = (status, detail, extra) => check(`device:${device.id}`, name, status, detail, { device: facts, ...extra });
   const error = device.lastError;
   const lastRead = device.lastReadingAt ? `Last read ${ago(now - device.lastReadingAt)}.` : '';
-  if (device.online === false) return make('ok', 'Not connected right now.');
+  if (device.online === false) return make('ok', OFF_OR_ASLEEP.test(error || '') ? 'Asleep or turned off.' : 'Not connected right now.');
   if (error && ASLEEP.test(error)) return make('ok', 'Asleep or turned off.');
   if (error && TURNED_OFF_IN_SETTINGS.test(error)) return make('ok', `${error}.`);
   if (error && NEEDS_PYTHON.test(error)) return make('warn', 'Needs Python. See the fix above.', { side: PC });

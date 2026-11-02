@@ -31,17 +31,19 @@ async function readBattery(logicalDevice) {
   const entry = table.find(logicalDevice);
   if (!entry) throw new Error('unsupported device');
   let lastError = new Error('no command channel');
+  let silent = false;
   for (const channel of channelsFor(logicalDevice, entry)) {
     try {
       return await runSteps(channel, entry, logicalDevice.productId);
     } catch (e) {
       lastError = e;
+      if (/^timeout/.test(e.message)) silent = true;
       if (/ is off$/.test(e.message)) break; // the dongle answered: no other channel will do better
     }
   }
-  // Several of these protocols have no "off" answer: the dongle just never replies, which
+  // Several of these protocols have no "off" answer: the dongle just stays silent, which
   // HeadsetControl and rivalcfg both read as the device being unavailable.
-  if (/^timeout/.test(lastError.message)) throw new Error(`${entry.kind} is off`);
+  if (silent && !entry.wired && !/ is off$/.test(lastError.message)) throw new Error(`${entry.kind} is not answering`);
   throw lastError;
 }
 

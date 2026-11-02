@@ -4,6 +4,7 @@
 // mice from rivalcfg (github.com/flozz/rivalcfg). Offsets match what hidapi returns.
 //
 //   channel : which HID collection to talk to; omitted means try the vendor collections
+//   wired   : reached over its cable, so it can't be off
 //   steps   : run in order; each parse returns part of a reading, { offline: true } if the
 //             dongle answers but the device is off, or null to keep waiting for the right frame
 const { pad, scale, fromVoltage } = require('./exchange');
@@ -44,7 +45,10 @@ function hidppVoltageStep(command, points) {
     request: pad([0x11, 0xff, ...command], 20),
     parse(f) {
       if (f.length < 7 || f[0] !== 0x11) return null;
-      if (f[2] === 0xff) return OFFLINE; // HID++ error: the dongle answered for the headset
+      // HeadsetControl reads an error answer as the headset being offline. Answers and errors
+      // repeat the request's feature index and function, which keeps out G HUB's traffic.
+      if (f[2] === 0xff) return f[3] === command[0] && f[4] === command[1] ? OFFLINE : null;
+      if (f[2] !== command[0] || f[3] !== command[1]) return null;
       const mv = (f[4] << 8) | f[5];
       if (mv < points[points.length - 1][0]) return OFFLINE; // no real cell reads this low
       return { capacity: fromVoltage(mv, points), charging: f[6] === 0x03, voltageMv: mv };
@@ -213,7 +217,7 @@ const DEVICES = [
     }],
   },
   {
-    name: 'SteelSeries Aerox and Prime Wireless (cable)', kind: 'mouse', vendorId: STEELSERIES,
+    name: 'SteelSeries Aerox and Prime Wireless (cable)', kind: 'mouse', wired: true, vendorId: STEELSERIES,
     productIds: [0x183a, 0x187a, 0x1854, 0x185e, 0x1862, 0x185a, 0x1876, 0x1842, 0x184a],
     channel: { interface: 3 },
     steps: [{ request: [0x00, 0x92], parse: aeroxBattery }],

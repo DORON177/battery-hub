@@ -9,6 +9,9 @@ const { isExpectedFailure } = require('./diagnostics');
 
 // What drivers throw when a receiver or dongle reports the device itself is switched off.
 const TURNED_OFF = /\bis off$/i;
+// What they throw when a receiver or dongle got no answer from the device. Only a device that has
+// answered before counts as off: one that never has may not speak the protocol at all.
+const NOT_ANSWERING = /\bis not answering$/i;
 
 let timer = null;
 let polling = false; // guard: HID channels allow only one opener at a time, so never
@@ -137,7 +140,7 @@ async function attemptRead(cfg, driver, liveList) {
     }
   }
   // Couldn't reach the device at the path we cached: unplugged, or moved to another port.
-  const stale = /cannot open|could not read/i.test(lastError.message);
+  const stale = /cannot open|could not read|could not (get|send) feature report/i.test(lastError.message);
   return { status: stale ? 'stale' : 'error', error: lastError };
 }
 
@@ -295,8 +298,9 @@ async function pollAllDevices(onUpdate) {
       const patch = { lastError: 'not connected', online: false };
       store.upsertDevice(id, patch);
       onUpdate({ ...store.getDevices()[id] });
-    } else if (TURNED_OFF.test(result.error.message)) {
-      // The receiver or dongle answered for it, so it is really off rather than asleep.
+    } else if (TURNED_OFF.test(result.error.message)
+      || (NOT_ANSWERING.test(result.error.message) && store.getDevices()[id].lastReadingAt)) {
+      // Its receiver or dongle is there but the device isn't: off, or asleep for some brands.
       trend.delete(id);
       store.upsertDevice(id, { lastError: result.error.message, online: false, failedReads: 0 });
       onUpdate({ ...store.getDevices()[id] });

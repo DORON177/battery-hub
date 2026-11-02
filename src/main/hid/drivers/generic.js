@@ -53,8 +53,8 @@ async function readBattery(logicalDevice, profile) {
   const dev = await session.acquire(channel.path);
   if (profile.reportKind !== 'feature') return readInput(channel.path, dev, profile);
 
-  const report = await dev.getFeatureReport(profile.reportId, profile.readLength);
-  const reading = frameToReading(Array.from(report), profile);
+  const report = await session.getFeatureReport(channel.path, dev, profile.reportId, profile.readLength);
+  const reading = frameToReading(report, profile);
   if (!reading) throw new Error('waiting for device to report');
   return reading;
 }

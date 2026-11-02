@@ -39,7 +39,12 @@ class FakeDevice {
     });
   }
 
-  getFeatureReport() { return this.track(() => Buffer.from(this.feature)); }
+  getFeatureReport() {
+    return this.track(() => {
+      if (this.featureError) throw this.featureError;
+      return Buffer.from(this.feature);
+    });
+  }
 
   async close() { this.closes += 1; }
 }
@@ -180,4 +185,17 @@ test('findChannel: tells apart collections on the same usage page', () => {
   assert.equal(findChannel(device, 1, 128).path, 'system');
   assert.equal(findChannel(device, 1).path, 'keyboard', 'older profiles keep working');
   assert.equal(findChannel(device, 2), undefined);
+});
+
+test('generic: a failed feature report drops the handle, so a replugged device reads again', async () => {
+  const { dev, logical } = mouse();
+  const profile = { ...inputProfile, reportKind: 'feature', readLength: 8, byteOffset: 6 };
+  dev.featureError = new Error('could not get feature report from device');
+  await assert.rejects(generic.readBattery(logical, profile), /could not get feature report/);
+  assert.equal(dev.closes, 1);
+  const opensBefore = opens;
+  dev.featureError = null;
+  dev.feature = [5, 1, 0, 0, 0, 0, 44];
+  assert.equal((await generic.readBattery(logical, profile)).capacity, 44);
+  assert.equal(opens, opensBefore + 1, 'the next poll must open a fresh handle');
 });

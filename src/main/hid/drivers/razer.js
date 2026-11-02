@@ -15,6 +15,7 @@ const CMD_CHARGING = 0x84;
 const STATUS_BUSY = 0x01;
 const STATUS_OK = 0x02;
 const STATUS_TIMEOUT = 0x04; // OpenRazer's RAZER_CMD_TIMEOUT: the receiver got no answer from the device
+const NO_DEVICE = /is (off|not answering)$/;
 const ANSWER_ATTEMPTS = 8;
 const ANSWER_WAIT_MS = 40;
 
@@ -42,14 +43,14 @@ function parseReply(report, commandId) {
   return report.slice(8, 88);
 }
 
-async function ask(dev, transactionId, commandId) {
-  await dev.sendFeatureReport([REPORT_ID, ...buildRequest(transactionId, commandId)]);
+async function ask(path, dev, transactionId, commandId) {
+  await session.sendFeatureReport(path, dev, [REPORT_ID, ...buildRequest(transactionId, commandId)]);
   for (let i = 0; i < ANSWER_ATTEMPTS; i++) {
     await sleep(ANSWER_WAIT_MS);
-    const raw = Array.from(await dev.getFeatureReport(REPORT_ID, REPORT_SIZE + 1));
+    const raw = await session.getFeatureReport(path, dev, REPORT_ID, REPORT_SIZE + 1);
     const report = raw.slice(1); // hidapi puts the report id first
     if (report[0] === STATUS_BUSY) continue;
-    if (report[0] === STATUS_TIMEOUT && report[6] === CLASS_MISC && report[7] === commandId) throw new Error('device is off');
+    if (report[0] === STATUS_TIMEOUT && report[6] === CLASS_MISC && report[7] === commandId) throw new Error('device is not answering');
     const args = parseReply(report, commandId);
     if (args) return args;
     throw new Error('device did not accept the request');
@@ -61,10 +62,10 @@ const working = new Map(); // logical id -> channel path that answered
 
 async function readFrom(channel, transactionId) {
   const dev = await session.acquire(channel.path);
-  const level = await ask(dev, transactionId, CMD_BATTERY);
+  const level = await ask(channel.path, dev, transactionId, CMD_BATTERY);
   // A sleeping mouse answers through its receiver with an empty level.
   if (level[1] === 0) throw new Error('device is off');
-  const charging = await ask(dev, transactionId, CMD_CHARGING).then((a) => !!a[1], () => null);
+  const charging = await ask(channel.path, dev, transactionId, CMD_CHARGING).then((a) => !!a[1], () => null);
   return { capacity: Math.round((level[1] * 100) / 255), charging };
 }
 
@@ -82,7 +83,7 @@ async function readBattery(logicalDevice) {
       return reading;
     } catch (e) {
       lastError = e;
-      if (e.message === 'device is off') break;
+      if (NO_DEVICE.test(e.message)) break; // the receiver answered: no other channel will do better
     }
   }
   working.delete(logicalDevice.id);
