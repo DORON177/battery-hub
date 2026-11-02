@@ -6,6 +6,13 @@ All notable changes to this project are documented here. Versions follow
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-02
+
+### Fixed
+- A wireless device switched off while its receiver stayed plugged in, such as a Logitech
+  G502 X, kept showing its last level as if it were still on. It now shows Turned off, keeps
+  the last level dimmed, and comes back by itself when switched on.
+
 ## [2.0.0] - 2026-11-02
 
 A fresh start for Battery Hub. Earlier copies update to it by themselves.
