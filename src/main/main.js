@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, nativeTheme, Menu, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, nativeTheme, Menu, shell, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
@@ -37,6 +37,8 @@ const store = require('./store');
 const poller = require('./poller');
 const tray = require('./tray');
 const flyout = require('./flyout');
+const system = require('./system-batteries');
+const diagnostics = require('./diagnostics');
 const notifier = require('./notifier');
 
 const ICON = path.join(__dirname, '..', '..', 'assets', 'icon.png');
@@ -179,6 +181,7 @@ function createWindow(forceShow) {
 function quitApp() {
   isQuitting = true;
   flyout.destroy();
+  system.stopWatching();
   tray.destroyAll();
   poller.stop();
   hidClient.stop();
@@ -187,6 +190,13 @@ function quitApp() {
 
 // Surface renderer/GPU/utility process crashes so a blanked window leaves a trail.
 app.on('render-process-gone', (e, wc, details) => logLine('FATAL', `render-process-gone: ${JSON.stringify(details)}`));
+// The app only ever shows its own pages, so nothing in a window may go to a website or open a new
+// one. Links meant for the browser go through app:open-external.
+app.on('web-contents-created', (e, contents) => {
+  contents.on('will-navigate', (event) => event.preventDefault());
+  contents.setWindowOpenHandler(() => ({ action: 'deny' }));
+});
+
 app.on('child-process-gone', (e, details) => logLine('ERROR', `child-process-gone: ${JSON.stringify(details)}`));
 
 app.whenReady().then(() => {
@@ -197,6 +207,14 @@ app.whenReady().then(() => {
   tray.setMode(store.getSetting('trayMode'));
   createWindow(process.argv.includes('--show')); // the installer opens the window whatever the startup setting
   flyout.prepare(roundWindowCorners);
+  poller.setCardsChangedHandler((droppedId) => {
+    if (droppedId) {
+      notifier.reset(droppedId);
+      tray.removeDevice(droppedId);
+      flyout.update(tray.list());
+    }
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('devices-changed');
+  });
   poller.start(broadcast);
 
   app.on('activate', () => {
@@ -215,10 +233,13 @@ app.on('before-quit', () => { isQuitting = true; });
 
 // ---- IPC: devices ----
 
+const SYSTEM_SOURCE = { bluetooth: 'Bluetooth', xinput: 'Xbox wireless' };
+
 ipcMain.handle('devices:list-live', async () => {
-  const devices = await hidClient.enumerate();
-  return devices.map((d) => ({
+  const [devices, systemDevices] = await Promise.all([hidClient.enumerate(), system.scan()]);
+  const hid = devices.map((d) => ({
     id: d.id,
+    serialNumber: d.serialNumber,
     vendorId: d.vendorId,
     productId: d.productId,
     product: d.product,
@@ -226,6 +247,17 @@ ipcMain.handle('devices:list-live', async () => {
     channelCount: d.channels.length,
     suggestedDriver: detectDriver(d) ? detectDriver(d).id : null,
   }));
+  const fromWindows = systemDevices.map((d) => ({
+    id: d.id,
+    product: d.name,
+    manufacturer: SYSTEM_SOURCE[d.kind],
+    channelCount: 0,
+    suggestedDriver: 'system',
+  }));
+  // Supported devices first: nobody should have to hunt for them among hubs and receivers.
+  return [...fromWindows, ...hid]
+    .filter((d) => !poller.isClaimed(d))
+    .sort((a, b) => Number(!!b.suggestedDriver) - Number(!!a.suggestedDriver));
 });
 
 ipcMain.handle('devices:list-saved', () => store.getDevices());
@@ -327,6 +359,25 @@ autoUpdater.on('error', (err) => sendUpdate({ status: 'error', message: (err && 
 
 ipcMain.handle('app:version', () => app.getVersion());
 
+const supportDeps = () => ({
+  root: app.getAppPath(),
+  packaged: app.isPackaged,
+  version: app.getVersion(),
+  userData: app.getPath('userData'),
+  logFile: LOG_FILE,
+  fetcher: net.fetch,
+  enumerate: hidClient.enumerate,
+  windowsSelfTest: system.selfTest,
+  devices: store.getDevices(),
+});
+
+ipcMain.handle('support:run', () => diagnostics.runChecks(supportDeps()));
+
+ipcMain.handle('support:device-report', async (evt, request) => {
+  const live = await hidClient.enumerate().catch(() => []);
+  return diagnostics.deviceReport(supportDeps(), request, live.find((d) => d.id === request.id));
+});
+
 ipcMain.handle('app:check-updates', async () => {
   if (!app.isPackaged) return { status: 'dev', version: app.getVersion() };
   try {
@@ -343,7 +394,7 @@ ipcMain.handle('app:install-update', () => {
 });
 
 ipcMain.handle('app:open-external', (evt, url) => {
-  if (/^https:\/\//i.test(url)) shell.openExternal(url);
+  if (/^https:\/\//i.test(url)) return shell.openExternal(url);
 });
 
 // ---- IPC: window controls ----

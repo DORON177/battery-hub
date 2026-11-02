@@ -50,4 +50,5 @@ async function readBattery(logicalDevice) {
   throw new Error('timeout waiting for battery response');
 }
 
-module.exports = { id: 'kysona', matches, parseFrame, readBattery };
+// The mouse reappears under another product id while charging over its cable.
+module.exports = { id: 'kysona', hasWiredIdentity: true, matches, parseFrame, readBattery };

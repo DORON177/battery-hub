@@ -44,9 +44,9 @@ body:
     attributes:
       label: Calibration scan output
       description: >
-        Run **Add Device → Calibrate & Add → Start 30-second Scan**, and turn the device
-        off and on while it scans. Paste what the scan captured (or a screenshot).
-        If it captured nothing at all, say so.
+        Filled in if you used Send device report in the app. Otherwise run
+        **Add device → Set up → Start scan**, and turn the device off and on while it scans.
+        Paste what the scan captured (or a screenshot). If it captured nothing at all, say so.
       render: text
     validations:
       required: true

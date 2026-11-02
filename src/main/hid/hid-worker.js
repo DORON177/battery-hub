@@ -5,21 +5,16 @@
 // node-hid call here — out of the main process — means such a crash only kills THIS worker;
 // the main app detects the exit and respawns it, losing at most one poll cycle.
 const { listLogicalDevices } = require('./catalog');
-const { kysona, generic, mchose } = require('./drivers');
+const { driverById } = require('./drivers');
 const { capture } = require('./inspector');
-
-function driverFor(id) {
-  if (id === 'kysona') return kysona;
-  if (id === 'mchose') return mchose;
-  return generic;
-}
 
 async function handle(cmd, args) {
   if (cmd === 'enumerate') return listLogicalDevices();
   if (cmd === 'readBattery') {
     const [driverId, device, profile] = args;
-    return driverFor(driverId).readBattery(device, profile);
+    return driverById(driverId).readBattery(device, profile);
   }
+  if (cmd === 'identify') return driverById(args[0]).identify(args[1]);
   if (cmd === 'capture') return capture(args[0]);
   throw new Error(`unknown hid command: ${cmd}`);
 }

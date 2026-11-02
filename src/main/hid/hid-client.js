@@ -71,6 +71,7 @@ module.exports = {
       throw e;
     });
   },
+  identify: (driverId, device) => call('identify', [driverId, device], 4000),
   // Must exceed inspector.js CAPTURE_MS (30s scan) plus channel setup. A scan leaves handles
   // open on every channel of the device, and only ending the process releases them safely
   // (see session.js), so the worker is recycled afterwards.

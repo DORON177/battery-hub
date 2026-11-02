@@ -52,4 +52,9 @@ async function readQueued(path, dev) {
   return frames;
 }
 
-module.exports = { acquire, read, readQueued };
+async function write(path, dev, bytes) {
+  try { await dev.write(bytes); }
+  catch (e) { sessions.delete(path); dev.close().catch(() => {}); throw e; }
+}
+
+module.exports = { acquire, read, readQueued, write };

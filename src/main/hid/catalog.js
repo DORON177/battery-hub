@@ -14,7 +14,7 @@ async function listLogicalDevices() {
         id: key,
         vendorId: info.vendorId,
         productId: info.productId,
-        product: info.product || 'Unknown device',
+        product: (info.product || 'Unknown device').replace(/_/g, ' '),
         manufacturer: info.manufacturer || '',
         serialNumber: info.serialNumber || '',
         channels: [],

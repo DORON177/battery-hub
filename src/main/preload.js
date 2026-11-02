@@ -18,6 +18,8 @@ contextBridge.exposeInMainWorld('batteryHub', {
     return () => ipcRenderer.removeListener('battery-update', listener);
   },
 
+  onDevicesChanged: (cb) => ipcRenderer.on('devices-changed', () => cb()),
+
   // settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setSettings: (patch) => ipcRenderer.invoke('settings:set', patch),
@@ -32,6 +34,8 @@ contextBridge.exposeInMainWorld('batteryHub', {
     return () => ipcRenderer.removeListener('update-event', listener);
   },
   openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
+  runSupportCheck: () => ipcRenderer.invoke('support:run'),
+  deviceReport: (request) => ipcRenderer.invoke('support:device-report', request),
 
   localTools: () => ipcRenderer.invoke('local-tools:list'),
   runLocalTool: (id) => ipcRenderer.send('local-tools:run', id),

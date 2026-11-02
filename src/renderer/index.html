@@ -219,6 +219,13 @@
             </div>
             <div class="settings-row">
               <div class="settings-label">
+                <span class="settings-title">PlayStation controllers over Bluetooth</span>
+                <span class="settings-hint">Needed to read their battery wirelessly. A few older games may lose the controller until it's turned off and on.</span>
+              </div>
+              <button class="toggle" data-setting="controllerBluetooth" role="switch"><span class="toggle-knob"></span></button>
+            </div>
+            <div class="settings-row">
+              <div class="settings-label">
                 <span class="settings-title">Refresh interval</span>
                 <span class="settings-hint">How often pollable devices are re-checked.</span>
               </div>
@@ -227,6 +234,18 @@
                 <span class="stepper-unit">sec</span>
               </div>
             </div>
+          </div>
+
+          <div class="settings-group-title">Help</div>
+          <div class="settings-panel">
+            <div class="settings-row">
+              <div class="settings-label">
+                <span class="settings-title">Check for problems</span>
+                <span class="settings-hint">Tests this install, this PC and your devices, to find where a problem is.</span>
+              </div>
+              <button class="btn btn-ghost" id="support-run-btn">Run check</button>
+            </div>
+            <div class="support-results" id="support-results" hidden></div>
           </div>
 
           <div class="settings-group-title">About</div>
@@ -297,6 +316,7 @@
           <p class="chart-empty" id="detail-chart-empty" hidden>Not enough readings in this period yet.</p>
         </div>
         <p class="chart-key" id="detail-chart-key" hidden><i aria-hidden="true"></i>Charging</p>
+        <div class="sheet-report" id="detail-report"></div>
       </aside>
     </div>
   </div>
@@ -356,5 +376,6 @@
   <script src="estimate.js"></script>
   <script src="app.js"></script>
   <script src="detail.js"></script>
+  <script src="support.js"></script>
 </body>
 </html>
