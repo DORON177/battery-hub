@@ -39,6 +39,9 @@ async function readBattery(logicalDevice) {
       if (/ is off$/.test(e.message)) break; // the dongle answered: no other channel will do better
     }
   }
+  // Several of these protocols have no "off" answer: the dongle just never replies, which
+  // HeadsetControl and rivalcfg both read as the device being unavailable.
+  if (/^timeout/.test(lastError.message)) throw new Error(`${entry.kind} is off`);
   throw lastError;
 }
 

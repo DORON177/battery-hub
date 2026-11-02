@@ -262,3 +262,41 @@ test('a Windows scan parses one device or many, and rejects nonsense', () => {
   assert.equal(parseScan('[{"id":"bt:1","capacity":250}]').length, 0);
   assert.equal(parseScan('not json'), null);
 });
+
+test('switched-off devices read as off instead of a made-up level', () => {
+  const aerox = entry(0x1038, 0x1838);
+  assert.deepEqual(aerox.steps[0].parse([0xd2, 0]), { offline: true }); // rivalcfg: level -5
+  assert.deepEqual(aerox.steps[0].parse([0xd2, 0x7f]), { offline: true });
+  assert.deepEqual(entry(0x1038, 0x1830).steps[0].parse([0xff, 0, 0]), { offline: true });
+  const g733 = entry(0x046d, 0x0ab5).steps[0];
+  assert.deepEqual(g733.parse(pad([0x11, 0xff, 0xff, 0x08, 0x0a, 0x05], 20)), { offline: true });
+});
+
+test('a razer receiver that times out on the mouse means the mouse is off', async () => {
+  const timedOut = razer.buildRequest(0x1f, 0x80);
+  timedOut[0] = 0x04;
+  const dev = { sendFeatureReport: async () => {}, getFeatureReport: async () => [0, ...timedOut] };
+  const session = require('../src/main/hid/session');
+  const acquire = session.acquire;
+  session.acquire = async () => dev;
+  try {
+    await assert.rejects(razer.readBattery({ id: 'r', productId: razerDevices[0][0], channels: [{ path: 'p', interface: 0 }] }), /device is off/);
+  } finally {
+    session.acquire = acquire;
+  }
+});
+
+test('a table device whose dongle never answers on any channel is off', async () => {
+  const exchange = require('../src/main/hid/drivers/exchange');
+  const original = exchange.exchange;
+  delete require.cache[require.resolve('../src/main/hid/drivers/tabled')];
+  exchange.exchange = async () => { throw new Error('timeout waiting for battery response'); };
+  try {
+    const tabled = require('../src/main/hid/drivers/tabled');
+    const device = { vendorId: 0x03f0, productId: 0x098d, channels: [{ path: 'a', usagePage: 0xff00 }, { path: 'b', usagePage: 0xff01 }] };
+    await assert.rejects(tabled.readBattery(device), /^Error: headset is off$/);
+  } finally {
+    exchange.exchange = original;
+    delete require.cache[require.resolve('../src/main/hid/drivers/tabled')];
+  }
+});

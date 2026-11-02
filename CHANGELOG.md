@@ -12,6 +12,9 @@ All notable changes to this project are documented here. Versions follow
 - A wireless device switched off while its receiver stayed plugged in, such as a Logitech
   G502 X, kept showing its last level as if it were still on. It now shows Turned off, keeps
   the last level dimmed, and comes back by itself when switched on.
+- The same now holds for every driver: Razer mice, PlayStation controllers, SteelSeries, HyperX,
+  Corsair, Logitech and MCHOSE headsets, Audeze headsets, and Bluetooth and Xbox devices.
+- A switched-off SteelSeries Aerox or Prime mouse showed 0% instead of being off.
 
 ## [2.0.0] - 2026-11-02
 
