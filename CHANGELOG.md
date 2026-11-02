@@ -6,6 +6,31 @@ All notable changes to this project are documented here. Versions follow
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-11-02
+
+### Added
+- Far wider device support, with no setup needed: any Bluetooth device that reports its
+  battery to Windows, Xbox wireless controllers, PlayStation controllers, Logitech HID++ mice
+  and keyboards, 81 Razer devices, and headsets and mice from SteelSeries, HyperX, Corsair,
+  Logitech, Audeze and MCHOSE.
+- Supported devices now appear first in Add device.
+- One card per device: a device reachable several ways, such as a controller on its cable and
+  over Bluetooth, is matched by its Bluetooth address and reads the best working connection.
+  Existing duplicate cards merge by themselves and keep their name and history.
+- Setting for reading PlayStation controllers over Bluetooth.
+- If a device fails two scans, or three reads in a row, you can send a report on it. The report
+  includes the same check as Settings > Help, and if the problem is on your PC you see the fix
+  first.
+- Settings > Help has a check that tests your install file by file, your version, this PC and
+  your devices, says where a problem most likely is, and can open a filled-in support request.
+
+### Fixed
+- Running a scan again could save a setup from the older scan.
+
+### Security
+- The app window can no longer go to a website or open new windows.
+- Updated two libraries with known security issues.
+
 ## [1.3.1] - 2026-11-01
 
 ### Changed
