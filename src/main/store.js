@@ -63,6 +63,7 @@ function mergeDevices(keepId, dropId) {
     ...keep,
     customName: keep.customName || drop.customName || null,
     customIcon: keep.customIcon || drop.customIcon || null,
+    alertThreshold: keep.alertThreshold ?? drop.alertThreshold ?? null,
     product: /_/.test(keep.product || '') ? drop.product : keep.product, // "MX_Master_4"
     identity: keep.identity || drop.identity,
     order: Math.min(keep.order ?? 1e9, drop.order ?? 1e9),

@@ -224,10 +224,35 @@ function renderDetail() {
   document.getElementById('detail-voltage-row').hidden = !voltage;
   if (voltage) setText('detail-voltage', `${(voltage / 1000).toFixed(2)} V`);
 
+  renderAlert(dev);
   offerReadReport(dev);
 
   // Keep a reading the user is hovering rather than redrawing it out from under them.
   if (detail.hover === null && !detail.opening) renderChart();
+}
+
+// The device's own low battery level. Empty means it follows Settings.
+function renderAlert(dev) {
+  const custom = typeof dev.alertThreshold === 'number';
+  const fallback = currentSettings.notifyThreshold ?? 20;
+  document.querySelectorAll('#detail-alert-mode button').forEach((b) => {
+    b.classList.toggle('active', b.dataset.value === (custom ? 'custom' : 'default'));
+  });
+  document.getElementById('detail-alert-stepper').hidden = !custom;
+  const input = document.getElementById('detail-alert-value');
+  if (custom && document.activeElement !== input) input.value = dev.alertThreshold;
+  let hint = custom ? 'Alert at or below' : `Same as Settings (${fallback}%)`;
+  if (currentSettings.notifyEnabled === false) hint = 'Low battery alerts are off in Settings';
+  setText('detail-alert-hint', hint);
+}
+
+async function saveAlert(threshold) {
+  const dev = state.saved[detail.id];
+  if (!dev) return;
+  dev.alertThreshold = threshold;
+  renderAlert(dev);
+  positionSegThumbs(sheet);
+  await window.batteryHub.setDeviceAlert(dev.id, threshold);
 }
 
 function openDetail(id) {
@@ -280,6 +305,24 @@ document.querySelectorAll('#detail-range button').forEach((button) => {
     hidePoint();
     renderChart();
   });
+});
+
+document.querySelectorAll('#detail-alert-mode button').forEach((button) => {
+  button.addEventListener('click', () => {
+    const dev = state.saved[detail.id];
+    if (!dev) return;
+    if (button.dataset.value === 'default') saveAlert(null);
+    else if (typeof dev.alertThreshold !== 'number') saveAlert(currentSettings.notifyThreshold ?? 20);
+  });
+});
+
+document.getElementById('detail-alert-value').addEventListener('change', (e) => {
+  const input = e.target;
+  let v = Math.round(Number(input.value) / 5) * 5;
+  if (Number.isNaN(v)) v = currentSettings.notifyThreshold ?? 20;
+  v = Math.max(5, Math.min(95, v));
+  input.value = v;
+  saveAlert(v);
 });
 
 window.addEventListener('resize', () => { if (detail.id !== null) renderChart(); });

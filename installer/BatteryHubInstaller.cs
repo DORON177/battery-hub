@@ -51,6 +51,7 @@ namespace BatteryHubInstaller
         readonly Border fill;
         readonly Button closeButton;
         readonly FrameworkElement card;
+        readonly System.Windows.Shapes.Ellipse dot;
 
         static Brush Color(string hex) { return (Brush)new BrushConverter().ConvertFromString(hex); }
 
@@ -66,8 +67,23 @@ namespace BatteryHubInstaller
             FontFamily = new FontFamily("Segoe UI Variable Display, Segoe UI");
             UseLayoutRounding = true;
 
-            var art = new Image { Width = 112, Height = 112, Source = LoadArt(), VerticalAlignment = VerticalAlignment.Center };
-            RenderOptions.SetBitmapScalingMode(art, BitmapScalingMode.HighQuality);
+            var image = new Image { Width = 112, Height = 112, Source = LoadArt() };
+            RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
+            // The third light on the character's body (dark in the art) blinks while it installs.
+            dot = new System.Windows.Shapes.Ellipse
+            {
+                Width = 3.8,
+                Height = 3.8,
+                Fill = Color("#67FACF"),
+                Opacity = 0,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(52.6, 81.7, 0, 0),
+                Effect = new DropShadowEffect { Color = Colors.White, BlurRadius = 5, ShadowDepth = 0, Opacity = 0.35 },
+            };
+            var art = new Grid { Width = 112, Height = 112, VerticalAlignment = VerticalAlignment.Center };
+            art.Children.Add(image);
+            art.Children.Add(dot);
             var bob = new TranslateTransform();
             art.RenderTransform = bob;
 
@@ -143,6 +159,18 @@ namespace BatteryHubInstaller
                 RepeatBehavior = RepeatBehavior.Forever,
                 EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
             });
+            dot.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(650))
+            {
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
+            });
+        }
+
+        // Done: the light stays on like the other two. Failed: it goes out.
+        void StopDot(bool lit)
+        {
+            dot.BeginAnimation(OpacityProperty, new DoubleAnimation(lit ? 1 : 0, TimeSpan.FromMilliseconds(200)));
         }
 
         void SetProgress(double value, int ms)
@@ -200,6 +228,7 @@ namespace BatteryHubInstaller
                     return;
                 }
                 SetProgress(1, 350);
+                StopDot(true);
                 // Started from here so the window opens even with "Start minimized" on. The install
                 // has worked either way, so not finding the app isn't a failure.
                 var app = FindInstalledApp();
@@ -296,6 +325,7 @@ namespace BatteryHubInstaller
         {
             status.Text = message;
             status.Foreground = Color("#FF6B66");
+            StopDot(false);
             closeButton.Visibility = Visibility.Visible;
         }
 
