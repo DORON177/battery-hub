@@ -6,6 +6,19 @@ All notable changes to this project are documented here. Versions follow
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-02
+
+A fresh start for Battery Hub. Earlier copies update to it by themselves.
+
+### Added
+- Each device can have its own low battery alert level, set in its panel. Devices without one
+  keep using the level in Settings.
+- While the installer runs, the third light on the character blinks.
+
+### Changed
+- Updated Electron from 33 to 45, along with the build tools and updater. The installer is about
+  40 MB larger because of this.
+
 ## [1.3.2] - 2026-11-02
 
 ### Added
