@@ -5,11 +5,20 @@
 //   byte[6]  = capacity percent (0-100)
 //   byte[7]  = charging flag (0/1)
 //   byte[8-9] = voltage in mV, big-endian
+//
+// Linux now runs this family in drivers/hid/hid-pulsar.c, which also asks the receiver whether it
+// has the mouse at all (CMD_STATUS): subcommand 0x03, checksum 0x4a. byte[6] of the answer is 1
+// while the mouse is connected and 0 when it isn't. A switched-off mouse never answers the battery
+// request, so without this it could only look asleep. Checked on a VXE R1 Pro: 0 within a second of
+// switching it off, 1 again on switching it on.
 const { findChannel } = require('../catalog');
 const session = require('../session');
 
 const USAGE_PAGE_COMMAND = 0xFF02;
 const BATTERY_REQUEST = [0x08, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x49];
+const STATUS_REQUEST = [0x08, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4a];
+const FRAME_LENGTH = 17;
+const OFF_ANSWERS = 2; // one "not connected" can catch the receiver while the switch is moving
 const RESPONSE_TIMEOUT_MS = 4000;
 const REPOKE_MS = 500; // this firmware often ignores a single request; poke until it answers
 const READ_SLICE_MS = 100;
@@ -30,6 +39,16 @@ function parseFrame(arr) {
   return { capacity, charging: !!arr[7], voltageMv: (arr[8] << 8) | arr[9] };
 }
 
+// The receiver's answer to the status request: true while it has the mouse, false when it
+// doesn't, null for any other frame. The checksum is checked as Linux does.
+function parseStatus(arr) {
+  if (arr.length < FRAME_LENGTH || arr[0] !== 0x08 || arr[1] !== 0x03 || arr[6] > 1) return null;
+  let sum = 0;
+  for (let i = 0; i < FRAME_LENGTH - 1; i++) sum += arr[i];
+  if (((0x55 - sum) & 0xff) !== arr[FRAME_LENGTH - 1]) return null;
+  return arr[6] === 1;
+}
+
 async function readBattery(logicalDevice) {
   const channel = findChannel(logicalDevice, USAGE_PAGE_COMMAND);
   if (!channel) throw new Error('no command channel');
@@ -37,18 +56,31 @@ async function readBattery(logicalDevice) {
   const dev = await session.acquire(channel.path);
   await session.readQueued(channel.path, dev); // a late reply to an old request is stale
 
+  // Ask for the battery and whether the receiver has the mouse. A battery answer always wins; a
+  // receiver that never answers the status request leaves this as it was before.
   const deadline = Date.now() + RESPONSE_TIMEOUT_MS;
   let nextPoke = 0;
+  let connected = false;
+  let offAnswers = 0;
   while (Date.now() < deadline) {
     if (Date.now() >= nextPoke) {
+      if (!connected) await dev.write(STATUS_REQUEST);
       await dev.write(BATTERY_REQUEST);
       nextPoke = Date.now() + REPOKE_MS;
     }
-    const reading = parseFrame(await session.read(channel.path, dev, READ_SLICE_MS));
+    const frame = await session.read(channel.path, dev, READ_SLICE_MS);
+    const reading = parseFrame(frame);
     if (reading) return reading;
+    const status = parseStatus(frame);
+    if (status) {
+      connected = true;
+      offAnswers = 0;
+    } else if (status === false && ++offAnswers >= OFF_ANSWERS) {
+      throw new Error('mouse is off');
+    }
   }
   throw new Error('timeout waiting for battery response');
 }
 
 // The mouse reappears under another product id while charging over its cable.
-module.exports = { id: 'kysona', hasWiredIdentity: true, matches, parseFrame, readBattery };
+module.exports = { id: 'kysona', hasWiredIdentity: true, matches, parseFrame, parseStatus, readBattery };

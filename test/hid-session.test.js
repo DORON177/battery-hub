@@ -81,6 +81,39 @@ function mouse() {
   return { dev, path, logical: { channels: [{ path, usagePage: 0xff02, usage: 2 }] } };
 }
 const reply = (capacity, charging = 0) => [8, 4, 0, 0, 0, 0, capacity, charging, 0x0f, 0xa0];
+// Status answers exactly as a VXE R1 Pro receiver sent them, with the mouse on and off.
+const hexFrame = (text) => text.split(' ').map((b) => parseInt(b, 16));
+const statusOn = () => hexFrame('08 03 00 00 00 01 01 b5 b6 0d 00 00 00 00 00 00 d0');
+const statusOff = () => hexFrame('08 03 00 00 00 01 00 b5 b6 0d 00 00 00 00 00 00 d1');
+
+test('kysona: the receiver saying it has no mouse twice means the mouse is off', async () => {
+  const { dev, logical } = mouse();
+  dev.reads = [[], statusOff(), [], [], [], [], [], statusOff()];
+  await assert.rejects(kysona.readBattery(logical), /^Error: mouse is off$/);
+  assert.equal(dev.closes, 0);
+});
+
+test('kysona: one "no mouse" answer while the switch moves is not enough', async () => {
+  const { dev, logical } = mouse();
+  dev.reads = [[], statusOff(), statusOn(), statusOff(), reply(88)];
+  assert.equal((await kysona.readBattery(logical)).capacity, 88);
+});
+
+test('kysona: a battery answer wins over a stale "no mouse"', async () => {
+  const { dev, logical } = mouse();
+  dev.reads = [[], statusOff(), reply(90)];
+  assert.equal((await kysona.readBattery(logical)).capacity, 90);
+});
+
+test('kysona: status answers are checked like Linux checks them', () => {
+  assert.equal(kysona.parseStatus(statusOn()), true);
+  assert.equal(kysona.parseStatus(statusOff()), false);
+  const corrupt = statusOff();
+  corrupt[16] = 0xd0; // checksum of the "on" frame
+  assert.equal(kysona.parseStatus(corrupt), null);
+  assert.equal(kysona.parseStatus(reply(50)), null);
+  assert.equal(kysona.parseStatus([8, 3, 0, 0, 0, 1, 1]), null, 'too short to carry a checksum');
+});
 
 test('kysona: reads a reply and leaves the handle open for the next poll', async () => {
   const { dev, logical } = mouse();

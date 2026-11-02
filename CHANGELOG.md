@@ -12,6 +12,7 @@ All notable changes to this project are documented here. Versions follow
 - A wireless device switched off while its receiver stayed plugged in, such as a Logitech G502 X,
   kept showing its last level as if it were still on. It now shows Asleep or off (Turned off for
   headsets), keeps the last level dimmed, and comes back by itself. This works the same for
+  VXE and ATK mice (Battery Hub now asks their receiver whether it has the mouse, as Linux does),
   Logitech, Razer, SteelSeries, HyperX, Corsair, MCHOSE and Audeze devices and PlayStation
   controllers.
 - A switched-off SteelSeries Aerox or Prime mouse showed 0%, and a DualShock 4 adapter with no
