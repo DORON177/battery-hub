@@ -14,6 +14,7 @@ const CMD_BATTERY = 0x80;
 const CMD_CHARGING = 0x84;
 const STATUS_BUSY = 0x01;
 const STATUS_OK = 0x02;
+const STATUS_TIMEOUT = 0x04; // OpenRazer's RAZER_CMD_TIMEOUT: the receiver got no answer from the device
 const ANSWER_ATTEMPTS = 8;
 const ANSWER_WAIT_MS = 40;
 
@@ -48,6 +49,7 @@ async function ask(dev, transactionId, commandId) {
     const raw = Array.from(await dev.getFeatureReport(REPORT_ID, REPORT_SIZE + 1));
     const report = raw.slice(1); // hidapi puts the report id first
     if (report[0] === STATUS_BUSY) continue;
+    if (report[0] === STATUS_TIMEOUT && report[6] === CLASS_MISC && report[7] === commandId) throw new Error('device is off');
     const args = parseReply(report, commandId);
     if (args) return args;
     throw new Error('device did not accept the request');

@@ -44,6 +44,7 @@ function hidppVoltageStep(command, points) {
     request: pad([0x11, 0xff, ...command], 20),
     parse(f) {
       if (f.length < 7 || f[0] !== 0x11) return null;
+      if (f[2] === 0xff) return OFFLINE; // HID++ error: the dongle answered for the headset
       const mv = (f[4] << 8) | f[5];
       if (mv < points[points.length - 1][0]) return OFFLINE; // no real cell reads this low
       return { capacity: fromVoltage(mv, points), charging: f[6] === 0x03, voltageMv: mv };
@@ -77,10 +78,13 @@ function alphaStep(command, parse) {
   };
 }
 
-// byte 1: charging flag on top, level in 5% steps from 1
+// byte 1: charging flag on top, level in 5% steps from 1. rivalcfg reads a level outside 0-100
+// (a raw 0 from the dongle) as the mouse being off.
 function aeroxBattery(f) {
   if (f.length < 2) return null;
-  return { capacity: clampPercent(((f[1] & 0x7f) - 1) * 5), charging: !!(f[1] & 0x80) };
+  const level = ((f[1] & 0x7f) - 1) * 5;
+  if (level < 0 || level > 100) return OFFLINE;
+  return { capacity: level, charging: !!(f[1] & 0x80) };
 }
 
 const DEVICES = [
@@ -197,7 +201,7 @@ const DEVICES = [
   {
     name: 'SteelSeries Rival 3 Wireless', kind: 'mouse', vendorId: STEELSERIES, productIds: [0x1830, 0x1872],
     channel: { interface: 3 },
-    steps: [{ request: [0x00, 0xaa, 0x01], parse: (f) => (f.length < 3 ? null : { capacity: clampPercent(f[0]), charging: !!f[2] }) }],
+    steps: [{ request: [0x00, 0xaa, 0x01], parse: (f) => (f.length < 3 ? null : f[0] > 100 ? OFFLINE : { capacity: f[0], charging: !!f[2] }) }],
   },
   {
     name: 'SteelSeries Aerox and Prime Wireless', kind: 'mouse', vendorId: STEELSERIES,
