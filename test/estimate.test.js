@@ -65,3 +65,11 @@ test('returns null when the signal is too weak', () => {
   // A 5% drop but over only 6 minutes -> below the 0.25h minimum.
   assert.equal(estimateHoursLeft(hist([[0.1, 55], [0, 50]]), 50), null);
 });
+
+test('a device is turned off only when offline with an off report', () => {
+  const { isTurnedOff } = require('../src/renderer/estimate');
+  assert.equal(isTurnedOff({ online: false, lastError: 'device is off' }), true);
+  assert.equal(isTurnedOff({ online: false, lastError: 'headset is off' }), true);
+  assert.equal(isTurnedOff({ online: false, lastError: 'not connected' }), false);
+  assert.equal(isTurnedOff({ online: true, lastError: 'device is off' }), false);
+});
