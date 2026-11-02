@@ -146,3 +146,18 @@ test('a device that only times out stays online, since it may just be asleep', a
   await failRead('timeout waiting for battery response');
   assert.equal(devices.mouse.online, true);
 });
+
+test('a device that stops answering through its dongle goes offline only if it answered before', async () => {
+  addMouse();
+  devices.mouse.online = true;
+  delete devices.mouse.lastReadingAt;
+  devices.mouse.failedReads = 0;
+  await failRead('headset is not answering');
+  assert.equal(devices.mouse.online, true, 'never read: it may not speak this protocol, so keep it countable');
+  assert.equal(devices.mouse.failedReads, 1);
+  await pollWithChangeMidRead(() => {}, () => finishRead.resolve({ capacity: 70, charging: false }));
+  await failRead('headset is not answering');
+  assert.equal(devices.mouse.online, false);
+  assert.equal(devices.mouse.lastReading.capacity, 70);
+  assert.equal(devices.mouse.failedReads, 0);
+});

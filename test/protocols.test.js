@@ -112,9 +112,17 @@ test('HID++ replies are matched to the call, and errors are told apart', () => {
   assert.equal(hidpp.replyTo(reply, 1, 6, 1)[0], 80);
   assert.equal(hidpp.replyTo(reply, 2, 6, 1), null);
   assert.equal(hidpp.replyTo(reply, 1, 7, 1), null);
-  assert.throws(() => hidpp.replyTo(pad([0x10, 1, 0x8f, 0, 0, 4], 20), 1, 6, 1), /off/);
-  assert.throws(() => hidpp.replyTo(pad([0x11, 1, 0xff, 6, 0x1b, 5], 20), 1, 6, 1), /off/);
+  // The receiver can't reach the device (Linux: resource error, unknown device; Solaar: connect failed)
+  for (const code of [0x04, 0x08, 0x09]) {
+    assert.throws(() => hidpp.replyTo(pad([0x10, 1, 0x8f, 6, 0x1b, code], 20), 1, 6, 1), /^Error: device is off$/);
+  }
+  // The device itself answered with an error, so it is on
+  assert.throws(() => hidpp.replyTo(pad([0x11, 1, 0xff, 6, 0x1b, 5], 20), 1, 6, 1), /refused the request \(error 5\)/);
+  assert.throws(() => hidpp.replyTo(pad([0x10, 1, 0x8f, 6, 0x1b, 0x01], 20), 1, 6, 1), /refused/);
+  // Errors for someone else's request (another feature, or G HUB's function and software id)
   assert.equal(hidpp.replyTo(pad([0x11, 1, 0xff, 9, 0x1b, 5], 20), 1, 6, 1), null);
+  assert.equal(hidpp.replyTo(pad([0x11, 1, 0xff, 6, 0x1a, 5], 20), 1, 6, 1), null);
+  assert.equal(hidpp.replyTo(pad([0x10, 1, 0x8f, 6, 0x13, 0x09], 20), 1, 6, 1), null);
 });
 
 test('HID++ battery features decode percent, levels, and voltage', () => {
@@ -270,6 +278,10 @@ test('switched-off devices read as off instead of a made-up level', () => {
   assert.deepEqual(entry(0x1038, 0x1830).steps[0].parse([0xff, 0, 0]), { offline: true });
   const g733 = entry(0x046d, 0x0ab5).steps[0];
   assert.deepEqual(g733.parse(pad([0x11, 0xff, 0xff, 0x08, 0x0a, 0x05], 20)), { offline: true });
+  // Answers to other software's requests are not this headset's battery
+  assert.equal(g733.parse(pad([0x11, 0xff, 0xff, 0x08, 0x1c, 0x05], 20)), null);
+  assert.equal(g733.parse(pad([0x11, 0xff, 0x04, 0x0a, 0x0f, 0xa0, 1], 20)), null);
+  assert.equal(g733.parse(pad([0x11, 0xff, 0x08, 0x1a, 0x0f, 0xa0, 1], 20)), null);
 });
 
 test('a razer receiver that times out on the mouse means the mouse is off', async () => {
@@ -280,13 +292,13 @@ test('a razer receiver that times out on the mouse means the mouse is off', asyn
   const acquire = session.acquire;
   session.acquire = async () => dev;
   try {
-    await assert.rejects(razer.readBattery({ id: 'r', productId: razerDevices[0][0], channels: [{ path: 'p', interface: 0 }] }), /device is off/);
+    await assert.rejects(razer.readBattery({ id: 'r', productId: razerDevices[0][0], channels: [{ path: 'p', interface: 0 }] }), /^Error: device is not answering$/);
   } finally {
     session.acquire = acquire;
   }
 });
 
-test('a table device whose dongle never answers on any channel is off', async () => {
+test('a table device whose dongle never answers is not answering, unless it is on its cable', async () => {
   const exchange = require('../src/main/hid/drivers/exchange');
   const original = exchange.exchange;
   delete require.cache[require.resolve('../src/main/hid/drivers/tabled')];
@@ -294,9 +306,63 @@ test('a table device whose dongle never answers on any channel is off', async ()
   try {
     const tabled = require('../src/main/hid/drivers/tabled');
     const device = { vendorId: 0x03f0, productId: 0x098d, channels: [{ path: 'a', usagePage: 0xff00 }, { path: 'b', usagePage: 0xff01 }] };
-    await assert.rejects(tabled.readBattery(device), /^Error: headset is off$/);
+    await assert.rejects(tabled.readBattery(device), /^Error: headset is not answering$/);
+    const cable = { vendorId: 0x1038, productId: 0x183a, channels: [{ path: 'c', usagePage: 0xffc0, interface: 3 }] };
+    await assert.rejects(tabled.readBattery(cable), /^Error: timeout waiting for battery response$/);
   } finally {
     exchange.exchange = original;
     delete require.cache[require.resolve('../src/main/hid/drivers/tabled')];
   }
+});
+
+test('Logitech: a device that stops answering reads as off on the same poll, an unplugged one does not', async () => {
+  const exchange = require('../src/main/hid/drivers/exchange');
+  const original = exchange.exchange;
+  const fresh = () => {
+    delete require.cache[require.resolve('../src/main/hid/drivers/hidpp')];
+    return require('../src/main/hid/drivers/hidpp');
+  };
+  const receiver = { product: 'USB Receiver', vendorId: 0x046d, channels: [{ path: 'r', usagePage: 0xff00, usage: 0x02 }] };
+  try {
+    // Slot 1 holds a mouse with Unified Battery at index 6, then it goes quiet.
+    let on = true;
+    exchange.exchange = async (channel, request, accept) => {
+      const [, device, index, fnSw] = request;
+      if (!on || device !== 1) throw new Error('timeout waiting for battery response');
+      if (index === 0) return accept(pad([0x11, 1, 0, fnSw, request[4] === 0x10 && request[5] === 0x04 ? 6 : 0], 20));
+      return accept(pad([0x11, 1, 6, fnSw, 64, 4, 0, 0], 20));
+    };
+    const hidpp2 = fresh();
+    assert.equal((await hidpp2.readBattery(receiver)).capacity, 64);
+    on = false;
+    await assert.rejects(hidpp2.readBattery(receiver), /^Error: device is not answering$/);
+
+    // Unplugged: the channel itself fails, which must reach the poller as it is.
+    exchange.exchange = async () => { throw new Error('could not read data from device'); };
+    await assert.rejects(fresh().readBattery(receiver), /could not read data/);
+  } finally {
+    exchange.exchange = original;
+    delete require.cache[require.resolve('../src/main/hid/drivers/hidpp')];
+  }
+});
+
+test('DualShock 4 adapter with no controller on it reads as off, not as a low battery', () => {
+  const usb = new Array(64).fill(0);
+  usb[0] = 0x01;
+  usb[31] = 0x04;
+  assert.deepEqual(playstation.parseDualShock4(usb, false, true), { off: true });
+  usb[31] = 0x00;
+  usb[30] = 0x05;
+  assert.deepEqual(playstation.parseDualShock4(usb, false, true), { capacity: 55, charging: false });
+  usb[31] = 0x04; // a controller on its own cable never reports this; only the adapter is checked
+  assert.deepEqual(playstation.parseDualShock4(usb), { capacity: 55, charging: false });
+});
+
+test('Audeze talks on the collection HeadsetControl uses first', () => {
+  const order = audeze.candidates({ channels: [
+    { path: 'consumer', usagePage: 0x0c, usage: 1 },
+    { path: 'other', usagePage: 0xff00, usage: 1 },
+    { path: 'command', usagePage: 0xff13, usage: 1 },
+  ] }).map((c) => c.path);
+  assert.deepEqual(order, ['command', 'other', 'consumer']);
 });

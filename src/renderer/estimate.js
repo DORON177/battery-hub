@@ -57,9 +57,14 @@ function isOffline(device) {
   return device.online === false;
 }
 
-// Offline because its receiver or dongle reported it switched off, rather than unplugged.
-function isTurnedOff(device) {
-  return isOffline(device) && /\bis off$/i.test(device.lastError || '');
+// What to call a device that is offline because its receiver or dongle said it is off or got no
+// answer from it, rather than because it was unplugged. Only a headset is known to be off: a
+// mouse, keyboard or controller may just be asleep. Null when that isn't why it's offline.
+function offLabel(device) {
+  if (!isOffline(device)) return null;
+  const error = device.lastError || '';
+  if (!/\bis (off|not answering)$/i.test(error)) return null;
+  return /^headset\b/i.test(error) ? 'Turned off' : 'Asleep or off';
 }
 
 function isCharging(device) {
@@ -80,5 +85,5 @@ function urgencyCompare(a, b) {
 
 // Node (tests) only — `module` is undefined in the browser, so this is a no-op there.
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { drainRatePerHour, estimateHoursLeft, hasRecentReading, lastChargedAt, isOffline, isTurnedOff, isCharging, urgencyCompare };
+  module.exports = { drainRatePerHour, estimateHoursLeft, hasRecentReading, lastChargedAt, isOffline, offLabel, isCharging, urgencyCompare };
 }

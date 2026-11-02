@@ -10,8 +10,11 @@ const LONG = 0x11;
 const LONG_LENGTH = 20;
 const SOFTWARE_ID = 0x0b;
 const ROOT_INDEX = 0x00;
-const ERROR_INDEX = 0xff;
-const OLD_ERROR_INDEX = 0x8f; // HID++ 1.0: usually a paired device that is asleep or off
+const ERROR_INDEX = 0xff; // HID++ 2.0 error: the device itself refused the call
+const OLD_ERROR_INDEX = 0x8f; // HID++ 1.0 error: usually the receiver answering for a device it can't reach
+// HID++ 1.0 error codes for a device the receiver can't reach: Linux reads resource error and
+// unknown device as "might not be connected", and Solaar adds a failed connection request.
+const UNREACHABLE = new Set([0x04, 0x08, 0x09]);
 const DIRECT = 0xff;
 const RECEIVER_SLOTS = [1, 2, 3, 4, 5, 6];
 const REPLY_MS = 400;
@@ -37,16 +40,28 @@ function request(device, index, fn, params = []) {
   return pad([LONG, device, index, (fn << 4) | SOFTWARE_ID, ...params], LONG_LENGTH);
 }
 
-// The params of a reply to exactly this call; throws on a protocol error.
+// The params of a reply to exactly this call; throws on an error answer to it. As in Linux's
+// hidpp_match_error, an error belongs to this call only when it repeats the call's feature index
+// and function: other software such as G HUB talks to the same device, and its errors arrive here too.
 function replyTo(frame, device, index, fn) {
-  if (frame.length < 5 || frame[1] !== device) return null;
+  if (frame.length < 6 || frame[1] !== device) return null;
   if (frame[2] === ERROR_INDEX || frame[2] === OLD_ERROR_INDEX) {
-    if (frame[3] === index || frame[2] === OLD_ERROR_INDEX) throw new Error('device is off');
-    return null;
+    if (frame[3] !== index || frame[4] !== ((fn << 4) | SOFTWARE_ID)) return null;
+    if (frame[2] === OLD_ERROR_INDEX && UNREACHABLE.has(frame[5])) throw new Error('device is off');
+    throw new Error(`device refused the request (error ${frame[5]})`);
   }
   if (frame[2] !== index || frame[3] !== ((fn << 4) | SOFTWARE_ID)) return null;
   return frame.slice(4);
 }
+
+// How a call ended when it didn't succeed. Anything else means the channel itself failed, for
+// example because the receiver was unplugged.
+const SILENT = /^timeout waiting/;
+const ANSWERED = /^device (is off|refused)/;
+const isOutcome = (e) => SILENT.test(e.message) || ANSWERED.test(e.message);
+// A refusal shows a working device, the receiver saying it can't reach one comes next, and
+// silence says least: it may be an empty slot as much as a device that is off.
+const weight = (e) => (/^device refused/.test(e.message) ? 3 : /is off$/.test(e.message) ? 2 : 1);
 
 const call = (channel, device, index, fn, params) => exchange(
   channel, request(device, index, fn, params), (f) => replyTo(f, device, index, fn), REPLY_MS,
@@ -90,36 +105,50 @@ const FEATURES = [
 async function findRoute(channel, logicalDevice) {
   const receiver = /receiver/i.test(logicalDevice.product);
   const slots = receiver ? RECEIVER_SLOTS : [DIRECT, ...RECEIVER_SLOTS];
-  let asleep = false;
+  let failure = null;
   for (const device of slots) {
     for (const entry of FEATURES) {
       try {
         const index = await featureIndex(channel, device, entry.feature);
         if (index) return { device, index, entry };
-      } catch (_) {
-        asleep = true;
-        break; // nothing in this slot answers: try the next one
+      } catch (e) {
+        if (!isOutcome(e)) throw e;
+        if (!failure || weight(e) > weight(failure)) failure = e;
+        break; // nothing usable in this slot: try the next one
       }
     }
   }
-  throw new Error(asleep ? 'device is off' : 'no battery feature found');
+  if (!failure) throw new Error('no battery feature found');
+  if (weight(failure) === 1) throw new Error('device is not answering');
+  throw failure;
+}
+
+async function readRoute(channel, route) {
+  const params = await call(channel, route.device, route.index, route.entry.fn);
+  const reading = route.entry.parse(params);
+  if (!reading.capacity) throw new Error('waiting for device to report');
+  return reading;
 }
 
 async function readBattery(logicalDevice) {
   const channel = channelOf(logicalDevice);
   if (!channel) throw new Error('no command channel');
-  let route = routes.get(channel.path);
-  if (!route) {
-    route = await findRoute(channel, logicalDevice);
-    routes.set(channel.path, route);
+  const known = routes.get(channel.path);
+  if (known) {
+    try {
+      return await readRoute(channel, known);
+    } catch (e) {
+      routes.delete(channel.path); // a device can move slot or wake with other firmware
+      if (!isOutcome(e)) throw e;
+      // Look again straight away, so a device that went off shows as off on this read.
+    }
   }
+  const route = await findRoute(channel, logicalDevice);
+  routes.set(channel.path, route);
   try {
-    const params = await call(channel, route.device, route.index, route.entry.fn);
-    const reading = route.entry.parse(params);
-    if (!reading.capacity) throw new Error('waiting for device to report');
-    return reading;
+    return await readRoute(channel, route);
   } catch (e) {
-    routes.delete(channel.path); // a device can move slot or wake with other firmware
+    routes.delete(channel.path);
     throw e;
   }
 }

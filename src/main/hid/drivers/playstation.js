@@ -12,6 +12,7 @@ const { address } = require('../../identity');
 const SONY = 0x054c;
 const DUALSENSE = new Set([0x0ce6, 0x0df2]); // DualSense, DualSense Edge
 const DUALSHOCK4 = new Set([0x05c4, 0x09cc, 0x0ba0]); // v1, v2, wireless adapter
+const ADAPTER = 0x0ba0;
 const LISTEN_MS = 1500;
 const FULL_REPORT = { id: 0x05, size: 41 };
 const BLUETOOTH_HID = /00001124-0000-1000-8000-00805f9b34fb/i;
@@ -40,8 +41,11 @@ function parseDualSense(frame, bluetooth) {
   return null; // temperature or charging fault: no trustworthy level
 }
 
-function parseDualShock4(frame, bluetooth) {
+// Sony's wireless adapter keeps sending mostly empty reports with no controller connected. Linux
+// tells by bit 2 of the second status byte, which is set while the adapter has no controller.
+function parseDualShock4(frame, bluetooth, adapter = false) {
   if (frame[0] !== (bluetooth ? 0x11 : 0x01)) return null;
+  if (adapter && !bluetooth && (frame[31] & 0x04)) return { off: true };
   const status = frame[bluetooth ? 32 : 30];
   const units = status & 0x0f;
   const cable = !!(status & 0x10);
@@ -63,7 +67,8 @@ async function readBattery(logicalDevice, profile) {
   while (Date.now() < deadline) {
     const frame = await session.read(channel.path, dev, LISTEN_SLICE_MS);
     if (frame.length === 0) continue;
-    const reading = parse(frame, bluetooth);
+    const reading = parse(frame, bluetooth, logicalDevice.productId === ADAPTER);
+    if (reading && reading.off) throw new Error('device is off');
     if (reading) return reading;
     if (bluetooth && frame[0] === 0x01 && !askedForFullReport) {
       if (profile && profile.quietBluetooth) throw new Error('Bluetooth reading is off in Settings');

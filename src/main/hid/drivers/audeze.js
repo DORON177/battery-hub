@@ -23,8 +23,11 @@ const CMD = [0xd6, 0x0c];
 const SCRIPT = path.join(__dirname, '..', 'input-report.ps1');
 const SCRIPT_TIMEOUT_MS = 6000;
 
-const candidates = (logicalDevice) => [...logicalDevice.channels]
-  .sort((a, b) => Number(b.usagePage >= 0xff00) - Number(a.usagePage >= 0xff00));
+// The collection HeadsetControl uses comes first, then any other vendor collection in case a
+// model differs.
+const COMMAND = { usagePage: 0xff13, usage: 0x01 };
+const preference = (c) => (c.usagePage === COMMAND.usagePage && c.usage === COMMAND.usage ? 2 : Number(c.usagePage >= 0xff00));
+const candidates = (logicalDevice) => [...logicalDevice.channels].sort((a, b) => preference(b) - preference(a));
 
 function matches(logicalDevice) {
   return logicalDevice.vendorId === AUDEZE && PRODUCTS.has(logicalDevice.productId);
@@ -71,17 +74,20 @@ function exchange(channelPath) {
 async function readBattery(logicalDevice) {
   let lastError = new Error('no command channel');
   for (const channel of candidates(logicalDevice)) {
+    let reports;
     try {
-      const reading = parseReports(await exchange(channel.path));
-      if (reading && !reading.off) return reading;
-      // The headset does not answer while it is switched off.
-      lastError = new Error('headset is off');
-      if (reading) break;
+      reports = await exchange(channel.path);
     } catch (e) {
-      lastError = e;
+      lastError = e; // this collection doesn't take the request
+      continue;
     }
+    const reading = parseReports(reports);
+    if (reading && !reading.off) return reading;
+    // Only the command collection takes the request, and the headset does not answer there
+    // while it is switched off (HeadsetControl reads the silence the same way).
+    throw new Error('headset is off');
   }
   throw lastError;
 }
 
-module.exports = { id: 'audeze', matches, readBattery, buildRequest, parseReports };
+module.exports = { id: 'audeze', matches, readBattery, buildRequest, parseReports, candidates };

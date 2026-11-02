@@ -57,4 +57,17 @@ async function write(path, dev, bytes) {
   catch (e) { sessions.delete(path); dev.close().catch(() => {}); throw e; }
 }
 
-module.exports = { acquire, read, readQueued, write };
+// For drivers that only use feature reports, which leave nothing pending, so closing straight after
+// a failure is safe. A failure usually means the device was unplugged, and a handle from before then
+// never works again, even once the device is back at the same path.
+async function getFeatureReport(path, dev, reportId, length) {
+  try { return Array.from(await dev.getFeatureReport(reportId, length)); }
+  catch (e) { sessions.delete(path); dev.close().catch(() => {}); throw e; }
+}
+
+async function sendFeatureReport(path, dev, bytes) {
+  try { return await dev.sendFeatureReport(bytes); }
+  catch (e) { sessions.delete(path); dev.close().catch(() => {}); throw e; }
+}
+
+module.exports = { acquire, read, readQueued, write, getFeatureReport, sendFeatureReport };

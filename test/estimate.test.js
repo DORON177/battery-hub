@@ -66,10 +66,13 @@ test('returns null when the signal is too weak', () => {
   assert.equal(estimateHoursLeft(hist([[0.1, 55], [0, 50]]), 50), null);
 });
 
-test('a device is turned off only when offline with an off report', () => {
-  const { isTurnedOff } = require('../src/renderer/estimate');
-  assert.equal(isTurnedOff({ online: false, lastError: 'device is off' }), true);
-  assert.equal(isTurnedOff({ online: false, lastError: 'headset is off' }), true);
-  assert.equal(isTurnedOff({ online: false, lastError: 'not connected' }), false);
-  assert.equal(isTurnedOff({ online: true, lastError: 'device is off' }), false);
+test('an offline device says why: a headset is off, anything else may be asleep', () => {
+  const { offLabel } = require('../src/renderer/estimate');
+  assert.equal(offLabel({ online: false, lastError: 'headset is off' }), 'Turned off');
+  assert.equal(offLabel({ online: false, lastError: 'headset is not answering' }), 'Turned off');
+  assert.equal(offLabel({ online: false, lastError: 'device is off' }), 'Asleep or off');
+  assert.equal(offLabel({ online: false, lastError: 'mouse is not answering' }), 'Asleep or off');
+  assert.equal(offLabel({ online: false, lastError: 'not connected' }), null);
+  assert.equal(offLabel({ online: true, lastError: 'device is off' }), null);
+  assert.equal(offLabel({ online: false, lastError: 'Bluetooth reading is off in Settings' }), null);
 });

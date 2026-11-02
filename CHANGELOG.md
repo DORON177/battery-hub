@@ -9,12 +9,17 @@ All notable changes to this project are documented here. Versions follow
 ## [2.0.1] - 2026-11-02
 
 ### Fixed
-- A wireless device switched off while its receiver stayed plugged in, such as a Logitech
-  G502 X, kept showing its last level as if it were still on. It now shows Turned off, keeps
-  the last level dimmed, and comes back by itself when switched on.
-- The same now holds for every driver: Razer mice, PlayStation controllers, SteelSeries, HyperX,
-  Corsair, Logitech and MCHOSE headsets, Audeze headsets, and Bluetooth and Xbox devices.
-- A switched-off SteelSeries Aerox or Prime mouse showed 0% instead of being off.
+- A wireless device switched off while its receiver stayed plugged in, such as a Logitech G502 X,
+  kept showing its last level as if it were still on. It now shows Asleep or off (Turned off for
+  headsets), keeps the last level dimmed, and comes back by itself. This works the same for
+  Logitech, Razer, SteelSeries, HyperX, Corsair, MCHOSE and Audeze devices and PlayStation
+  controllers.
+- A switched-off SteelSeries Aerox or Prime mouse showed 0%, and a DualShock 4 adapter with no
+  controller on it showed 5%. Both now read as off.
+- A Razer device, or one set up with a scan, kept its last level for minutes after its receiver
+  was unplugged, and did not read again after it was plugged back in until Battery Hub restarted.
+- With Logitech G HUB running, its traffic could be mistaken for a Logitech mouse's or headset's
+  answer.
 
 ## [2.0.0] - 2026-11-02
 
