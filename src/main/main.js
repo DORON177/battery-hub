@@ -294,6 +294,13 @@ ipcMain.handle('devices:set-icon', (evt, { id, icon }) => {
   return store.upsertDevice(id, { customIcon: icon || null });
 });
 
+// Low battery level for one device (null = use the level in Settings).
+ipcMain.handle('devices:set-alert', (evt, { id, threshold }) => {
+  const n = Number(threshold);
+  const value = threshold == null || Number.isNaN(n) ? null : Math.max(5, Math.min(95, Math.round(n)));
+  return store.upsertDevice(id, { alertThreshold: value });
+});
+
 // Hide a device without forgetting it: the poller skips hidden devices, so this also
 // drops its tray icon and pending notification state. Unhiding restores all of it.
 ipcMain.handle('devices:set-hidden', (evt, { id, hidden }) => {

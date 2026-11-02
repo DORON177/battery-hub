@@ -38,7 +38,9 @@ function check(device) {
   const name = displayName(device);
 
   if (s.notifyEnabled) {
-    const low = cap <= s.notifyThreshold && !charging;
+    // A device can carry its own level; without one it follows the level in Settings.
+    const threshold = typeof device.alertThreshold === 'number' ? device.alertThreshold : s.notifyThreshold;
+    const low = cap <= threshold && !charging;
     if (low && !wasLow.get(device.id)) {
       post(ALERTS.low(name, cap));
     }

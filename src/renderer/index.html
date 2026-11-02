@@ -300,6 +300,21 @@
         </dl>
 
         <div class="chart-head">
+          <h3>Low battery alert</h3>
+          <div class="segmented" id="detail-alert-mode">
+            <button data-value="default" class="active">Default</button>
+            <button data-value="custom">Custom</button>
+          </div>
+        </div>
+        <div class="alert-row">
+          <p class="alert-hint" id="detail-alert-hint"></p>
+          <div class="stepper" id="detail-alert-stepper" hidden>
+            <input type="number" id="detail-alert-value" min="5" max="95" step="5" aria-label="Alert level for this device" />
+            <span class="stepper-unit">%</span>
+          </div>
+        </div>
+
+        <div class="chart-head">
           <h3>Battery history</h3>
           <div class="segmented" id="detail-range">
             <button data-value="day" class="active">24 hours</button>
