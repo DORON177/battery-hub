@@ -128,15 +128,51 @@ test('a normal reading is still committed', async () => {
   assert.equal(updates.length, 1);
 });
 
-test('a device its receiver reports as off goes offline and keeps its last level', async () => {
+test('a mouse its receiver reports as off keeps its normal look while it may only be napping', async () => {
   addMouse();
   await pollWithChangeMidRead(() => {}, () => finishRead.resolve({ capacity: 35, charging: false }));
-  await failRead('device is off');
+  await failRead('mouse is off');
+  assert.equal(devices.mouse.online, true, 'it answered a moment ago, so it is most likely napping');
+  assert.equal(devices.mouse.failedReads, 0);
+});
+
+test('a mouse that has not answered for five minutes goes offline and keeps its last level', async () => {
+  addMouse();
+  await pollWithChangeMidRead(() => {}, () => finishRead.resolve({ capacity: 35, charging: false }));
+  devices.mouse.lastReadingAt = Date.now() - 6 * 60000;
+  await failRead('mouse is off');
   assert.equal(devices.mouse.online, false);
   assert.equal(devices.mouse.lastReading.capacity, 35);
   assert.equal(devices.mouse.failedReads, 0);
   await pollWithChangeMidRead(() => {}, () => finishRead.resolve({ capacity: 34, charging: false }));
   assert.equal(devices.mouse.online, true);
+});
+
+test('a device shown as away is not brought back by a read that only timed out', async () => {
+  addMouse();
+  await pollWithChangeMidRead(() => {}, () => finishRead.resolve({ capacity: 35, charging: false }));
+  devices.mouse.lastReadingAt = Date.now() - 6 * 60000;
+  await failRead('mouse is off');
+  assert.equal(devices.mouse.online, false);
+  await failRead('timeout waiting for battery response');
+  assert.equal(devices.mouse.online, false, 'still away');
+  assert.equal(devices.mouse.lastError, 'mouse is off');
+  await failRead('Cannot write to hid device');
+  assert.equal(devices.mouse.online, true, 'a different failure is reported as before');
+});
+
+test('what counts as away: headsets at once, mice and keyboards after a five-minute nap', () => {
+  const now = 1_700_000_000_000;
+  const ago = (minutes) => now - minutes * 60000;
+  assert.equal(poller.isAway('headset is off', ago(0.1), now), true);
+  assert.equal(poller.isAway('headset is not answering', ago(0.1), now), true);
+  assert.equal(poller.isAway('mouse is off', ago(0.1), now), false);
+  assert.equal(poller.isAway('device is not answering', ago(4.9), now), false);
+  assert.equal(poller.isAway('device is not answering', ago(5), now), true);
+  assert.equal(poller.isAway('mouse is off', undefined, now), true, 'never read and the receiver says off');
+  assert.equal(poller.isAway('mouse is not answering', undefined, now), false, 'never read: keep it countable');
+  assert.equal(poller.isAway('timeout waiting for battery response', ago(60), now), false);
+  assert.equal(poller.isAway('Bluetooth reading is off in Settings', ago(60), now), false);
 });
 
 test('a device that only times out stays online, since it may just be asleep', async () => {

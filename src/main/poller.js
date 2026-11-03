@@ -12,6 +12,25 @@ const TURNED_OFF = /\bis off$/i;
 // What they throw when a receiver or dongle got no answer from the device. Only a device that has
 // answered before counts as off: one that never has may not speak the protocol at all.
 const NOT_ANSWERING = /\bis not answering$/i;
+// Mice and keyboards nap a few seconds after the last touch, and the receiver then answers exactly
+// as it does for a switched-off one (checked on a VXE R1 Pro: the same bytes, and no battery answer
+// until the mouse moves). So one that answered within this long is taken to be napping and keeps its
+// normal look. Headsets don't nap, so their off counts straight away.
+const NAP_MS = 5 * 60 * 1000;
+
+// True when the device's receiver or dongle says it isn't there and that should show on its card.
+function isAway(message, lastReadingAt, now = Date.now()) {
+  if (!TURNED_OFF.test(message) && !(NOT_ANSWERING.test(message) && lastReadingAt)) return false;
+  if (/^headset\b/i.test(message)) return true;
+  return !lastReadingAt || now - lastReadingAt >= NAP_MS;
+}
+
+// A device shown as away stays that way until it answers: a read that just timed out says nothing new,
+// and a receiver busy trying to reach a sleeping mouse can make the odd read end that way.
+function stillAway(saved, message) {
+  const away = saved.online === false && (TURNED_OFF.test(saved.lastError || '') || NOT_ANSWERING.test(saved.lastError || ''));
+  return away && /timeout|timed out/i.test(message);
+}
 
 let timer = null;
 let polling = false; // guard: HID channels allow only one opener at a time, so never
@@ -298,11 +317,12 @@ async function pollAllDevices(onUpdate) {
       const patch = { lastError: 'not connected', online: false };
       store.upsertDevice(id, patch);
       onUpdate({ ...store.getDevices()[id] });
-    } else if (TURNED_OFF.test(result.error.message)
-      || (NOT_ANSWERING.test(result.error.message) && store.getDevices()[id].lastReadingAt)) {
-      // Its receiver or dongle is there but the device isn't: off, or asleep for some brands.
+    } else if (isAway(result.error.message, store.getDevices()[id].lastReadingAt)) {
+      // Its receiver or dongle is there but the device isn't: off, or asleep for a long while.
       trend.delete(id);
       store.upsertDevice(id, { lastError: result.error.message, online: false, failedReads: 0 });
+      onUpdate({ ...store.getDevices()[id] });
+    } else if (stillAway(store.getDevices()[id], result.error.message)) {
       onUpdate({ ...store.getDevices()[id] });
     } else {
       const saved = store.getDevices()[id];
@@ -334,4 +354,4 @@ function restart(onUpdate) {
   start(onUpdate);
 }
 
-module.exports = { start, stop, restart, pollOnce, withPollingPaused, isClaimed, setCardsChangedHandler };
+module.exports = { start, stop, restart, pollOnce, withPollingPaused, isClaimed, setCardsChangedHandler, isAway };
