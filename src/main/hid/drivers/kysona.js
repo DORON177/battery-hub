@@ -18,7 +18,7 @@ const USAGE_PAGE_COMMAND = 0xFF02;
 const BATTERY_REQUEST = [0x08, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x49];
 const STATUS_REQUEST = [0x08, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4a];
 const FRAME_LENGTH = 17;
-const OFF_ANSWERS = 2; // one "not connected" can catch the receiver while the switch is moving
+const OFF_ANSWERS = 2; // "not connected" this many times in a row; one can catch the switch moving
 const RESPONSE_TIMEOUT_MS = 4000;
 const REPOKE_MS = 500; // this firmware often ignores a single request; poke until it answers
 const READ_SLICE_MS = 100;
@@ -56,27 +56,33 @@ async function readBattery(logicalDevice) {
   const dev = await session.acquire(channel.path);
   await session.readQueued(channel.path, dev); // a late reply to an old request is stale
 
-  // Ask for the battery and whether the receiver has the mouse. A battery answer always wins; a
-  // receiver that never answers the status request leaves this as it was before.
+  // Ask whether the receiver has the mouse, and for the battery only while it says yes. A battery
+  // request makes the receiver try to reach the mouse, and while it tries, its status answer can say
+  // "connected" for a mouse that is asleep or off (seen on a VXE R1 Pro), so the status question goes
+  // on until the battery answers. A receiver that never answers it gets the battery request anyway.
   const deadline = Date.now() + RESPONSE_TIMEOUT_MS;
   let nextPoke = 0;
-  let connected = false;
-  let offAnswers = 0;
+  let pokes = 0;
+  let connected = null; // the latest status answer
+  let offInARow = 0;
   while (Date.now() < deadline) {
     if (Date.now() >= nextPoke) {
-      if (!connected) await dev.write(STATUS_REQUEST);
-      await dev.write(BATTERY_REQUEST);
+      await dev.write(STATUS_REQUEST);
+      if (connected || (connected === null && pokes > 0)) await dev.write(BATTERY_REQUEST);
+      pokes += 1;
       nextPoke = Date.now() + REPOKE_MS;
     }
     const frame = await session.read(channel.path, dev, READ_SLICE_MS);
     const reading = parseFrame(frame);
     if (reading) return reading;
     const status = parseStatus(frame);
-    if (status) {
+    if (status === true) {
+      if (!connected) nextPoke = 0; // ask for the battery straight away
       connected = true;
-      offAnswers = 0;
-    } else if (status === false && ++offAnswers >= OFF_ANSWERS) {
-      throw new Error('mouse is off');
+      offInARow = 0;
+    } else if (status === false) {
+      connected = false;
+      if (++offInARow >= OFF_ANSWERS) throw new Error('mouse is off');
     }
   }
   throw new Error('timeout waiting for battery response');

@@ -8,6 +8,7 @@ class FakeDevice {
   constructor() {
     this.reads = [];
     this.writes = 0;
+    this.sent = []; // the command byte of each write
     this.closes = 0;
     this.writeError = null;
     this.feature = null;
@@ -31,9 +32,10 @@ class FakeDevice {
     });
   }
 
-  write() {
+  write(bytes) {
     return this.track(() => {
       this.writes += 1;
+      this.sent.push(bytes && bytes[1]);
       if (this.writeError) throw this.writeError;
       return 17;
     });
@@ -97,6 +99,27 @@ test('kysona: one "no mouse" answer while the switch moves is not enough', async
   const { dev, logical } = mouse();
   dev.reads = [[], statusOff(), statusOn(), statusOff(), reply(88)];
   assert.equal((await kysona.readBattery(logical)).capacity, 88);
+});
+
+test('kysona: a "connected" answer from a receiver busy reaching a sleeping mouse is not trusted', async () => {
+  // As seen with two programs asking at once: "connected" first, then the truth.
+  const { dev, logical } = mouse();
+  dev.reads = [[], statusOn(), [], [], statusOff(), [], [], statusOff()];
+  await assert.rejects(kysona.readBattery(logical), /^Error: mouse is off$/);
+});
+
+test('kysona: no battery request goes out while the receiver says it has no mouse', async () => {
+  const { dev, logical } = mouse();
+  dev.reads = [[], statusOff(), [], [], statusOff()];
+  await assert.rejects(kysona.readBattery(logical), /mouse is off/);
+  assert.ok(dev.sent.length > 0 && !dev.sent.includes(0x04), `sent ${dev.sent}`);
+});
+
+test('kysona: once the receiver has the mouse, the battery is asked for straight away', async () => {
+  const { dev, logical } = mouse();
+  dev.reads = [[], statusOn(), [], reply(77)];
+  assert.equal((await kysona.readBattery(logical)).capacity, 77);
+  assert.deepEqual(dev.sent, [0x03, 0x03, 0x04]);
 });
 
 test('kysona: a battery answer wins over a stale "no mouse"', async () => {
