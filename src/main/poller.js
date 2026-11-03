@@ -12,11 +12,18 @@ const TURNED_OFF = /\bis off$/i;
 // What they throw when a receiver or dongle got no answer from the device. Only a device that has
 // answered before counts as off: one that never has may not speak the protocol at all.
 const NOT_ANSWERING = /\bis not answering$/i;
-// Mice and keyboards nap a few seconds after the last touch, and the receiver then answers exactly
-// as it does for a switched-off one (checked on a VXE R1 Pro: the same bytes, and no battery answer
-// until the mouse moves). So one that answered within this long is taken to be napping and keeps its
-// normal look. Headsets don't nap, so their off counts straight away.
-const NAP_MS = 5 * 60 * 1000;
+// Mice and keyboards nap shortly after the last touch, and the receiver then answers as it does for a
+// switched-off one. Measured on a VXE R1 Pro against the pointer: it naps about 10 s after the mouse
+// stops, and from about 30 s it gives the very same answers as when it is switched off. So one that
+// answered within this long is taken to be napping and keeps its normal look; after it, it really is
+// asleep or off. Headsets don't nap, so their off counts straight away.
+const NAP_MS = 2 * 60 * 1000;
+// While a device naps it is looked at this often instead of once a poll, so any moment of use is
+// seen and a mouse that is in use, with pauses, doesn't drift into looking away.
+const NAP_RECHECK_MS = 15 * 1000;
+let napTimer = null;
+
+const isAwayMessage = (message) => TURNED_OFF.test(message) || NOT_ANSWERING.test(message);
 
 // True when the device's receiver or dongle says it isn't there and that should show on its card.
 function isAway(message, lastReadingAt, now = Date.now()) {
@@ -25,11 +32,15 @@ function isAway(message, lastReadingAt, now = Date.now()) {
   return !lastReadingAt || now - lastReadingAt >= NAP_MS;
 }
 
+// True when the receiver says the device isn't there but it answered recently enough to be napping.
+function isNapping(message, lastReadingAt, now = Date.now()) {
+  return isAwayMessage(message) && !isAway(message, lastReadingAt, now) && !!lastReadingAt && now - lastReadingAt < NAP_MS;
+}
+
 // A device shown as away stays that way until it answers: a read that just timed out says nothing new,
 // and a receiver busy trying to reach a sleeping mouse can make the odd read end that way.
 function stillAway(saved, message) {
-  const away = saved.online === false && (TURNED_OFF.test(saved.lastError || '') || NOT_ANSWERING.test(saved.lastError || ''));
-  return away && /timeout|timed out/i.test(message);
+  return saved.online === false && isAwayMessage(saved.lastError || '') && /timeout|timed out/i.test(message);
 }
 
 let timer = null;
@@ -93,7 +104,7 @@ async function withPollingPaused(fn) {
   }
 }
 
-async function pollOnce(onUpdate, { force = false } = {}) {
+async function pollOnce(onUpdate, { force = false, only = null } = {}) {
   if (polling || holds > 0) return;
   polling = true;
   try {
@@ -101,10 +112,20 @@ async function pollOnce(onUpdate, { force = false } = {}) {
       invalidateLiveCache(); // manual Refresh always re-scans USB
       await system.scan();
     }
-    await pollAllDevices(onUpdate);
+    await pollAllDevices(onUpdate, only);
   } finally {
     polling = false;
   }
+}
+
+// Looks at napping devices again soon. Only while the regular polling runs, and only one at a time.
+function scheduleNapCheck(onUpdate, ids) {
+  if (!timer || !ids.length) return;
+  clearTimeout(napTimer);
+  napTimer = setTimeout(() => {
+    napTimer = null;
+    pollOnce(onUpdate, { only: ids }).catch((e) => console.error('nap check failed:', e && e.stack || e));
+  }, NAP_RECHECK_MS);
 }
 
 function onHeadsetStatus(id, state, onUpdate) {
@@ -238,7 +259,7 @@ function routeProfile(route) {
   return { ...route.profile, quietBluetooth: !store.getSetting('controllerBluetooth') };
 }
 
-async function pollAllDevices(onUpdate) {
+async function pollAllDevices(onUpdate, only = null) {
   let live = await getLiveDevices(false);
   await reconcile(live);
   const saved = store.getDevices();
@@ -246,8 +267,10 @@ async function pollAllDevices(onUpdate) {
   if (usesWindows) system.startWatching();
   else system.stopWatching();
   let rescannedThisPoll = false; // force at most one fresh USB scan per poll
+  const napping = [];
 
   for (const id of Object.keys(saved)) {
+    if (only && !only.includes(id)) continue;
     const cfg = saved[id];
     if (!isTracked(id)) continue;
     const routes = routesOf(cfg);
@@ -330,8 +353,10 @@ async function pollAllDevices(onUpdate) {
       const patch = { lastError: result.error.message, online: true, failedReads: expected ? 0 : (saved.failedReads || 0) + 1 };
       store.upsertDevice(id, patch);
       onUpdate({ ...store.getDevices()[id] });
+      if (isNapping(result.error.message, saved.lastReadingAt)) napping.push(id);
     }
   }
+  scheduleNapCheck(onUpdate, napping);
 }
 
 function start(onUpdate) {
@@ -347,6 +372,8 @@ function start(onUpdate) {
 function stop() {
   if (timer) clearInterval(timer);
   timer = null;
+  clearTimeout(napTimer);
+  napTimer = null;
   monitor.stopAll();
 }
 
@@ -354,4 +381,4 @@ function restart(onUpdate) {
   start(onUpdate);
 }
 
-module.exports = { start, stop, restart, pollOnce, withPollingPaused, isClaimed, setCardsChangedHandler, isAway };
+module.exports = { start, stop, restart, pollOnce, withPollingPaused, isClaimed, setCardsChangedHandler, isAway, isNapping };
