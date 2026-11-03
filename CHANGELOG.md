@@ -16,7 +16,7 @@ All notable changes to this project are documented here. Versions follow
   Logitech, Razer, SteelSeries, HyperX, Corsair, MCHOSE and Audeze devices and PlayStation
   controllers. Mice and keyboards nap a few seconds after the last touch, and their receiver then
   says the same as when they are off, so they keep their normal look until they haven't answered
-  for 5 minutes.
+  for 2 minutes. A napping one is checked every 15 seconds, so any use in between is seen.
 - A switched-off SteelSeries Aerox or Prime mouse showed 0%, and a DualShock 4 adapter with no
   controller on it showed 5%. Both now read as off.
 - A Razer device, or one set up with a scan, kept its last level for minutes after its receiver
