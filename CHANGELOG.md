@@ -11,6 +11,11 @@ All notable changes to this project are documented here. Versions follow
   and MCHOSE G75. A card added before this release starts reading by itself. Built from two projects
   that read these keyboards on real hardware; not tested here.
 
+### Fixed
+- While a device was charging and the window was open, even behind other windows, Battery Hub
+  used about half of one CPU core redrawing the pulsing ring. The ring now pulses three times and
+  then stays a steady green, and CPU use drops to almost nothing.
+
 ## [2.0.1] - 2026-11-02
 
 ### Fixed

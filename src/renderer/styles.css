@@ -456,12 +456,14 @@ html, body {
     inset 0 0 0 1.5px rgba(52, 199, 89, 0.45),
     var(--shadow-card);
 }
-.device-card.charging .gauge-fill { animation: chargePulse 1.9s ease-in-out infinite; }
-.device-card.charging .gauge-track { animation: trackGlow 1.9s ease-in-out infinite; }
+/* The ring pulses a few times when charging starts, then rests on a steady green. With hardware
+   acceleration off, an endless pulse redraws the window on the CPU: 44% of a core while open. */
+.device-card.charging .gauge-fill { animation: chargePulse 1.9s ease-in-out 3; }
+.device-card.charging .gauge-track { stroke: rgba(52, 199, 89, 0.18); animation: trackGlow 1.9s ease-in-out 3; }
 .device-card.charging .charge-pill { display: inline-flex; }
 .device-card.charging .device-sub { display: none; }
-@keyframes chargePulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
-@keyframes trackGlow { 0%, 100% { stroke: rgba(52, 199, 89, 0.12); } 50% { stroke: rgba(52, 199, 89, 0.28); } }
+@keyframes chargePulse { 50% { opacity: 0.5; } }
+@keyframes trackGlow { 50% { stroke: rgba(52, 199, 89, 0.3); } }
 
 /* ---- offline state ---- */
 .device-card.offline { opacity: 0.72; }
