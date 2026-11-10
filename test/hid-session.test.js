@@ -255,3 +255,26 @@ test('generic: a failed feature report drops the handle, so a replugged device r
   assert.equal((await generic.readBattery(logical, profile)).capacity, 44);
   assert.equal(opens, opensBefore + 1, 'the next poll must open a fresh handle');
 });
+
+test('kysona: a receiver that refuses writes on 0xFF02 is tried on its other vendor collections', async () => {
+  const main = new FakeDevice();
+  const other = new FakeDevice();
+  main.writeError = new Error('Cannot write to hid device');
+  other.reads = [[], reply(66)];
+  devices.set('fa09-ff02', main);
+  devices.set('fa09-ff04', other);
+  const logical = { channels: [
+    { path: 'fa09-mouse', usagePage: 0x01, usage: 2 },
+    { path: 'fa09-ff04', usagePage: 0xff04, usage: 2 },
+    { path: 'fa09-ff02', usagePage: 0xff02, usage: 2 },
+  ] };
+  assert.equal((await kysona.readBattery(logical)).capacity, 66);
+  assert.equal(main.writes, 1, 'the command collection is still tried first');
+});
+
+test('kysona: when every collection refuses writes, that is the error reported', async () => {
+  const main = new FakeDevice();
+  main.writeError = new Error('Cannot write to hid device');
+  devices.set('only-ff02', main);
+  await assert.rejects(kysona.readBattery({ channels: [{ path: 'only-ff02', usagePage: 0xff02, usage: 2 }] }), /Cannot write/);
+});

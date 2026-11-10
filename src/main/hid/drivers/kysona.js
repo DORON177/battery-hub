@@ -49,10 +49,30 @@ function parseStatus(arr) {
   return arr[6] === 1;
 }
 
-async function readBattery(logicalDevice) {
-  const channel = findChannel(logicalDevice, USAGE_PAGE_COMMAND);
-  if (!channel) throw new Error('no command channel');
+// The command collection first, then the other vendor collections: some receivers in this family
+// refuse writes on 0xFF02 (a Compx 3554:fa09 receiver, which also has 0xFF04). Untested on one.
+function commandChannels(logicalDevice) {
+  const main = findChannel(logicalDevice, USAGE_PAGE_COMMAND);
+  const others = logicalDevice.channels.filter((c) => c !== main && c.usagePage >= 0xff00);
+  return main ? [main, ...others] : [];
+}
 
+async function readBattery(logicalDevice) {
+  const channels = commandChannels(logicalDevice);
+  if (!channels.length) throw new Error('no command channel');
+  let lastError = null;
+  for (const channel of channels) {
+    try {
+      return await readFrom(channel);
+    } catch (e) {
+      if (!/cannot write/i.test(e.message)) throw e;
+      lastError = e;
+    }
+  }
+  throw lastError;
+}
+
+async function readFrom(channel) {
   const dev = await session.acquire(channel.path);
   await session.readQueued(channel.path, dev); // a late reply to an old request is stale
 

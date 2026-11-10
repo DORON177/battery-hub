@@ -27,7 +27,8 @@ const APP = 'app';
 const DEVICE = 'device';
 
 const check = (id, title, status, detail, extra = {}) => ({ id, title, status, detail, side: null, fix: null, ...extra });
-const hex4 = (n) => Number(n).toString(16).padStart(4, '0');
+// A value Windows didn't give (a collection without a usage) shows as ---- rather than NaN.
+const hex4 = (n) => (n == null || Number.isNaN(Number(n)) ? '----' : Number(n).toString(16).padStart(4, '0'));
 const count = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 function sanitize(text, home = os.homedir()) {
