@@ -366,3 +366,43 @@ test('Audeze talks on the collection HeadsetControl uses first', () => {
   ] }).map((c) => c.path);
   assert.deepEqual(order, ['command', 'other', 'consumer']);
 });
+
+const compx = require('../src/main/hid/drivers/compx');
+const hexBytes = (text) => pad(text.split(' ').map((b) => parseInt(b, 16)), 20);
+const withSum = (f) => { f[19] = f.slice(0, 19).reduce((a, b) => a + b, 0) & 0xff; return f; };
+
+test('Compx keyboard receiver: requests carry the checksums the sources document', () => {
+  assert.equal(compx.frame(0x4a, 0x00)[19], 0x5d); // AULA F87 Pro: 13 4A 00 ... 5D
+  assert.equal(compx.frame(0x4a, 0x01)[19], 0x5e); // MCHOSE G75: 13 4A 01 ... 5E
+  assert.equal(compx.frame(0x05, 0x01).length, 20);
+});
+
+test('Compx keyboard receiver: reads both battery answers captured on real keyboards', () => {
+  // AULA F87 Pro, unplugged, 95%
+  assert.deepEqual(compx.parseFrame(withSum(hexBytes('13 4A 01 00 02 5F 01'))), { capacity: 95, charging: false });
+  // MCHOSE G75 Pro, 36%
+  assert.deepEqual(compx.parseFrame(withSum(hexBytes('13 4A 01 00 02 24 01'))), { capacity: 36, charging: false });
+  // Lingbao K98 push after the session, 100%
+  assert.deepEqual(compx.parseFrame(withSum(hexBytes('13 0A 01 00 04 05 64 01'))), { capacity: 100, charging: false });
+  // on external power
+  assert.equal(compx.parseFrame(withSum(hexBytes('13 4A 01 00 02 64 10'))).charging, true);
+  // the receiver's session answer (AULA F99 Pro)
+  assert.deepEqual(compx.parseFrame(withSum(hexBytes('13 05 01 00 0A 03 00 00 00 01 58 01'))), { ack: true });
+});
+
+test('Compx keyboard receiver: wrong checksums, echoes and empty levels are not readings', () => {
+  const real = withSum(hexBytes('13 4A 01 00 02 5F 01'));
+  assert.equal(real[19], 0xc0, 'matches the captured frame');
+  const corrupt = [...real];
+  corrupt[19] = 0xc1;
+  assert.equal(compx.parseFrame(corrupt), null);
+  assert.equal(compx.parseFrame(compx.frame(0x4a, 0x00)), null, 'our own request echoed back');
+  assert.equal(compx.parseFrame(withSum(hexBytes('13 4A 01 00 02 00 01'))), null);
+});
+
+test('the Compx keyboard receiver gets its own driver, not the Kysona mouse one', () => {
+  const receiver = { vendorId: 0x3554, productId: 0xfa09, channels: [{ usagePage: 0x01, usage: 6 }, { usagePage: 0xff02, usage: 2 }, { usagePage: 0xff04, usage: 2 }] };
+  assert.equal(detectDriver(receiver).id, 'compx');
+  const vxe = { vendorId: 0x3554, productId: 0xf58a, channels: [{ usagePage: 0xff02, usage: 2 }] };
+  assert.equal(detectDriver(vxe).id, 'kysona');
+});

@@ -278,3 +278,14 @@ test('kysona: when every collection refuses writes, that is the error reported',
   devices.set('only-ff02', main);
   await assert.rejects(kysona.readBattery({ channels: [{ path: 'only-ff02', usagePage: 0xff02, usage: 2 }] }), /Cannot write/);
 });
+
+test('kysona: a card saved for the Compx keyboard receiver is read with the Compx protocol', async () => {
+  const dev = new FakeDevice();
+  const push = [0x13, 0x0a, 0x01, 0x00, 0x04, 0x05, 0x47, 0x01, ...new Array(11).fill(0)];
+  push.push(push.reduce((a, b) => a + b, 0) & 0xff);
+  dev.reads = [[], push];
+  devices.set('fa09-cmd', dev);
+  const receiver = { vendorId: 0x3554, productId: 0xfa09, channels: [{ path: 'fa09-cmd', usagePage: 0xff02, usage: 2 }] };
+  assert.deepEqual(await kysona.readBattery(receiver), { capacity: 71, charging: false });
+  assert.ok(dev.sent.includes(0x05) && dev.sent.includes(0x4a), 'session and battery requests in report 0x13 format');
+});

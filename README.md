@@ -48,7 +48,7 @@ Windows SmartScreen shows a **"Windows protected your PC"** prompt because the i
 Every release is built and published by [GitHub Actions](.github/workflows/release.yml) directly from a tagged commit — no binaries are uploaded by hand — and each one ships a `SHA256SUMS.txt`. To confirm your download matches, run:
 
 ```powershell
-(Get-FileHash "Battery-Hub-Installer-2.0.1.exe" -Algorithm SHA256).Hash
+(Get-FileHash "Battery-Hub-Installer-2.0.2.exe" -Algorithm SHA256).Hash
 ```
 
 and compare the result with the checksum in that release's `SHA256SUMS.txt`. Pasting the same hash into [VirusTotal](https://www.virustotal.com/gui/home/search) will show any scan results for the exact file.
@@ -102,6 +102,7 @@ Battery Hub reads these directly. Anything else can usually be added with **Set 
 | Audeze | Maxwell, Maxwell 2 |
 | MCHOSE | V9 Turbo+, X9 |
 | VXE, ATK | Dragonfly R1 Pro, NordicMouse and other Kysona-based mice |
+| Compx 2.4G receiver | AULA F87 Pro and F99 Pro, Lingbao K98, MCHOSE G75 keyboards |
 
 Tested on real hardware: VXE NordicMouse, MCHOSE V9 Turbo+, DualSense on USB and Bluetooth, and Logitech MX Master 4 over Bluetooth. The rest are built from the protocols documented by the projects below and checked against those byte layouts, so please [report a device](https://github.com/DORON177/battery-hub/issues/new?template=device-support.yml) if one misbehaves.
 

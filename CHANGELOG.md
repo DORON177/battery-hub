@@ -6,6 +6,13 @@ All notable changes to this project are documented here. Versions follow
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-11-10
+
+### Added
+- Keyboards on Compx's shared 2.4G receiver (3554:fa09): AULA F87 Pro and F99 Pro, Lingbao K98
+  and MCHOSE G75. A card added before this release starts reading by itself. Built from two projects
+  that read these keyboards on real hardware; not tested here.
+
 ## [2.0.1] - 2026-11-02
 
 ### Fixed

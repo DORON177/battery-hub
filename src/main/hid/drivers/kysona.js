@@ -13,6 +13,7 @@
 // switching it off, 1 again on switching it on.
 const { findChannel } = require('../catalog');
 const session = require('../session');
+const compx = require('./compx');
 
 const USAGE_PAGE_COMMAND = 0xFF02;
 const BATTERY_REQUEST = [0x08, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x49];
@@ -26,7 +27,7 @@ const READ_SLICE_MS = 100;
 const KNOWN_VENDOR_IDS = new Set([0x3554]); // VXE
 
 function matches(logicalDevice) {
-  if (!KNOWN_VENDOR_IDS.has(logicalDevice.vendorId)) return false;
+  if (!KNOWN_VENDOR_IDS.has(logicalDevice.vendorId) || compx.matches(logicalDevice)) return false;
   return !!findChannel(logicalDevice, USAGE_PAGE_COMMAND);
 }
 
@@ -49,8 +50,9 @@ function parseStatus(arr) {
   return arr[6] === 1;
 }
 
-// The command collection first, then the other vendor collections: some receivers in this family
-// refuse writes on 0xFF02 (a Compx 3554:fa09 receiver, which also has 0xFF04). Untested on one.
+// The command collection first, then the other vendor collections, in case a receiver in this
+// family refuses the request on 0xFF02. (The Compx keyboard receiver that first showed this turned out
+// to speak another protocol, which has its own driver now.)
 function commandChannels(logicalDevice) {
   const main = findChannel(logicalDevice, USAGE_PAGE_COMMAND);
   const others = logicalDevice.channels.filter((c) => c !== main && c.usagePage >= 0xff00);
@@ -58,6 +60,8 @@ function commandChannels(logicalDevice) {
 }
 
 async function readBattery(logicalDevice) {
+  // Cards added before the Compx keyboard receiver had its own driver are saved under this one.
+  if (compx.matches(logicalDevice)) return compx.readBattery(logicalDevice);
   const channels = commandChannels(logicalDevice);
   if (!channels.length) throw new Error('no command channel');
   let lastError = null;
