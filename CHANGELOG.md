@@ -15,6 +15,13 @@ All notable changes to this project are documented here. Versions follow
 - While a device was charging and the window was open, even behind other windows, Battery Hub
   used about half of one CPU core redrawing the pulsing ring. The ring now pulses three times and
   then stays a steady green, and CPU use drops to almost nothing.
+- Battery Hub only looked for updates when its window opened, so a copy that starts hidden and
+  lives in the tray could stay on an old version. It now checks a minute after starting and every
+  six hours.
+- With Close to tray turned off, closing the window left Battery Hub running with no window.
+  Closing now quits.
+- Pressing Refresh while a check was already running did nothing. It now waits and then refreshes.
+- The log file is kept under 1 MB instead of growing for ever.
 
 ### Changed
 - Battery Hub uses about 40% less memory while it sits in the tray (about 290 MB instead of

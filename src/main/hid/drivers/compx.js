@@ -63,7 +63,7 @@ function parseFrame(f) {
 function sendControl(channelPath) {
   const hex = REQUESTS.map((r) => r.map((b) => b.toString(16).padStart(2, '0')).join(''));
   return new Promise((resolve, reject) => {
-    execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', SCRIPT, channelPath, ...hex],
+    execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', SCRIPT, channelPath, hex.join(',')],
       { windowsHide: true, timeout: SCRIPT_TIMEOUT_MS }, (err) => (err ? reject(new Error('could not send to device')) : resolve()));
   });
 }

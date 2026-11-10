@@ -16,6 +16,13 @@ app.disableHardwareAcceleration();
 // Everything the app logs (and any fatal error) goes to a file next to the settings so
 // crashes leave a trail instead of a window that just vanishes.
 const LOG_FILE = path.join(app.getPath('userData'), 'battery-hub.log');
+// Keep the log from growing for ever: past 1 MB, keep the newest quarter.
+try {
+  if (fs.statSync(LOG_FILE).size > 1024 * 1024) {
+    const text = fs.readFileSync(LOG_FILE, 'utf8');
+    fs.writeFileSync(LOG_FILE, text.slice(text.indexOf('\n', text.length - 256 * 1024) + 1));
+  }
+} catch (_) {}
 function logLine(tag, msg) {
   const line = `[${new Date().toISOString()}] ${tag} ${msg}\n`;
   try { fs.appendFileSync(LOG_FILE, line); } catch (_) {}
@@ -190,6 +197,9 @@ function createWindow(forceShow) {
       freeWindowTimer = setTimeout(() => {
         if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) mainWindow.destroy();
       }, FREE_WINDOW_MS);
+    } else if (!isQuitting) {
+      // Not staying in the tray, so closing the window is quitting.
+      quitApp();
     }
   });
 }
@@ -226,6 +236,7 @@ app.whenReady().then(() => {
   const startHidden = !process.argv.includes('--show') && (store.getSetting('startMinimized') || process.argv.includes('--hidden'));
   if (!startHidden) createWindow(true);
   flyout.prepare(roundWindowCorners);
+  scheduleUpdateChecks();
   poller.setCardsChangedHandler((droppedId) => {
     if (droppedId) {
       notifier.reset(droppedId);
@@ -404,6 +415,17 @@ ipcMain.handle('support:device-report', async (evt, request) => {
   const live = await hidClient.enumerate().catch(() => []);
   return diagnostics.deviceReport(supportDeps(), request, live.find((d) => d.id === request.id));
 });
+
+// The app itself looks for updates: a copy that starts hidden and lives in the tray has no window to
+// ask for it. Shortly after start, then a few times a day.
+const UPDATE_FIRST_CHECK_MS = 60 * 1000;
+const UPDATE_CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
+function scheduleUpdateChecks() {
+  if (!app.isPackaged) return;
+  const check = () => autoUpdater.checkForUpdates().catch((e) => logLine('INFO', `updater: check failed: ${e && e.message}`));
+  setTimeout(check, UPDATE_FIRST_CHECK_MS);
+  setInterval(check, UPDATE_CHECK_EVERY_MS);
+}
 
 ipcMain.handle('app:check-updates', async () => {
   if (!app.isPackaged) return { status: 'dev', version: app.getVersion() };

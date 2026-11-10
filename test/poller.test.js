@@ -208,3 +208,19 @@ test('a device that stops answering through its dongle goes offline only if it a
   assert.equal(devices.mouse.lastReading.capacity, 70);
   assert.equal(devices.mouse.failedReads, 0);
 });
+
+test('a refresh asked for while a check is running waits for it instead of being dropped', async () => {
+  addMouse();
+  const first = poller.pollOnce(() => {}, { force: true });
+  await flush();
+  const finishFirst = finishRead;
+  let refreshed = 0;
+  const second = poller.pollOnce(() => { refreshed += 1; }, { force: true });
+  finishFirst.resolve({ capacity: 50, charging: false });
+  await first;
+  for (let i = 0; i < 80 && finishRead === finishFirst; i++) await new Promise((r) => setTimeout(r, 25));
+  finishRead.resolve({ capacity: 49, charging: false });
+  await second;
+  assert.equal(refreshed, 1);
+  assert.equal(devices.mouse.lastReading.capacity, 49);
+});

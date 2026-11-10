@@ -22,6 +22,7 @@ const NAP_MS = 2 * 60 * 1000;
 // seen and a mouse that is in use, with pauses, doesn't drift into looking away.
 const NAP_RECHECK_MS = 15 * 1000;
 let napTimer = null;
+const FORCE_WAIT_MS = 15000;
 
 const isAwayMessage = (message) => TURNED_OFF.test(message) || NOT_ANSWERING.test(message);
 
@@ -105,6 +106,8 @@ async function withPollingPaused(fn) {
 }
 
 async function pollOnce(onUpdate, { force = false, only = null } = {}) {
+  // A refresh the user asked for waits its turn; a routine poll just skips this round.
+  for (let waited = 0; force && polling && waited < FORCE_WAIT_MS; waited += 50) await new Promise((r) => setTimeout(r, 50));
   if (polling || holds > 0) return;
   polling = true;
   try {

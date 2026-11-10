@@ -1,8 +1,9 @@
 # Sends HID output reports with HidD_SetOutputReport, a USB control transfer, which node-hid doesn't
 # expose. Some receivers ignore the same report sent with WriteFile. Replies arrive as input reports
 # on every open handle, so the caller reads them on its own handle.
-# Usage: output-report.ps1 <device path> <hex report> [<hex report> ...]
-param([string]$Path, [string[]]$Reports)
+# Usage: output-report.ps1 <device path> <hex report>[,<hex report>...]
+# The reports come as one argument: PowerShell would bind only the first of several to an array.
+param([string]$Path, [string]$Reports)
 $ErrorActionPreference = 'Stop'
 Add-Type -TypeDefinition @'
 using System;
@@ -17,13 +18,16 @@ public static class HidOutput {
 '@
 $handle = [HidOutput]::CreateFile($Path, 0xC0000000L, 3, [IntPtr]::Zero, 3, 0, [IntPtr]::Zero)
 if ($handle.IsInvalid) { exit 2 }
+$sent = 0
 try {
-  foreach ($hex in $Reports) {
+  foreach ($hex in $Reports.Split(',')) {
     $report = New-Object byte[] ($hex.Length / 2)
     for ($i = 0; $i -lt $report.Length; $i++) { $report[$i] = [Convert]::ToByte($hex.Substring($i * 2, 2), 16) }
-    if (-not [HidOutput]::HidD_SetOutputReport($handle, $report, $report.Length)) { exit 3 }
+    if ([HidOutput]::HidD_SetOutputReport($handle, $report, $report.Length)) { $sent++ }
     Start-Sleep -Milliseconds 60
   }
+  [Console]::Out.WriteLine("sent $sent")
+  if ($sent -eq 0) { exit 3 }
 } finally {
   $handle.Dispose()
 }
