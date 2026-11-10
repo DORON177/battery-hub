@@ -44,6 +44,11 @@ const { offLabel } = require('../renderer/estimate'); // shared with the window,
 
 const ICON = path.join(__dirname, '..', '..', 'assets', 'icon.png');
 let mainWindow = null;
+// A window closed to the tray is kept for this long, so reopening it soon is instant, then freed:
+// its page alone holds about 100 MB. Reopening after that rebuilds it in about half a second.
+const FREE_WINDOW_MS = 30 * 1000;
+let freeWindowTimer = null;
+let downloadedUpdate = null; // told again to a rebuilt window, so its Restart & install still shows
 let isQuitting = false;
 
 // Single instance — a second launch just focuses the running window. Crucially we
@@ -104,6 +109,7 @@ function restartPoller() {
 }
 
 function showWindow() {
+  clearTimeout(freeWindowTimer);
   if (!mainWindow || mainWindow.isDestroyed()) {
     createWindow(true);
     return;
@@ -164,6 +170,10 @@ function createWindow(forceShow) {
     roundWindowCorners(mainWindow);
     if (!startMinimized) mainWindow.show();
   });
+  mainWindow.webContents.on('did-finish-load', () => {
+    if (downloadedUpdate) mainWindow.webContents.send('update-event', downloadedUpdate);
+  });
+  mainWindow.on('closed', () => { mainWindow = null; });
 
   mainWindow.webContents.on('render-process-gone', (evt, details) => {
     console.error('renderer process gone:', details);
@@ -176,6 +186,10 @@ function createWindow(forceShow) {
       e.preventDefault();
       try { if (!mainWindow.webContents.isDestroyed()) mainWindow.blurWebView(); } catch (_) {}
       mainWindow.hide();
+      clearTimeout(freeWindowTimer);
+      freeWindowTimer = setTimeout(() => {
+        if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) mainWindow.destroy();
+      }, FREE_WINDOW_MS);
     }
   });
 }
@@ -207,7 +221,10 @@ app.whenReady().then(() => {
   applyLoginItem();
   tray.setHandlers(showWindow, quitApp, (bounds) => flyout.toggle(bounds, tray.list()));
   tray.setMode(store.getSetting('trayMode'));
-  createWindow(process.argv.includes('--show')); // the installer opens the window whatever the startup setting
+  // The installer opens the window whatever the startup setting. Started hidden, there is no window
+  // until it is opened from the tray.
+  const startHidden = !process.argv.includes('--show') && (store.getSetting('startMinimized') || process.argv.includes('--hidden'));
+  if (!startHidden) createWindow(true);
   flyout.prepare(roundWindowCorners);
   poller.setCardsChangedHandler((droppedId) => {
     if (droppedId) {
@@ -356,6 +373,7 @@ autoUpdater.autoInstallOnAppQuit = true;   // also install silently if the user 
 autoUpdater.logger = { info: (m) => logLine('INFO', `updater: ${m}`), warn: (m) => logLine('INFO', `updater: ${m}`), error: (m) => logLine('ERROR', `updater: ${m}`), debug: () => {} };
 
 function sendUpdate(payload) {
+  if (payload.status === 'downloaded') downloadedUpdate = payload;
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('update-event', payload);
 }
 

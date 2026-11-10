@@ -2,8 +2,9 @@ const { BrowserWindow, screen } = require('electron');
 const path = require('path');
 const store = require('./store');
 
-// The small glass panel above the tray. Built ahead of time and hidden rather than closed, so a
-// click opens it at once. The glass belongs to the window, so Windows' own show and hide
+// The small glass panel above the tray. Built on the first click and hidden rather than closed, so
+// the next clicks open it at once; a minute after it was last open it is freed (its page holds
+// about 90 MB), and the click after that builds it again. The glass belongs to the window, so Windows' own show and hide
 // animation carries it while the page inside rises. Both alternatives failed when measured:
 // setOpacity leaves an acrylic window blank here, and moving the window blocks for 14-26 ms a
 // step, which caps the motion near 27 fps. That animation needs a thick frame, hence resizable.
@@ -12,12 +13,14 @@ const ROW = 45;
 const CHROME = 62;
 const EXIT_MS = 90;
 const EDGE = 12;
+const FREE_AFTER_MS = 60 * 1000;
 
 let win = null;
 let hiddenAt = 0;
 let polishWindow = () => {};
 let hideTimer = null;
 let items = [];
+let freeTimer = null;
 
 function sorted(devices) {
   const rank = (d) => (d.offline || d.capacity == null ? 2 : d.charging ? 1 : 0);
@@ -69,6 +72,7 @@ function update(devices) {
 
 function open() {
   clearTimeout(hideTimer);
+  clearTimeout(freeTimer);
   win.webContents.send('flyout-open', !store.getSetting('reduceMotion'));
   win.show();
   win.focus();
@@ -84,8 +88,14 @@ function toggle(trayBounds, devices) {
   else open();
 }
 
+function scheduleFree() {
+  clearTimeout(freeTimer);
+  freeTimer = setTimeout(() => { if (win && !win.isDestroyed() && !win.isVisible()) destroy(); }, FREE_AFTER_MS);
+}
+
 function hide() {
   if (!win || win.isDestroyed() || !win.isVisible()) return;
+  scheduleFree();
   if (store.getSetting('reduceMotion')) {
     win.hide();
     return;
@@ -97,10 +107,10 @@ function hide() {
 
 function prepare(polish) {
   polishWindow = polish;
-  if (!win) create();
 }
 
 function destroy() {
+  clearTimeout(freeTimer);
   if (win && !win.isDestroyed()) win.destroy();
   win = null;
 }
