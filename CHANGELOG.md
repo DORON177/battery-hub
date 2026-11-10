@@ -21,6 +21,9 @@ All notable changes to this project are documented here. Versions follow
   controller on it showed 5%. Both now read as off.
 - A Razer device, or one set up with a scan, kept its last level for minutes after its receiver
   was unplugged, and did not read again after it was plugged back in until Battery Hub restarted.
+- Device reports showed a channel with no usage as NaN.
+- A Compx receiver that refuses requests on its usual channel is now tried on its other vendor
+  channels.
 - With Logitech G HUB running, its traffic could be mistaken for a Logitech mouse's or headset's
   answer.
 

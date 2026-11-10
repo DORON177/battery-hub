@@ -366,3 +366,10 @@ test('an old version is called out', async () => {
   assert.equal(result.verdict.side, 'pc');
   fs.rmSync(root, { recursive: true });
 });
+
+test('a collection Windows gives no usage for shows as ---- in a report, not NaN', async () => {
+  const { form } = await reportFor({ frames: [] }, { channels: [{ usagePage: 0xf100, path: 'v' }, { usagePage: 0x0c, usage: 1, path: 'c' }] });
+  const scan = form.get('scan');
+  assert.match(scan, /Channels: f100:----, 000c:0001/);
+  assert.doesNotMatch(scan, /NaN/);
+});
