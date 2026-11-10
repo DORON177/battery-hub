@@ -25,9 +25,10 @@ Battery Hub reads the battery level of your wireless HID devices and shows each 
 - **System-tray icons** — a live battery indicator per device beside the clock.
 - **At-a-glance overview** — which device needs charging next, how soon, and how many are connected.
 - **History & estimates** — click any device for a 24-hour or 7-day battery chart, its drain rate and when it was last charged.
-- **Low-battery notifications** — Windows alerts when a device falls below a configurable threshold.
+- **Low-battery notifications** — Windows alerts when a device falls below a threshold, set once for all devices or per device.
+- **Knows when a device is off** — a device switched off while its receiver stays plugged in shows as *Asleep or off* instead of an old reading.
 - **Guided calibration** — a 30-second scan detects the battery byte for devices that aren't recognised automatically.
-- **Liquid-glass interface** — translucent Windows 11 acrylic design with light/dark themes and a reduce-motion option.
+- **Light and dark themes** — a calm Windows 11 style window, a tray flyout and a reduce-motion option.
 - **Auto-updates** — delivered through GitHub Releases.
 
 ## Installation
@@ -100,7 +101,7 @@ Battery Hub reads these directly. Anything else can usually be added with **Set 
 | Corsair | Void and Virtuoso headsets |
 | Audeze | Maxwell, Maxwell 2 |
 | MCHOSE | V9 Turbo+, X9 |
-| VXE | NordicMouse and other Kysona-based mice |
+| VXE, ATK | Dragonfly R1 Pro, NordicMouse and other Kysona-based mice |
 
 Tested on real hardware: VXE NordicMouse, MCHOSE V9 Turbo+, DualSense on USB and Bluetooth, and Logitech MX Master 4 over Bluetooth. The rest are built from the protocols documented by the projects below and checked against those byte layouts, so please [report a device](https://github.com/DORON177/battery-hub/issues/new?template=device-support.yml) if one misbehaves.
 
