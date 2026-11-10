@@ -20,6 +20,8 @@ All notable changes to this project are documented here. Versions follow
 - Battery Hub uses about 40% less memory while it sits in the tray (about 290 MB instead of
   500 MB): the window is let go 30 seconds after you close it, and the tray popup a minute after it
   closes. Opening either again still takes about a quarter of a second.
+- The helper that reads Bluetooth and Xbox controller batteries from Windows is now a small program
+  of its own instead of PowerShell: about 17 MB instead of 125 MB while a Bluetooth device is added.
 
 ## [2.0.1] - 2026-11-02
 

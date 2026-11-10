@@ -1,10 +1,20 @@
 // Batteries read through Windows rather than HID: paired Bluetooth devices and Xbox controllers.
-// PowerShell is slow to start, so one watcher stays running while any such device is tracked.
+// One watcher stays running while any such device is tracked. It is a small program built from
+// batteries/SystemBatteries.cs (about 17 MB running); without it, the same work runs as a PowerShell
+// script, which holds about 125 MB.
 const { spawn, execFile } = require('child_process');
+const fs = require('fs');
 const path = require('path');
 
+const PROGRAM = path.join(__dirname, 'system-batteries.exe');
 const SCRIPT = path.join(__dirname, 'system-batteries.ps1');
 const ARGS = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', SCRIPT];
+
+// The command for one scan, or for a watcher scanning every few seconds while the app runs.
+function command(every) {
+  if (fs.existsSync(PROGRAM)) return [PROGRAM, every ? ['--every', String(every), '--parent', String(process.pid)] : []];
+  return ['powershell.exe', every ? [...ARGS, '-Every', String(every), '-ParentId', String(process.pid)] : ARGS];
+}
 const SCAN_TIMEOUT_MS = 20000;
 const WATCH_EVERY_S = 10; // cheap once running: it asks the device manager directly
 
@@ -28,7 +38,8 @@ function remember(list) {
 
 function runScript() {
   return new Promise((resolve) => {
-    execFile('powershell.exe', ARGS, { windowsHide: true, timeout: SCAN_TIMEOUT_MS, encoding: 'utf8' }, (err, stdout, stderr) => {
+    const [file, args] = command(0);
+    execFile(file, args, { windowsHide: true, timeout: SCAN_TIMEOUT_MS, encoding: 'utf8' }, (err, stdout, stderr) => {
       const list = err ? null : parseScan(stdout.trim().split(/\r?\n/).pop());
       resolve({ list, error: list ? null : String(stderr || (err && err.message) || 'no output').slice(0, 200) });
     });
@@ -52,7 +63,8 @@ async function selfTest() {
 
 function startWatching() {
   if (watcher || process.platform !== 'win32') return;
-  watcher = spawn('powershell.exe', [...ARGS, '-Every', String(WATCH_EVERY_S), '-ParentId', String(process.pid)], { windowsHide: true });
+  const [file, args] = command(WATCH_EVERY_S);
+  watcher = spawn(file, args, { windowsHide: true });
   let buffer = '';
   watcher.stdout.setEncoding('utf8');
   watcher.stdout.on('data', (chunk) => {

@@ -12,3 +12,4 @@ src/main/local-tools.js
 
 # local editor / tooling config
 .claude/
+src/main/system-batteries.exe

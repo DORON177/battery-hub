@@ -6,8 +6,10 @@
   "main": "src/main/main.js",
   "private": true,
   "scripts": {
+    "prestart": "node scripts/build-batteries.js",
     "start": "electron .",
     "test": "node --test \"test/*.test.js\"",
+    "predist": "node scripts/build-batteries.js",
     "dist": "electron-builder",
     "installer": "node scripts/build-installer.js"
   },
