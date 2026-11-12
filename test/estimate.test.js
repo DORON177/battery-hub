@@ -34,10 +34,10 @@ test('ignores intervals that touch a charge', () => {
   assert.equal(estimateHoursLeft(h, 50), 25);
 });
 
-test('counts flat time but ignores rising intervals', () => {
-  // Rising 80->85 is skipped. Flat 80->80 and 85->85 count, so 85->75 is 10% over 15h.
+test('counts flat time, and a small rise without a charge cancels drain', () => {
+  // 80->85 is a wobble, not a charge, so the drain is the net 80->75: 5% over 20h, 0.25%/h.
   const h = hist([[20, 80], [15, 80], [10, 85], [5, 85], [0, 75]]);
-  assert.equal(estimateHoursLeft(h, 50), 75);
+  assert.equal(estimateHoursLeft(h, 50), 200);
 });
 
 test('does not inflate the rate when drops are separated by flat heartbeats', () => {

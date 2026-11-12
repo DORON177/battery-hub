@@ -9,6 +9,12 @@
 // point when the level changes or a ~20 min heartbeat passes, so a 1% drop is usually
 // preceded by hours of flat heartbeats; counting only the interval containing the drop
 // divides it by minutes and inflates the rate by an order of magnitude.
+//
+// A small rise without a charge is a reading wobbling between two steps (a DualSense reports in
+// 10% steps and can flip 55, 45, 55, 45), so it cancels the drop before it; counting only the
+// drops made that wobble look like a fast drain. A bigger rise is a charge the device didn't flag.
+const WOBBLE = 15;
+
 function drainRatePerHour(history) {
   if (!history || history.length < 2) return null;
   let totalDrop = 0;   // % of battery lost
@@ -19,7 +25,7 @@ function drainRatePerHour(history) {
     if (a.ch || b.ch) continue;             // ignore any interval touching a charge
     const drop = a.c - b.c;                 // positive => discharged, 0 => flat
     const hours = (b.t - a.t) / 3600000;
-    if (drop < 0 || hours <= 0) continue;   // skip rising / bad-timestamp intervals
+    if (drop < -WOBBLE || hours <= 0) continue; // an unflagged charge, or a bad timestamp
     if (hours > 72) continue;               // skip multi-day gaps (device off / unused)
     totalDrop += drop;
     totalHours += hours;

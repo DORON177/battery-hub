@@ -52,3 +52,13 @@ test('hasRecentReading covers the seven days of history that is kept', () => {
   assert.equal(hasRecentReading({ lastReadingAt: NOW - 8 * 24 * HOUR }, NOW), false);
   assert.equal(hasRecentReading({}, NOW), false);
 });
+
+test('a reading that wobbles between two steps is not mistaken for a fast drain', () => {
+  // 10% steps flipping back and forth over two hours: no real drain at all
+  const wobble = hist([[2, 55], [1.75, 45], [1.5, 55], [1.25, 45], [1, 55], [0.75, 45], [0.5, 55], [0, 55]]);
+  assert.equal(drainRatePerHour(wobble), null);
+  // a real drain with one wobble on the way still reads as the drain
+  assert.equal(drainRatePerHour(hist([[4, 85], [3, 75], [2.5, 85], [2, 75], [0, 65]])), 5);
+  // a big unflagged rise is a charge, not a wobble: it doesn't cancel the drain before it
+  assert.equal(drainRatePerHour(hist([[6, 80], [4, 60], [3, 95], [1, 85]])), 30 / 4);
+});

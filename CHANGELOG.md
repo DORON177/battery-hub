@@ -22,6 +22,9 @@ All notable changes to this project are documented here. Versions follow
   Closing now quits.
 - Pressing Refresh while a check was already running did nothing. It now waits and then refreshes.
 - The log file is kept under 1 MB instead of growing for ever.
+- A controller showed a drain rate like "238% a day". Devices that would lose more than a full
+  charge in a day now show it per hour ("9.9% an hour"), and a level that wobbles between two steps,
+  as a DualSense does, no longer makes the drain look faster than it is.
 
 ### Changed
 - Battery Hub uses about 40% less memory while it sits in the tray (about 290 MB instead of

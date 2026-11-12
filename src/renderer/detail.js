@@ -193,6 +193,14 @@ chartBox.addEventListener('keydown', (e) => {
   }
 });
 
+// Per day for slow devices (a mouse loses a few % a day); per hour for ones that would lose more
+// than a full charge in a day, such as a controller in play, where "238% a day" reads as broken.
+function formatRate(rate) {
+  if (!rate) return 'Still learning';
+  const daily = rate * 24;
+  return daily >= 100 ? `${rate.toFixed(1)}% an hour` : `${daily.toFixed(1)}% a day`;
+}
+
 function renderDetail() {
   const dev = state.saved[detail.id];
   if (!dev) { closeDetail(); return; }
@@ -218,7 +226,7 @@ function renderDetail() {
   else if (offline || !hasRecentReading(dev)) left = '—';
   else if (hoursLeft != null) left = `~${formatDuration(hoursLeft)}`;
   setText('detail-left', left);
-  setText('detail-rate', rate ? `${(rate * 24).toFixed(1)}% a day` : 'Still learning');
+  setText('detail-rate', formatRate(rate));
   setText('detail-charged', charging ? 'Now' : charged ? timeAgo(charged) : 'Not recently');
   setText('detail-updated', timeAgo(dev.lastReadingAt));
   document.getElementById('detail-voltage-row').hidden = !voltage;
