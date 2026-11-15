@@ -8,7 +8,7 @@ PackageName: Battery Hub
 PackageUrl: https://github.com/DORON177/battery-hub
 License: MIT
 LicenseUrl: https://github.com/DORON177/battery-hub/blob/main/LICENSE
-Copyright: Copyright (c) 2026 DORON177
+Copyright: Copyright (c) 2026 Battery Hub contributors
 ShortDescription: Live battery monitoring for wireless mice, keyboards, headsets and controllers on Windows.
 Description: >-
   Battery Hub reads the battery level of wireless HID peripherals — mice, keyboards,

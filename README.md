@@ -148,4 +148,4 @@ Release history is in [CHANGELOG.md](CHANGELOG.md), and security reports are cov
 
 ## License
 
-[MIT](LICENSE) © 2026 DORON177
+[MIT](LICENSE) © 2026 Battery Hub contributors
