@@ -4,7 +4,7 @@ All notable changes to this project are documented here. Versions follow
 [semantic versioning](https://semver.org/); each entry corresponds to a
 [GitHub release](https://github.com/DORON177/battery-hub/releases).
 
-## [Unreleased]
+## [2.0.2] - 2026-11-15
 
 ### Added
 - Battery Hub in Spanish, Chinese and Hebrew (right to left), as well as English. It follows the
@@ -40,7 +40,7 @@ All notable changes to this project are documented here. Versions follow
 - The helper that reads Bluetooth and Xbox controller batteries from Windows is now a small program
   of its own instead of PowerShell: about 17 MB instead of 125 MB while a Bluetooth device is added.
 
-## [2.0.1] - 2026-11-02
+## [2.0.1] - 2026-11-10
 
 ### Fixed
 - A wireless device switched off while its receiver stayed plugged in, such as a Logitech G502 X,
