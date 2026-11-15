@@ -132,6 +132,14 @@ Native `node-hid` runs in an isolated utility process, so a driver fault can't b
 - **Something else isn't working.** Open Settings > Help and press Run check. It tests your install, this PC and your devices, tells you where the problem is, and can open a filled-in support request.
 - **Crash logs** are written to `%APPDATA%\battery-hub\battery-hub.log`.
 
+## Privacy
+
+Battery Hub runs entirely on your PC and collects nothing. It goes online for two things only, both
+to GitHub: checking for and downloading updates, and the version check in Settings > Help. Device
+reports and support requests open a filled-in GitHub form in your browser; nothing is sent until you
+submit it yourself, and you can read every field first. Battery history and settings stay in
+`%APPDATA%\battery-hub`.
+
 ## Contributing
 
 Device support requests and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
