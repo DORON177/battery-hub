@@ -38,7 +38,19 @@
     "files": [
       "src/**/*",
       "assets/**/*",
-      "package.json"
+      "package.json",
+      "!**/node_modules/node-hid/hidapi/**",
+      "!**/node_modules/node-hid/src/**",
+      "!**/node_modules/node-hid/prebuilds/!(HID-win32-x64)/**"
+    ],
+    "afterPack": "scripts/after-pack.js",
+    "electronLanguages": [
+      "en-US",
+      "es",
+      "es-419",
+      "zh-CN",
+      "zh-TW",
+      "he"
     ],
     "win": {
       "target": "nsis",

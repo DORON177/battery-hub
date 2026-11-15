@@ -27,6 +27,9 @@ All notable changes to this project are documented here. Versions follow
   as a DualSense does, no longer makes the drain look faster than it is.
 
 ### Changed
+- The installer is 107 MB instead of 122 MB, and the installed app about 75 MB smaller: unused
+  languages, a 3D graphics library the app never uses, and copies of the USB library for other
+  systems are left out.
 - Removed the setting for reading PlayStation controllers over Bluetooth: they are always read now.
 - Battery Hub uses about 40% less memory while it sits in the tray (about 290 MB instead of
   500 MB): the window is let go 30 seconds after you close it, and the tray popup a minute after it
