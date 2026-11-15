@@ -68,7 +68,7 @@
     <h1>Battery Hub</h1>
     <p class="lead">See the battery of every wireless mouse, keyboard, headset and controller on your Windows PC, in one window, in the tray, and with an alert before one runs out.</p>
     <div class="actions">
-      <a class="btn primary" href="https://github.com/DORON177/battery-hub/releases/latest">Download for Windows</a>
+      <a class="btn primary" id="download" href="https://github.com/DORON177/battery-hub/releases/download/v2.0.2/Battery-Hub-Installer-2.0.2.exe">Download for Windows</a>
       <a class="btn ghost" href="https://github.com/DORON177/battery-hub">Source on GitHub</a>
     </div>
     <p class="small">Free and open source · Windows 10 and 11 · or <code>winget install DORON177.BatteryHub</code></p>
@@ -132,5 +132,15 @@
     <a href="https://github.com/DORON177/battery-hub/issues">Report a problem</a>
   </footer>
 </div>
+<script>
+  // Point the button at the newest installer; the link above is the fallback.
+  fetch('https://api.github.com/repos/DORON177/battery-hub/releases/latest')
+    .then((r) => r.json())
+    .then((rel) => {
+      const a = (rel.assets || []).find((x) => /^Battery-Hub-Installer-.*\.exe$/.test(x.name));
+      if (a) document.getElementById('download').href = a.browser_download_url;
+    })
+    .catch(() => {});
+</script>
 </body>
 </html>
