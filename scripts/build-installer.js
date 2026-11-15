@@ -10,13 +10,13 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const { version, build } = require('../package.json');
+const { version } = require('../package.json');
 const FRAMEWORK = path.join(process.env.WINDIR, 'Microsoft.NET', 'Framework64', 'v4.0.30319');
 const WPF = path.join(FRAMEWORK, 'WPF');
 
 const previewAt = process.argv.indexOf('--preview');
 const preview = previewAt > 0 ? process.argv[previewAt + 1] : null;
-const payload = path.join(ROOT, 'dist', `${build.productName} Setup ${version}.exe`);
+const payload = path.join(ROOT, 'dist', `Battery-Hub-Update-${version}.exe`);
 const out = preview || path.join(ROOT, 'dist', `Battery-Hub-Installer-${version}.exe`);
 
 if (!preview && !fs.existsSync(payload)) {

@@ -13,7 +13,7 @@ winget install DORON177.BatteryHub
 1. Compute the installer's SHA-256 — CI attaches `SHA256SUMS.txt` to every release, or:
 
    ```powershell
-   (Get-FileHash "Battery-Hub-Setup-<version>.exe" -Algorithm SHA256).Hash
+   (Get-FileHash "Battery-Hub-Update-<version>.exe" -Algorithm SHA256).Hash
    ```
 
 2. In all three YAML files update `PackageVersion`, and in the installer manifest update

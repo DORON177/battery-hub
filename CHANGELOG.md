@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Versions follow
 [semantic versioning](https://semver.org/); each entry corresponds to a
 [GitHub release](https://github.com/DORON177/battery-hub/releases).
 
+## [Unreleased]
+
+### Changed
+- The release file that auto-update and winget use is now called Battery-Hub-Update-x.y.z.exe
+  instead of Battery-Hub-Setup-x.y.z.exe, so it's clear that Battery-Hub-Installer-x.y.z.exe is
+  the one to download.
+
 ## [2.0.2] - 2026-11-15
 
 ### Added

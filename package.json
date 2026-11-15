@@ -57,6 +57,7 @@
       "icon": "assets/icon.ico"
     },
     "nsis": {
+      "artifactName": "Battery-Hub-Update-${version}.${ext}",
       "oneClick": true,
       "perMachine": false,
       "createDesktopShortcut": true,
