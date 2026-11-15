@@ -21,9 +21,9 @@ Apply at https://signpath.org/apply (the form needs a browser). Terms: https://s
 
 **Project name:** Battery Hub
 
-**Repository:** https://github.com/DORON177/battery-hub
+**Repository:** https://github.com/battery-hub/battery-hub
 
-**Download page:** https://github.com/DORON177/battery-hub/releases/latest
+**Download page:** https://github.com/battery-hub/battery-hub/releases/latest
 (also `winget install DORON177.BatteryHub`, in the Windows Package Manager since August 2026)
 
 **License:** MIT (OSI approved), for all of the project's own code.
@@ -51,7 +51,7 @@ binaries are signed under the project.
 - releases since July 2026, most recent 2.0.1 on 2026-11-10
 
 **Team and roles:**
-- Author, reviewer and approver: DORON177 (https://github.com/DORON177)
+- Author, reviewer and approver: the maintainers of https://github.com/battery-hub
 
 **Data collection:** none. See the Privacy section of the README.
 
@@ -65,8 +65,8 @@ Add this section to README.md, as SignPath's terms require:
 Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by
 [SignPath Foundation](https://signpath.org/).
 
-- Committers and reviewers: [DORON177](https://github.com/DORON177)
-- Approvers: [DORON177](https://github.com/DORON177)
+- Committers and reviewers: [battery-hub](https://github.com/battery-hub) maintainers
+- Approvers: [battery-hub](https://github.com/battery-hub) maintainers
 
 Every release is built by GitHub Actions from a tagged commit and signed only after manual approval.
 See [Privacy](#privacy) for what the app does and doesn't send.

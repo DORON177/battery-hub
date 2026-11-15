@@ -7,7 +7,7 @@
 <meta name="description" content="Free Windows app that shows the battery level of wireless mice, keyboards, headsets and game controllers: Logitech, Razer, SteelSeries, HyperX, Corsair, PlayStation, Xbox, VXE, AULA and any Bluetooth device. In one window, the tray and notifications." />
 <meta property="og:title" content="Battery Hub" />
 <meta property="og:description" content="See the battery of every wireless mouse, keyboard, headset and controller on your Windows PC, in one place." />
-<meta property="og:image" content="https://doron177.github.io/battery-hub/logo.png" />
+<meta property="og:image" content="https://battery-hub.github.io/battery-hub/logo.png" />
 <meta property="og:type" content="website" />
 <link rel="icon" type="image/png" href="favicon.png" />
 <style>
@@ -68,10 +68,10 @@
     <h1>Battery Hub</h1>
     <p class="lead">See the battery of every wireless mouse, keyboard, headset and controller on your Windows PC, in one window, in the tray, and with an alert before one runs out.</p>
     <div class="actions">
-      <a class="btn primary" id="download" href="https://github.com/DORON177/battery-hub/releases/download/v2.0.2/Battery-Hub-Installer-2.0.2.exe">Download for Windows</a>
-      <a class="btn ghost" href="https://github.com/DORON177/battery-hub">Source on GitHub</a>
+      <a class="btn primary" id="download" href="https://github.com/battery-hub/battery-hub/releases/download/v2.0.2/Battery-Hub-Installer-2.0.2.exe">Download for Windows</a>
+      <a class="btn ghost" href="https://github.com/battery-hub/battery-hub">Source on GitHub</a>
     </div>
-    <p class="small"><a href="https://github.com/DORON177/battery-hub/releases">Older versions</a></p>
+    <p class="small"><a href="https://github.com/battery-hub/battery-hub/releases">Older versions</a></p>
     <p class="small">Free and open source · Windows 10 and 11 · or <code>winget install DORON177.BatteryHub</code></p>
   </header>
 
@@ -104,7 +104,7 @@
       <tr><th>VXE, ATK</th><td>Dragonfly R1 Pro, NordicMouse and other Kysona-based mice</td></tr>
       <tr><th>Compx 2.4G receiver</th><td>AULA F87 Pro and F99 Pro, Lingbao K98 and MCHOSE G75 keyboards</td></tr>
     </table>
-    <p class="small">Anything else can often be added with the app's guided 30-second scan. If a device doesn't work, the app can fill in a <a href="https://github.com/DORON177/battery-hub/issues/new?template=device-support.yml">device report</a> for you.</p>
+    <p class="small">Anything else can often be added with the app's guided 30-second scan. If a device doesn't work, the app can fill in a <a href="https://github.com/battery-hub/battery-hub/issues/new?template=device-support.yml">device report</a> for you.</p>
   </section>
 
   <section>
@@ -128,14 +128,14 @@
   </section>
 
   <footer>
-    Battery Hub is free software under the <a href="https://github.com/DORON177/battery-hub/blob/main/LICENSE">MIT license</a>. ·
-    <a href="https://github.com/DORON177/battery-hub/blob/main/CHANGELOG.md">What's new</a> ·
-    <a href="https://github.com/DORON177/battery-hub/issues">Report a problem</a>
+    Battery Hub is free software under the <a href="https://github.com/battery-hub/battery-hub/blob/main/LICENSE">MIT license</a>. ·
+    <a href="https://github.com/battery-hub/battery-hub/blob/main/CHANGELOG.md">What's new</a> ·
+    <a href="https://github.com/battery-hub/battery-hub/issues">Report a problem</a>
   </footer>
 </div>
 <script>
   // Point the button at the newest installer; the link above is the fallback.
-  fetch('https://api.github.com/repos/DORON177/battery-hub/releases/latest')
+  fetch('https://api.github.com/repos/battery-hub/battery-hub/releases/latest')
     .then((r) => r.json())
     .then((rel) => {
       const a = (rel.assets || []).find((x) => /^Battery-Hub-Installer-.*\.exe$/.test(x.name));

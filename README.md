@@ -3,9 +3,9 @@
   <h1>Battery Hub</h1>
   <p><strong>Live battery monitoring for wireless mice, keyboards, headsets and controllers on Windows.</strong></p>
 
-  <a href="https://github.com/DORON177/battery-hub/releases/latest"><img src="https://img.shields.io/github/v/release/DORON177/battery-hub?sort=semver" alt="Latest release" /></a>
-  <a href="https://github.com/DORON177/battery-hub/releases"><img src="https://img.shields.io/github/downloads/DORON177/battery-hub/total" alt="Downloads" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/DORON177/battery-hub" alt="License" /></a>
+  <a href="https://github.com/battery-hub/battery-hub/releases/latest"><img src="https://img.shields.io/github/v/release/battery-hub/battery-hub?sort=semver" alt="Latest release" /></a>
+  <a href="https://github.com/battery-hub/battery-hub/releases"><img src="https://img.shields.io/github/downloads/battery-hub/battery-hub/total" alt="Downloads" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/battery-hub/battery-hub" alt="License" /></a>
   <img src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011-0078D6" alt="Platform: Windows 10/11" />
 </div>
 
@@ -39,7 +39,7 @@ With the [Windows Package Manager](https://learn.microsoft.com/windows/package-m
 winget install DORON177.BatteryHub
 ```
 
-Or download the latest `Battery-Hub-Installer-x.y.z.exe` from the [releases page](https://github.com/DORON177/battery-hub/releases/latest) and run it. Battery Hub installs per-user and requires no administrator rights.
+Or download the latest `Battery-Hub-Installer-x.y.z.exe` from the [releases page](https://github.com/battery-hub/battery-hub/releases/latest) and run it. Battery Hub installs per-user and requires no administrator rights.
 
 Windows SmartScreen shows a **"Windows protected your PC"** prompt because the installer isn't code-signed — select **More info → Run anyway**. Code signing certificates are issued to identified publishers for a recurring fee; this project is unfunded, so builds are unsigned. See [Verifying a download](#verifying-a-download) if you'd like to confirm the file's integrity first.
 
@@ -104,7 +104,7 @@ Battery Hub reads these directly. Anything else can usually be added with **Set 
 | VXE, ATK | Dragonfly R1 Pro, NordicMouse and other Kysona-based mice |
 | Compx 2.4G receiver | AULA F87 Pro and F99 Pro, Lingbao K98, MCHOSE G75 keyboards |
 
-Tested on real hardware: VXE NordicMouse, MCHOSE V9 Turbo+, DualSense on USB and Bluetooth, and Logitech MX Master 4 over Bluetooth. The rest are built from the protocols documented by the projects below and checked against those byte layouts, so please [report a device](https://github.com/DORON177/battery-hub/issues/new?template=device-support.yml) if one misbehaves.
+Tested on real hardware: VXE NordicMouse, MCHOSE V9 Turbo+, DualSense on USB and Bluetooth, and Logitech MX Master 4 over Bluetooth. The rest are built from the protocols documented by the projects below and checked against those byte layouts, so please [report a device](https://github.com/battery-hub/battery-hub/issues/new?template=device-support.yml) if one misbehaves.
 
 Protocol work comes from [HeadsetControl](https://github.com/Sapd/HeadsetControl), [OpenRazer](https://github.com/openrazer/openrazer), [rivalcfg](https://github.com/flozz/rivalcfg) and the Linux kernel's HID drivers.
 

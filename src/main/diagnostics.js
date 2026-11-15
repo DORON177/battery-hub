@@ -10,7 +10,7 @@ const { execFile } = require('child_process');
 const packageCheck = require('./package-check');
 const { PY_CANDIDATES } = require('./monitor');
 
-const REPO = 'DORON177/battery-hub';
+const REPO = 'battery-hub/battery-hub';
 const LATEST_RELEASE = `https://api.github.com/repos/${REPO}/releases/latest`;
 const NETWORK_TIMEOUT_MS = 5000;
 const LOG_DAYS = 7;

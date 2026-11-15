@@ -138,9 +138,9 @@ test('only recent errors are picked out of the log', () => {
 });
 
 test('nothing personal survives sanitizing', () => {
-  const home = 'C:\\Users\\doron';
-  const text = sanitize('at C:\\Users\\doron\\AppData\\x c:\\users\\DORON\\y serial d228599c0140 and 14:3a:9a:e2:ea:5c path \\\\?\\HID#VID_054C&x', home);
-  assert.ok(!/doron/i.test(text));
+  const home = 'C:\\Users\\alexuser';
+  const text = sanitize('at C:\\Users\\alexuser\\AppData\\x c:\\users\\ALEXUSER\\y serial d228599c0140 and 14:3a:9a:e2:ea:5c path \\\\?\\HID#VID_054C&x', home);
+  assert.ok(!/alexuser/i.test(text));
   assert.ok(!/d228599c0140/.test(text));
   assert.ok(!/14:3a/.test(text));
   assert.ok(!/HID#VID/.test(text));
@@ -149,8 +149,8 @@ test('nothing personal survives sanitizing', () => {
 });
 
 test('the report leaves out what the user named a device and its serial', () => {
-  const device = checkDevice({ id: '1133:45122:d228599c0140', product: 'MX Master 4', customName: "Doron's mouse", driverId: 'hidpp', lastReadingAt: Date.now() });
-  assert.equal(device.title, "Doron's mouse"); // shown on screen only
+  const device = checkDevice({ id: '1133:45122:d228599c0140', product: 'MX Master 4', customName: "Alex's mouse", driverId: 'hidpp', lastReadingAt: Date.now() });
+  assert.equal(device.title, "Alex's mouse"); // shown on screen only
   const report = formatReport({
     checks: [device],
     verdict: { title: 'Everything looks fine' },
@@ -158,12 +158,12 @@ test('the report leaves out what the user named a device and its serial', () => 
     errors: [],
   });
   assert.match(report, /MX Master 4 \(046d:b042, hidpp, 1 connection\)/);
-  assert.ok(!/Doron/.test(report));
+  assert.ok(!/Alex/.test(report));
   assert.ok(!/d228599c0140/.test(report));
 });
 
 test('a Bluetooth name from Windows stays out of the report', () => {
-  const device = checkDevice({ id: 'bt:BTHENUM\\DEV_D228599C0140', product: "Doron's AirPods", driverId: 'system', lastReadingAt: Date.now() });
+  const device = checkDevice({ id: 'bt:BTHENUM\\DEV_D228599C0140', product: "Alex's AirPods", driverId: 'system', lastReadingAt: Date.now() });
   const report = formatReport({
     checks: [device],
     verdict: { title: 'x' },
@@ -201,7 +201,7 @@ function healthyDeps(root) {
     enumerate: async () => [{}, {}],
     windowsSelfTest: async () => ({ ok: true, count: 1 }),
     devices: {
-      a: { id: '13652:62858:serial', product: 'VXE', customName: 'Doron desk mouse', driverId: 'kysona', lastReadingAt: Date.now() },
+      a: { id: '13652:62858:serial', product: 'VXE', customName: 'Alex desk mouse', driverId: 'kysona', lastReadingAt: Date.now() },
       b: { id: '1:2:x', product: 'Hidden one', hidden: true },
     },
   };
@@ -215,7 +215,7 @@ test('the whole check on a healthy PC says everything is fine', async () => {
   assert.deepEqual(result.checks.map((c) => c.status), ['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok']);
   assert.equal(result.complete, true);
   assert.match(result.report, /VXE \(3554:f58a, kysona, 1 connection\)/);
-  assert.ok(!/Hidden one|Doron/.test(result.report));
+  assert.ok(!/Hidden one|Alex/.test(result.report));
   fs.rmSync(root, { recursive: true });
 });
 
@@ -316,7 +316,7 @@ test('a Bluetooth device is called Bluetooth, on either kind of link', async () 
   const low = { usagePage: 1, usage: 2, path: 'x{00001812-0000-1000-8000-00805f9b34fb}y' };
   assert.equal((await reportFor({}, { channels: [classic] })).form.get('connection'), 'Bluetooth');
   assert.equal((await reportFor({}, { channels: [low] })).form.get('connection'), 'Bluetooth');
-  const windows = await reportFor({ id: 'bt:BTHENUM\\DEV_D228599C0140', product: "Doron's AirPods", manufacturer: '' });
+  const windows = await reportFor({ id: 'bt:BTHENUM\\DEV_D228599C0140', product: "Alex's AirPods", manufacturer: '' });
   assert.equal(windows.form.get('connection'), 'Bluetooth');
   assert.equal(windows.form.get('device'), 'Bluetooth device');
   assert.equal(windows.form.get('ids'), 'bt');

@@ -7,7 +7,7 @@ Thanks for your interest in Battery Hub.
 The most useful contribution is a device report. Battery Hub can only read a device once
 its battery protocol is known, and that requires data from the hardware itself.
 
-Open a [device support request](https://github.com/DORON177/battery-hub/issues/new?template=device-support.yml)
+Open a [device support request](https://github.com/battery-hub/battery-hub/issues/new?template=device-support.yml)
 and include the vendor/product ID and the output of the in-app calibration scan
 (**Add Device → Calibrate & Add**). Requests without that information usually can't be
 acted on.

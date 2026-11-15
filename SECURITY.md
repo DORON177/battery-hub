@@ -3,13 +3,13 @@
 ## Supported versions
 
 Fixes are released against the latest version only. Please update to the
-[current release](https://github.com/DORON177/battery-hub/releases/latest) before
+[current release](https://github.com/battery-hub/battery-hub/releases/latest) before
 reporting an issue.
 
 ## Reporting a vulnerability
 
 Report vulnerabilities privately through GitHub's
-[security advisory form](https://github.com/DORON177/battery-hub/security/advisories/new)
+[security advisory form](https://github.com/battery-hub/battery-hub/security/advisories/new)
 rather than opening a public issue.
 
 Please include the affected version, what an attacker could achieve, and the steps to

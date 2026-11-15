@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here. Versions follow
 [semantic versioning](https://semver.org/); each entry corresponds to a
-[GitHub release](https://github.com/DORON177/battery-hub/releases).
+[GitHub release](https://github.com/battery-hub/battery-hub/releases).
 
 ## [Unreleased]
 
@@ -256,16 +256,16 @@ First stable release, consolidating the 1.0.x and 1.1.x series.
 Initial public release: live battery monitoring for wireless HID devices, per-device tray
 icons, low-battery notifications, history sparklines and the guided calibration wizard.
 
-[Unreleased]: https://github.com/DORON177/battery-hub/compare/v1.3.1...HEAD
-[1.3.1]: https://github.com/DORON177/battery-hub/releases/tag/v1.3.1
-[1.3.0]: https://github.com/DORON177/battery-hub/releases/tag/v1.3.0
-[1.2.0]: https://github.com/DORON177/battery-hub/releases/tag/v1.2.0
-[1.1.5]: https://github.com/DORON177/battery-hub/releases/tag/v1.1.5
-[1.1.4]: https://github.com/DORON177/battery-hub/releases/tag/v1.1.4
-[1.1.3]: https://github.com/DORON177/battery-hub/releases/tag/v1.1.3
-[1.1.2]: https://github.com/DORON177/battery-hub/releases/tag/v1.1.2
-[1.1.1]: https://github.com/DORON177/battery-hub/releases/tag/v1.1.1
-[1.1.0]: https://github.com/DORON177/battery-hub/releases/tag/v1.1.0
-[1.0.4]: https://github.com/DORON177/battery-hub/releases/tag/v1.0.4
-[1.0.3]: https://github.com/DORON177/battery-hub/releases/tag/v1.0.3
-[1.0.2]: https://github.com/DORON177/battery-hub/releases/tag/v1.0.2
+[Unreleased]: https://github.com/battery-hub/battery-hub/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/battery-hub/battery-hub/releases/tag/v1.3.1
+[1.3.0]: https://github.com/battery-hub/battery-hub/releases/tag/v1.3.0
+[1.2.0]: https://github.com/battery-hub/battery-hub/releases/tag/v1.2.0
+[1.1.5]: https://github.com/battery-hub/battery-hub/releases/tag/v1.1.5
+[1.1.4]: https://github.com/battery-hub/battery-hub/releases/tag/v1.1.4
+[1.1.3]: https://github.com/battery-hub/battery-hub/releases/tag/v1.1.3
+[1.1.2]: https://github.com/battery-hub/battery-hub/releases/tag/v1.1.2
+[1.1.1]: https://github.com/battery-hub/battery-hub/releases/tag/v1.1.1
+[1.1.0]: https://github.com/battery-hub/battery-hub/releases/tag/v1.1.0
+[1.0.4]: https://github.com/battery-hub/battery-hub/releases/tag/v1.0.4
+[1.0.3]: https://github.com/battery-hub/battery-hub/releases/tag/v1.0.3
+[1.0.2]: https://github.com/battery-hub/battery-hub/releases/tag/v1.0.2

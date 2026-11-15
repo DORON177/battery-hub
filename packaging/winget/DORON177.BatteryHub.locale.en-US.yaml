@@ -1,13 +1,13 @@
 PackageIdentifier: DORON177.BatteryHub
 PackageVersion: 1.2.0
 PackageLocale: en-US
-Publisher: DORON177
-PublisherUrl: https://github.com/DORON177
-PublisherSupportUrl: https://github.com/DORON177/battery-hub/issues
+Publisher: Battery Hub
+PublisherUrl: https://github.com/battery-hub
+PublisherSupportUrl: https://github.com/battery-hub/battery-hub/issues
 PackageName: Battery Hub
-PackageUrl: https://github.com/DORON177/battery-hub
+PackageUrl: https://github.com/battery-hub/battery-hub
 License: MIT
-LicenseUrl: https://github.com/DORON177/battery-hub/blob/main/LICENSE
+LicenseUrl: https://github.com/battery-hub/battery-hub/blob/main/LICENSE
 Copyright: Copyright (c) 2026 Battery Hub contributors
 ShortDescription: Live battery monitoring for wireless mice, keyboards, headsets and controllers on Windows.
 Description: >-
@@ -29,6 +29,6 @@ Tags:
   - peripherals
   - system-tray
   - wireless
-ReleaseNotesUrl: https://github.com/DORON177/battery-hub/releases/tag/v1.2.0
+ReleaseNotesUrl: https://github.com/battery-hub/battery-hub/releases/tag/v1.2.0
 ManifestType: defaultLocale
 ManifestVersion: 1.6.0
