@@ -27,6 +27,7 @@ All notable changes to this project are documented here. Versions follow
   as a DualSense does, no longer makes the drain look faster than it is.
 
 ### Changed
+- Removed the setting for reading PlayStation controllers over Bluetooth: they are always read now.
 - Battery Hub uses about 40% less memory while it sits in the tray (about 290 MB instead of
   500 MB): the window is let go 30 seconds after you close it, and the tray popup a minute after it
   closes. Opening either again still takes about a quarter of a second.

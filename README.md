@@ -110,7 +110,7 @@ Protocol work comes from [HeadsetControl](https://github.com/Sapd/HeadsetControl
 
 A device connected more than one way, such as a controller on its cable and over Bluetooth, shows as one card when both connections report the same Bluetooth address.
 
-Reading a PlayStation controller over Bluetooth switches it to its full report mode until it's turned off, as Steam and DS4Windows do. A few older games may not see the controller in that mode. You can turn this off in Settings.
+Reading a PlayStation controller over Bluetooth switches it to its full report mode until it's turned off, as Steam and DS4Windows do. A few older games may not see the controller in that mode until it's turned off and on.
 
 ## Project structure
 

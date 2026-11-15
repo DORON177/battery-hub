@@ -5,7 +5,7 @@
 // pads with zeros to full length, so report 0x01 means nothing there. Reading the calibration
 // report moves it to the full report (0x31 or 0x11), as Steam and DS4Windows do. That lasts until
 // the controller turns off, and an old game using DirectInput loses the controller until then, so
-// it only happens for a controller the user added, and there is a setting to refuse it.
+// it only happens for a controller the user added.
 const session = require('../session');
 const { address } = require('../../identity');
 
@@ -55,7 +55,7 @@ function parseDualShock4(frame, bluetooth, adapter = false) {
   return null;
 }
 
-async function readBattery(logicalDevice, profile) {
+async function readBattery(logicalDevice) {
   const channel = channelOf(logicalDevice);
   if (!channel) throw new Error('no command channel');
   const parse = DUALSENSE.has(logicalDevice.productId) ? parseDualSense : parseDualShock4;
@@ -71,7 +71,6 @@ async function readBattery(logicalDevice, profile) {
     if (reading && reading.off) throw new Error('device is off');
     if (reading) return reading;
     if (bluetooth && frame[0] === 0x01 && !askedForFullReport) {
-      if (profile && profile.quietBluetooth) throw new Error('Bluetooth reading is off in Settings');
       askedForFullReport = true;
       await dev.getFeatureReport(FULL_REPORT.id, FULL_REPORT.size);
     }

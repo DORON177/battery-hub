@@ -257,10 +257,6 @@ function readWindowsRoute(route) {
   return { status: 'no-candidates', remembered: found ? found.capacity : null };
 }
 
-function routeProfile(route) {
-  if (route.driverId !== 'playstation') return route.profile;
-  return { ...route.profile, quietBluetooth: !store.getSetting('controllerBluetooth') };
-}
 
 async function pollAllDevices(onUpdate, only = null) {
   let live = await getLiveDevices(false);
@@ -308,7 +304,7 @@ async function pollAllDevices(onUpdate, only = null) {
         attempt = readWindowsRoute(route);
       } else {
         const driver = driverById(route.driverId);
-        const target = { ...cfg, ...route, profile: routeProfile(route) };
+        const target = { ...cfg, ...route, profile: route.profile };
         // Poll-based devices (mouse, calibrated generic). Try the cached USB scan first; if the
         // device can't be found or read, the cache may be stale (device reconnected, or the
         // mouse switched to its wired charging identity), so refresh the scan once and retry.

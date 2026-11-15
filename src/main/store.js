@@ -11,7 +11,6 @@ const DEFAULT_SETTINGS = {
   notifyEnabled: true,
   notifyThreshold: 20,      // notify when battery drops below this %
   notifyCharging: true,     // notify when a device starts charging
-  controllerBluetooth: true, // read PlayStation controllers over Bluetooth
   notifyCharged: false,     // notify when a device finishes charging
   trayEnabled: true,        // show tray battery icons
   trayMode: 'list',         // 'perDevice' | 'list'
