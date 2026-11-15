@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Battery Hub — battery level of your wireless mouse, keyboard, headset and controller on Windows</title>
+<meta name="description" content="Free Windows app that shows the battery level of wireless mice, keyboards, headsets and game controllers: Logitech, Razer, SteelSeries, HyperX, Corsair, PlayStation, Xbox, VXE, AULA and any Bluetooth device. In one window, the tray and notifications." />
+<meta property="og:title" content="Battery Hub" />
+<meta property="og:description" content="See the battery of every wireless mouse, keyboard, headset and controller on your Windows PC, in one place." />
+<meta property="og:image" content="https://doron177.github.io/battery-hub/screenshot.png" />
+<meta property="og:type" content="website" />
+<link rel="icon" type="image/png" href="favicon.png" />
+<style>
+  :root {
+    --bg: #17191c;
+    --panel: #202226;
+    --line: #2e3136;
+    --text: #f3f4f6;
+    --muted: #a9aeb6;
+    --accent: #2fd5a0;
+    --accent-ink: #0b2a20;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f4f6f7; --panel: #ffffff; --line: #e1e5e8; --text: #15181b; --muted: #59616b; --accent: #129b72; --accent-ink: #ffffff; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
+  a { color: var(--accent); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+  header { padding: 64px 0 40px; text-align: center; }
+  header img.logo { width: 112px; height: 112px; }
+  h1 { font: 650 44px/1.1 "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; margin: 18px 0 10px; letter-spacing: -0.02em; }
+  .lead { color: var(--muted); font-size: 19px; max-width: 640px; margin: 0 auto 28px; }
+  .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-block; padding: 12px 22px; border-radius: 10px; font-weight: 600; text-decoration: none; }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.ghost { border: 1px solid var(--line); color: var(--text); }
+  .small { color: var(--muted); font-size: 14px; margin-top: 14px; }
+  code { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; font-size: 14px; }
+  .shot { display: block; width: 100%; max-width: 820px; margin: 8px auto 0; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35); }
+  section { padding: 56px 0 8px; }
+  h2 { font-size: 26px; margin: 0 0 18px; letter-spacing: -0.01em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; font-size: 15px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { width: 180px; font-weight: 600; }
+  tr:last-child th, tr:last-child td { border-bottom: none; }
+  details { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 10px; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p { color: var(--muted); margin: 10px 0 2px; }
+  footer { padding: 48px 0 40px; color: var(--muted); font-size: 14px; text-align: center; }
+  @media (max-width: 600px) {
+    header { padding-top: 40px; }
+    h1 { font-size: 32px; }
+    .lead { font-size: 17px; }
+    th { width: auto; display: block; border-bottom: none; padding-bottom: 0; }
+    td { display: block; padding-top: 4px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img class="logo" src="logo.png" alt="" width="112" height="112" />
+    <h1>Battery Hub</h1>
+    <p class="lead">See the battery of every wireless mouse, keyboard, headset and controller on your Windows PC, in one window, in the tray, and with an alert before one runs out.</p>
+    <div class="actions">
+      <a class="btn primary" href="https://github.com/DORON177/battery-hub/releases/latest">Download for Windows</a>
+      <a class="btn ghost" href="https://github.com/DORON177/battery-hub">Source on GitHub</a>
+    </div>
+    <p class="small">Free and open source · Windows 10 and 11 · or <code>winget install DORON177.BatteryHub</code></p>
+  </header>
+
+  <img class="shot" src="screenshot.png" alt="Battery Hub showing a DualSense controller, an MCHOSE headset, a VXE mouse, a Keychron keyboard and Galaxy Buds with their battery levels" width="1250" height="1100" />
+
+  <section>
+    <h2>What it does</h2>
+    <div class="grid">
+      <div class="card"><h3>All your devices in one place</h3><p>Mice, keyboards, headsets and controllers, each with its battery level, whether it's charging, and how long it has left.</p></div>
+      <div class="card"><h3>In the tray</h3><p>A battery icon per device next to the clock, and a small panel with all of them when you click it.</p></div>
+      <div class="card"><h3>Alerts before it dies</h3><p>A Windows notification when a device runs low, set once for everything or per device, plus charging and fully charged alerts.</p></div>
+      <div class="card"><h3>History</h3><p>A 24-hour and 7-day chart for each device, its drain rate, and when it was last charged.</p></div>
+      <div class="card"><h3>Knows when it's off</h3><p>A device switched off while its receiver stays plugged in shows as asleep or off, not as an old reading.</p></div>
+      <div class="card"><h3>Light and private</h3><p>Uses about 1% of a CPU core and runs entirely on your PC. Nothing is collected or sent anywhere.</p></div>
+    </div>
+  </section>
+
+  <section id="devices">
+    <h2>Supported devices</h2>
+    <table>
+      <tr><th>Bluetooth</th><td>Any paired device that reports its battery to Windows</td></tr>
+      <tr><th>Xbox</th><td>Wireless controllers</td></tr>
+      <tr><th>PlayStation</th><td>DualSense, DualSense Edge, DualShock 4 (USB and Bluetooth)</td></tr>
+      <tr><th>Logitech</th><td>Mice and keyboards using HID++ 2.0 (Bolt, Unifying, Lightspeed receivers), such as MX Master and G502 X; G PRO, G533, G535, G633, G733, G933 and G935 headsets</td></tr>
+      <tr><th>Razer</th><td>81 wireless mice and keyboards</td></tr>
+      <tr><th>SteelSeries</th><td>Arctis 1, 7, 7+, 9, Nova 3P, Nova 5, Nova 7 and Nova Pro Wireless headsets; Aerox, Prime and Rival 3 Wireless mice</td></tr>
+      <tr><th>HyperX</th><td>Cloud Alpha Wireless, Cloud Flight, Cloud II Wireless</td></tr>
+      <tr><th>Corsair</th><td>Void and Virtuoso headsets</td></tr>
+      <tr><th>Audeze</th><td>Maxwell, Maxwell 2</td></tr>
+      <tr><th>MCHOSE</th><td>V9 Turbo+ and X9 headsets</td></tr>
+      <tr><th>VXE, ATK</th><td>Dragonfly R1 Pro, NordicMouse and other Kysona-based mice</td></tr>
+      <tr><th>Compx 2.4G receiver</th><td>AULA F87 Pro and F99 Pro, Lingbao K98 and MCHOSE G75 keyboards (in the next release)</td></tr>
+    </table>
+    <p class="small">Anything else can often be added with the app's guided 30-second scan. If a device doesn't work, the app can fill in a <a href="https://github.com/DORON177/battery-hub/issues/new?template=device-support.yml">device report</a> for you.</p>
+  </section>
+
+  <section>
+    <h2>Questions</h2>
+    <details>
+      <summary>Windows says "Windows protected your PC". Is it safe?</summary>
+      <p>That warning appears for any app that isn't code-signed, which costs money every year and this project is free. Select <b>More info</b>, then <b>Run anyway</b>. Every release is built automatically by GitHub from the public source code, and each one comes with a SHA-256 checksum so you can check the file is exactly what was built.</p>
+    </details>
+    <details>
+      <summary>Does it need an account or send my data anywhere?</summary>
+      <p>No. Everything runs on your PC. It only goes online to check GitHub for updates. Device reports open in your browser, and nothing is sent unless you submit them yourself.</p>
+    </details>
+    <details>
+      <summary>My device isn't listed.</summary>
+      <p>Open <b>Add device</b>: supported devices are marked, and for others the 30-second scan can often find the battery value. If that doesn't work, send a device report from the app so support can be added.</p>
+    </details>
+    <details>
+      <summary>Does it update itself?</summary>
+      <p>Yes. New versions download in the background and install when you restart the app.</p>
+    </details>
+  </section>
+
+  <footer>
+    Battery Hub is free software under the <a href="https://github.com/DORON177/battery-hub/blob/main/LICENSE">MIT license</a>. ·
+    <a href="https://github.com/DORON177/battery-hub/blob/main/CHANGELOG.md">What's new</a> ·
+    <a href="https://github.com/DORON177/battery-hub/issues">Report a problem</a>
+  </footer>
+</div>
+</body>
+</html>
