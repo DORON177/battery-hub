@@ -109,6 +109,19 @@
             </div>
             <div class="settings-row">
               <div class="settings-label">
+                <span class="settings-title">Language</span>
+                <span class="settings-hint">The language Battery Hub uses.</span>
+              </div>
+              <select class="select" data-setting="language">
+                <option value="system">System</option>
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="zh">中文</option>
+                <option value="he">עברית</option>
+              </select>
+            </div>
+            <div class="settings-row">
+              <div class="settings-label">
                 <span class="settings-title">Card density</span>
                 <span class="settings-hint">Detailed cards or a compact grid.</span>
               </div>
@@ -271,7 +284,7 @@
         <header class="sheet-head">
           <div class="sheet-icon" id="detail-icon" aria-hidden="true"></div>
           <div class="sheet-title">
-            <h2 id="detail-name"></h2>
+            <h2 id="detail-name" data-no-translate></h2>
             <p id="detail-maker"></p>
           </div>
           <button class="wc-btn" id="detail-close" title="Close">
@@ -361,7 +374,7 @@
       <div class="card-info">
         <div class="card-title">
           <div class="device-type-icon" title="Change icon"></div>
-          <div class="device-name"></div>
+          <div class="device-name" data-no-translate></div>
         </div>
         <div class="device-sub"></div>
         <div class="device-estimate"></div>
@@ -380,6 +393,9 @@
   </template>
 
   <script src="mock.js"></script>
+  <script src="i18n-strings.js"></script>
+  <script src="i18n-core.js"></script>
+  <script src="i18n.js"></script>
   <script src="icons.js"></script>
   <script src="estimate.js"></script>
   <script src="app.js"></script>

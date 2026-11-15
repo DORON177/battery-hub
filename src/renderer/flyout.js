@@ -16,6 +16,7 @@ function row(d, n) {
   name.className = 'name';
   const label = document.createElement('span');
   label.textContent = d.name;
+  label.dataset.noTranslate = '';
   name.append(label);
   if (d.charging && !off) name.insertAdjacentHTML('beforeend', iconSvg('flash', 13));
   const track = document.createElement('div');

@@ -48,14 +48,17 @@ function pointsToPath(points) {
   return points.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
 }
 
+// Dates in the app's language rather than Windows'.
+const dateLocale = () => ({ es: 'es-ES', zh: 'zh-CN', he: 'he-IL' })[window.bhLanguage && window.bhLanguage()] || undefined;
+
 function formatTick(ts, range) {
   const d = new Date(ts);
-  if (range === 'week') return d.toLocaleDateString(undefined, { weekday: 'short' });
-  return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  if (range === 'week') return d.toLocaleDateString(dateLocale(), { weekday: 'short' });
+  return d.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatMoment(ts) {
-  return new Date(ts).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+  return new Date(ts).toLocaleString(dateLocale(), { weekday: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 // Stretches of consecutive charging points, as [firstIndex, lastIndex] pairs.

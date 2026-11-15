@@ -1,6 +1,7 @@
 const { Notification } = require('electron');
 const path = require('path');
 const store = require('./store');
+const { tr } = require('./lang');
 
 const ICON = path.join(__dirname, '..', '..', 'assets', 'icon.png');
 const LOW_ICON = path.join(__dirname, '..', '..', 'assets', 'brand', 'mood-low.png');
@@ -21,7 +22,7 @@ const ALERTS = {
 
 function post({ title, body, icon }) {
   if (!Notification.isSupported()) return;
-  new Notification({ title, body, icon }).show();
+  new Notification({ title: tr(title), body: tr(body), icon }).show();
 }
 
 function displayName(device) {

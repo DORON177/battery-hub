@@ -9,6 +9,7 @@ const DEFAULT_SETTINGS = {
   sortMode: 'urgent',       // 'urgent' | 'manual'
   reduceMotion: false,      // disable all UI animations/transitions
   notifyEnabled: true,
+  language: 'system',       // 'system' follows Windows; or en, es, zh, he
   notifyThreshold: 20,      // notify when battery drops below this %
   notifyCharging: true,     // notify when a device starts charging
   notifyCharged: false,     // notify when a device finishes charging

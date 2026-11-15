@@ -1,6 +1,7 @@
 const { Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const { moodFor } = require('./mood');
+const { tr } = require('./lang');
 
 // System-tray battery indicators, in one of two modes:
 //   'perDevice' — one tray icon per paired device (default)
@@ -52,8 +53,8 @@ function moodImage(mood) {
 }
 
 function statusText(info) {
-  if (info.offline || info.capacity == null) return info.offLabel || 'Not connected';
-  if (info.charging) return `Charging, ${info.capacity}%`;
+  if (info.offline || info.capacity == null) return tr(info.offLabel || 'Not connected');
+  if (info.charging) return tr(`Charging, ${info.capacity}%`);
   return `${info.capacity}%`;
 }
 
@@ -99,8 +100,8 @@ function renderPerDeviceOne(id) {
     { label: info.name, enabled: false },
     { label: status, enabled: false },
     { type: 'separator' },
-    { label: 'Open Battery Hub', click: () => handlers.open() },
-    { label: 'Quit Battery Hub', click: () => handlers.quit() },
+    { label: tr('Open Battery Hub'), click: () => handlers.open() },
+    { label: tr('Quit Battery Hub'), click: () => handlers.quit() },
   ]));
 }
 
@@ -128,8 +129,8 @@ function renderList() {
   for (const d of list) items.push({ label: `${d.name}: ${statusText(d)}`, enabled: false });
   items.push(
     { type: 'separator' },
-    { label: 'Open Battery Hub', click: () => handlers.open() },
-    { label: 'Quit Battery Hub', click: () => handlers.quit() },
+    { label: tr('Open Battery Hub'), click: () => handlers.open() },
+    { label: tr('Quit Battery Hub'), click: () => handlers.quit() },
   );
   listTray.setContextMenu(Menu.buildFromTemplate(items));
 }

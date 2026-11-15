@@ -475,7 +475,7 @@ async function refreshDiscover() {
       <div class="list-item-main">
         <span class="list-item-emoji">${iconSvg(iconFor(d.product, d.suggestedDriver))}</span>
         <div class="list-item-info">
-          <div class="list-item-title">${escapeHtml(d.product)}${badge}</div>
+          <div class="list-item-title"><span data-no-translate>${escapeHtml(d.product)}</span>${badge}</div>
           <div class="list-item-sub">${escapeHtml(d.manufacturer || 'Unknown manufacturer')}${d.channelCount ? ` · ${d.channelCount} channel${d.channelCount === 1 ? '' : 's'}` : ''}</div>
         </div>
       </div>
@@ -791,7 +791,7 @@ function reflectSettingControls(s) {
   document.querySelectorAll('.segmented[data-setting]').forEach((seg) => {
     seg.querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.value === s[seg.dataset.setting]));
   });
-  document.querySelectorAll('input[data-setting]').forEach((inp) => {
+  document.querySelectorAll('input[data-setting], select[data-setting]').forEach((inp) => {
     inp.value = s[inp.dataset.setting];
   });
   document.querySelectorAll('.settings-row[data-depends]').forEach((row) => {
@@ -849,6 +849,12 @@ function wireSettingsControls() {
   });
   document.querySelectorAll('.segmented[data-setting] button').forEach((b) => {
     b.addEventListener('click', () => updateSetting(b.parentElement.dataset.setting, b.dataset.value));
+  });
+  document.querySelectorAll('select[data-setting]').forEach((sel) => {
+    sel.addEventListener('change', () => {
+      updateSetting(sel.dataset.setting, sel.value);
+      if (sel.dataset.setting === 'language' && window.bhSetLanguage) window.bhSetLanguage(sel.value);
+    });
   });
   document.querySelectorAll('input[data-setting]').forEach((inp) => {
     inp.addEventListener('change', () => {

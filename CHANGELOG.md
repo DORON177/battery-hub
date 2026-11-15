@@ -7,6 +7,9 @@ All notable changes to this project are documented here. Versions follow
 ## [Unreleased]
 
 ### Added
+- Battery Hub in Spanish, Chinese and Hebrew (right to left), as well as English. It follows the
+  Windows display language, or choose one in Settings > Appearance > Language. The tray and
+  notifications follow it too.
 - Keyboards on Compx's shared 2.4G receiver (3554:fa09): AULA F87 Pro and F99 Pro, Lingbao K98
   and MCHOSE G75. A card added before this release starts reading by itself. Built from two projects
   that read these keyboards on real hardware; not tested here.
