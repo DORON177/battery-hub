@@ -35,7 +35,7 @@ published by HeadsetControl, OpenRazer, rivalcfg and the Linux kernel, plus anyt
 over Bluetooth. Everything runs locally and nothing is collected.
 
 **What will be signed:** the Windows installers attached to each GitHub release
-(`Battery-Hub-Setup-<version>.exe`, the NSIS installer used by auto-update and winget, and
+(`Battery-Hub-Update-<version>.exe`, the NSIS installer used by auto-update and winget, and
 `Battery-Hub-Installer-<version>.exe`, a small WPF wrapper around it), built by
 `.github/workflows/release.yml` on `windows-latest` from a pushed `v*` tag.
 
