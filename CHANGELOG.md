@@ -6,6 +6,10 @@ All notable changes to this project are documented here. Versions follow
 
 ## [Unreleased]
 
+### Added
+- When an update has downloaded, the Devices page shows it at the top with a Restart and install
+  button, so it isn't only in Settings.
+
 ### Fixed
 - Since 2.0.2, Settings > Help > device report said "This install is missing its file list" and
   blamed the PC. The file list was left out of 2.0.2 by mistake; it is back.

@@ -917,6 +917,18 @@ async function refreshSettings() {
 
 // ---------- about / updates ----------
 
+// A downloaded update is announced on the Devices page too, not only in Settings. "Later" hides it
+// for this window; it comes back when the window is opened again.
+let updateBannerDismissed = false;
+function showUpdateBanner(version) {
+  const banner = document.getElementById('update-banner');
+  if (!banner || updateBannerDismissed) return;
+  document.getElementById('update-banner-title').textContent = `Update ready: v${version}`;
+  document.getElementById('update-banner-install').onclick = () => window.batteryHub.installUpdate();
+  document.getElementById('update-banner-later').onclick = () => { updateBannerDismissed = true; banner.hidden = true; };
+  banner.hidden = false;
+}
+
 async function initAbout() {
   const versionEl = document.getElementById('app-version');
   if (versionEl && window.batteryHub.getVersion) {
@@ -951,6 +963,7 @@ async function initAbout() {
         case 'downloaded':
           show(`Update ready: v${e.version}`, 'Restart to finish installing.', true);
           installBtn.onclick = () => window.batteryHub.installUpdate();
+          showUpdateBanner(e.version);
           break;
         case 'not-available': manual ? show("You're up to date", 'You have the latest version.', false) : hideRow(); break;
         case 'error': manual ? show("Couldn't check for updates", e.message || '', false) : hideRow(); break;
