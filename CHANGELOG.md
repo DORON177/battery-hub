@@ -18,6 +18,8 @@ All notable changes to this project are documented here. Versions follow
 - The release file that auto-update and winget use is now called Battery-Hub-Update-x.y.z.exe
   instead of Battery-Hub-Setup-x.y.z.exe, so it's clear that Battery-Hub-Installer-x.y.z.exe is
   the one to download.
+- The project moved to github.com/battery-hub/battery-hub. Updates and device reports now use the
+  new address directly (the old one still forwards).
 
 ## [2.0.2] - 2026-11-15
 
