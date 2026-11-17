@@ -4,11 +4,16 @@
 const fs = require('fs');
 const path = require('path');
 
+// Then records the file list that Settings > Help checks an install against (write-manifest.js).
+// Both steps live here because package.json can only name one afterPack hook.
+const writeManifest = require('./write-manifest').default;
+
 const UNUSED = ['dxcompiler.dll'];
 
-module.exports = async ({ appOutDir }) => {
+module.exports = async (context) => {
   for (const name of UNUSED) {
-    const file = path.join(appOutDir, name);
+    const file = path.join(context.appOutDir, name);
     if (fs.existsSync(file)) fs.unlinkSync(file);
   }
+  await writeManifest(context);
 };

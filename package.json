@@ -27,7 +27,6 @@
     "productName": "Battery Hub",
     "asar": false,
     "npmRebuild": false,
-    "afterPack": "scripts/write-manifest.js",
     "publish": [
       {
         "provider": "github",
