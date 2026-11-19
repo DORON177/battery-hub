@@ -8,21 +8,23 @@ const { listLogicalDevices } = require('./catalog');
 const { driverById } = require('./drivers');
 const { capture } = require('./inspector');
 
-async function handle(cmd, args) {
+async function handle(id, cmd, args) {
   if (cmd === 'enumerate') return listLogicalDevices();
   if (cmd === 'readBattery') {
     const [driverId, device, profile] = args;
     return driverById(driverId).readBattery(device, profile);
   }
   if (cmd === 'identify') return driverById(args[0]).identify(args[1]);
-  if (cmd === 'capture') return capture(args[0]);
+  if (cmd === 'capture') {
+    return capture(args[0], { onProgress: (frames) => process.parentPort.postMessage({ id, progress: frames }) });
+  }
   throw new Error(`unknown hid command: ${cmd}`);
 }
 
 process.parentPort.on('message', async (e) => {
   const { id, cmd, args } = e.data;
   try {
-    const result = await handle(cmd, args || []);
+    const result = await handle(id, cmd, args || []);
     process.parentPort.postMessage({ id, ok: true, result });
   } catch (err) {
     process.parentPort.postMessage({ id, ok: false, error: (err && err.message) || String(err) });

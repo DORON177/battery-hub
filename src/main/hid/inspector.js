@@ -20,6 +20,7 @@ const READ_SLICE_MS = 100;
 const FEATURE_IDS_TO_TRY = [1, 2, 3, 4, 5, 6, 7, 8];
 const FEATURE_LENGTHS_TO_TRY = [8, 16, 32];
 const VENDOR_USAGE_PAGE_MIN = 0xFF00;
+const PROGRESS_MS = 1000;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -27,9 +28,10 @@ function frameKey(channel, reportKind, reportId, hex) {
   return `${channel.usagePage}:${channel.usage}:${reportKind}:${reportId}:${hex}`;
 }
 
-async function capture(logicalDevice, { pingOutputs = true } = {}) {
+async function capture(logicalDevice, { pingOutputs = true, onProgress = null } = {}) {
   const frames = new Map(); // key -> frame (dedup identical repeats, keep latest timestamp + count)
   const deadline = Date.now() + CAPTURE_MS;
+  const snapshot = () => Array.from(frames.values()).sort((a, b) => b.lastSeen - a.lastSeen);
 
   function record(channel, reportKind, reportId, bytes) {
     const arr = Array.from(bytes);
@@ -98,8 +100,15 @@ async function capture(logicalDevice, { pingOutputs = true } = {}) {
     }
   }
 
-  await Promise.all(logicalDevice.channels.map(watchChannel));
-  return Array.from(frames.values()).sort((a, b) => b.lastSeen - a.lastSeen);
+  // Send what has been seen so far every second: if node-hid crashes this process mid-scan,
+  // the main process still has those frames to show (see hid-client.js).
+  const progress = onProgress ? setInterval(() => { if (frames.size) onProgress(snapshot()); }, PROGRESS_MS) : null;
+  try {
+    await Promise.all(logicalDevice.channels.map(watchChannel));
+  } finally {
+    if (progress) clearInterval(progress);
+  }
+  return snapshot();
 }
 
 module.exports = { capture };

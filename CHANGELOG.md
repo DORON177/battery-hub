@@ -13,6 +13,9 @@ All notable changes to this project are documented here. Versions follow
 ### Fixed
 - Since 2.0.2, Settings > Help > device report said "This install is missing its file list" and
   blamed the PC. The file list was left out of 2.0.2 by mistake; it is back.
+- If the device scan in Add device > Set up stops partway with "hid worker exited", it now shows
+  what it found before stopping instead of nothing. Starting a second scan right after the first
+  also no longer catches the first one still shutting down.
 
 ### Changed
 - The release file that auto-update and winget use is now called Battery-Hub-Update-x.y.z.exe

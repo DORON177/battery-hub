@@ -26,6 +26,10 @@ function spawn() {
   proc.on('message', (msg) => {
     const p = pending.get(msg.id);
     if (!p) return;
+    if (msg.progress) {
+      if (p.onProgress) p.onProgress(msg.progress);
+      return;
+    }
     pending.delete(msg.id);
     clearTimeout(p.timer);
     if (msg.ok) p.resolve(msg.result);
@@ -40,7 +44,15 @@ function spawn() {
   });
 }
 
-function call(cmd, args, timeoutMs) {
+// The worker is killed after a scan; forget it at once so the next call starts a fresh one
+// instead of posting into a process that is still shutting down.
+function recycle() {
+  const proc = child;
+  child = null;
+  if (proc) { try { proc.kill(); } catch (_) {} }
+}
+
+function call(cmd, args, timeoutMs, onProgress = null) {
   return new Promise((resolve, reject) => {
     if (!child) {
       try { spawn(); } catch (e) { return reject(e); }
@@ -49,7 +61,7 @@ function call(cmd, args, timeoutMs) {
     const timer = setTimeout(() => {
       if (pending.has(id)) { pending.delete(id); reject(new Error(`${cmd} timed out`)); }
     }, timeoutMs);
-    pending.set(id, { resolve, reject, timer });
+    pending.set(id, { resolve, reject, timer, onProgress });
     try {
       child.postMessage({ id, cmd, args });
     } catch (e) {
@@ -75,8 +87,15 @@ module.exports = {
   // Must exceed inspector.js CAPTURE_MS (30s scan) plus channel setup. A scan leaves handles
   // open on every channel of the device, and only ending the process releases them safely
   // (see session.js), so the worker is recycled afterwards.
-  capture: (device) => call('capture', [device], 45000).finally(() => {
-    if (child) { try { child.kill(); } catch (_) {} }
-  }),
+  // If node-hid crashes the worker mid-scan, show what it had found up to then.
+  capture: (device) => {
+    let seen = [];
+    return call('capture', [device], 45000, (frames) => { seen = frames; })
+      .catch((e) => {
+        if (e.message === WORKER_EXITED && seen.length) return seen;
+        throw e;
+      })
+      .finally(recycle);
+  },
   stop: () => { if (child) { try { child.kill(); } catch (_) {} child = null; } rejectAll('hid client stopped'); },
 };
