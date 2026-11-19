@@ -79,7 +79,9 @@ function renderPerDeviceOne(id) {
   if (!info) return;
   const offline = info.offline || info.capacity == null;
   const { img, file } = imageFor(info.capacity, info.charging, offline);
-  const key = `${file}|${info.name}`;
+  // The tooltip and menu show the exact level, which changes within one 5% picture.
+  const status = statusText(info);
+  const key = `${file}|${info.name}|${status}`;
 
   let entry = perTrays.get(id);
   if (entry && entry.lastKey === key) return; // nothing changed; skip
@@ -90,11 +92,10 @@ function renderPerDeviceOne(id) {
     entry = { tray, lastKey: key };
     perTrays.set(id, entry);
   } else {
-    entry.tray.setImage(img);
+    if (!entry.lastKey.startsWith(`${file}|`)) entry.tray.setImage(img); // keep shell icon calls rare
     entry.lastKey = key;
   }
 
-  const status = statusText(info);
   entry.tray.setToolTip(`${info.name}: ${status}`);
   entry.tray.setContextMenu(Menu.buildFromTemplate([
     { label: info.name, enabled: false },

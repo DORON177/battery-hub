@@ -37,6 +37,21 @@ test('low battery fires once per crossing, and again after recovering', () => {
   assert.equal(sent.length, 2);
 });
 
+test('a reading wobbling around the alert level alerts only once', () => {
+  [22, 20, 21, 20, 22, 19, 24, 20].forEach((c) => notifier.check(device(c)));
+  assert.equal(sent.length, 1);
+  notifier.check(device(25));
+  notifier.check(device(20));
+  assert.equal(sent.length, 2);
+});
+
+test('charging ends the low state, so unplugging while still low alerts again', () => {
+  notifier.check(device(15));
+  notifier.check(device(16, true));
+  notifier.check(device(17));
+  assert.deepEqual(sent.map((n) => n.title).filter((t) => t === 'Low battery'), ['Low battery', 'Low battery']);
+});
+
 test('low battery stays quiet while charging, offline or switched off', () => {
   notifier.check(device(10, true));
   notifier.check(device(10, false, { online: false }));

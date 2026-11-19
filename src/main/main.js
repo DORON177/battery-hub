@@ -68,7 +68,7 @@ if (!gotLock) {
   app.quit();
   return;
 }
-app.on('second-instance', () => showWindow());
+app.on('second-instance', () => { if (app.isReady()) showWindow(); }); // a window can't be built before 'ready'
 
 const windowColor = () => (nativeTheme.shouldUseDarkColors ? '#1f2226' : '#eceff0');
 
@@ -233,7 +233,9 @@ app.whenReady().then(() => {
   tray.setMode(store.getSetting('trayMode'));
   // The installer opens the window whatever the startup setting. Started hidden, there is no window
   // until it is opened from the tray.
-  const startHidden = !process.argv.includes('--show') && (store.getSetting('startMinimized') || process.argv.includes('--hidden'));
+  // Without tray icons a hidden start would leave the app running with nothing to open it from.
+  const startHidden = !process.argv.includes('--show') && store.getSetting('trayEnabled')
+    && (store.getSetting('startMinimized') || process.argv.includes('--hidden'));
   if (!startHidden) createWindow(true);
   flyout.prepare(roundWindowCorners);
   scheduleUpdateChecks();
@@ -370,7 +372,10 @@ ipcMain.handle('settings:set', (evt, patch) => {
   if ('pollIntervalSec' in patch) restartPoller();
   if ('trayEnabled' in patch && !patch.trayEnabled) tray.destroyAll();
   if ('trayEnabled' in patch && patch.trayEnabled) restartPoller();
-  if ('trayMode' in patch) tray.setMode(patch.trayMode);
+  if ('trayMode' in patch) {
+    tray.setMode(patch.trayMode);
+    if (!after.trayEnabled) tray.destroyAll(); // switching mode rebuilds icons; keep them off
+  }
 
   return after;
 });
@@ -422,7 +427,9 @@ const UPDATE_FIRST_CHECK_MS = 60 * 1000;
 const UPDATE_CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
 function scheduleUpdateChecks() {
   if (!app.isPackaged) return;
-  const check = () => autoUpdater.checkForUpdates().catch((e) => logLine('INFO', `updater: check failed: ${e && e.message}`));
+  // Once an update is downloaded there is nothing more to find, and a later check that fails
+  // offline would hide the Restart and install button.
+  const check = () => downloadedUpdate ? null : autoUpdater.checkForUpdates().catch((e) => logLine('INFO', `updater: check failed: ${e && e.message}`));
   setTimeout(check, UPDATE_FIRST_CHECK_MS);
   setInterval(check, UPDATE_CHECK_EVERY_MS);
 }

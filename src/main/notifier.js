@@ -7,6 +7,7 @@ const ICON = path.join(__dirname, '..', '..', 'assets', 'icon.png');
 const LOW_ICON = path.join(__dirname, '..', '..', 'assets', 'brand', 'mood-low.png');
 const CHARGING_ICON = path.join(__dirname, '..', '..', 'assets', 'brand', 'mood-charge.png');
 const CHARGING_QUIET_MS = 5 * 60000; // a loose cable must not turn into a stream of alerts
+const LOW_RECOVER = 5; // points above the alert level a battery must reach before it can alert again
 
 // Per-device memory so we notify once per threshold crossing, not every poll.
 const wasLow = new Map();      // id -> boolean
@@ -45,7 +46,10 @@ function check(device) {
     if (low && !wasLow.get(device.id)) {
       post(ALERTS.low(name, cap));
     }
-    wasLow.set(device.id, low);
+    // A reading that wobbles around the level (20, 21, 20…) must not alert each time it dips:
+    // only charging or a clear rise above the level ends the low state.
+    if (low) wasLow.set(device.id, true);
+    else if (charging || cap >= threshold + LOW_RECOVER) wasLow.set(device.id, false);
   }
 
   // Only a real change counts: a device already charging when the app starts stays quiet.

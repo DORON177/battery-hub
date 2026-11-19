@@ -6,6 +6,8 @@ All notable changes to this project are documented here. Versions follow
 
 ## [Unreleased]
 
+## [2.0.3] - 2026-11-19
+
 ### Added
 - When an update has downloaded, the Devices page shows it at the top with a Restart and install
   button, so it isn't only in Settings.
@@ -16,6 +18,14 @@ All notable changes to this project are documented here. Versions follow
 - If the device scan in Add device > Set up stops partway with "hid worker exited", it now shows
   what it found before stopping instead of nothing. Starting a second scan right after the first
   also no longer catches the first one still shutting down.
+- A battery hovering around the alert level (20%, 21%, 20%…) no longer sends a Low battery alert
+  each time it dips. It alerts again once it has charged or climbed 5 points above the level.
+- The tray tooltip could show an old percentage until the level crossed the next 5% step.
+- With tray icons turned off, Start minimized started the app with no window and nothing to open
+  it from. It now opens the window.
+- A routine update check after an update had downloaded could hide its Restart and install button
+  when the PC was offline.
+- Switching the tray style in Settings brought tray icons back even when they were turned off.
 
 ### Changed
 - The release file that auto-update and winget use is now called Battery-Hub-Update-x.y.z.exe
@@ -269,7 +279,8 @@ First stable release, consolidating the 1.0.x and 1.1.x series.
 Initial public release: live battery monitoring for wireless HID devices, per-device tray
 icons, low-battery notifications, history sparklines and the guided calibration wizard.
 
-[Unreleased]: https://github.com/battery-hub/battery-hub/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/battery-hub/battery-hub/compare/v2.0.3...HEAD
+[2.0.3]: https://github.com/battery-hub/battery-hub/compare/v2.0.2...v2.0.3
 [1.3.1]: https://github.com/battery-hub/battery-hub/releases/tag/v1.3.1
 [1.3.0]: https://github.com/battery-hub/battery-hub/releases/tag/v1.3.0
 [1.2.0]: https://github.com/battery-hub/battery-hub/releases/tag/v1.2.0

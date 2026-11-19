@@ -1,6 +1,6 @@
 {
   "name": "battery-hub",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Live battery monitor for all your HID devices",
   "author": "Battery Hub contributors",
   "main": "src/main/main.js",
