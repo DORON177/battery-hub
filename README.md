@@ -146,6 +146,12 @@ Device support requests and pull requests are welcome — see [CONTRIBUTING.md](
 Release history is in [CHANGELOG.md](CHANGELOG.md), and security reports are covered by
 [SECURITY.md](SECURITY.md).
 
+## Support the project
+
+Battery Hub is free and stays free. If it saved you from a dead mouse mid-game, you can
+[buy it a coffee](https://buymeacoffee.com/batteryhub). It helps keep it free and adds
+support for more devices.
+
 ## License
 
 [MIT](LICENSE) © 2026 Battery Hub contributors
